@@ -1,18 +1,17 @@
 program ltr_eu_2;
 
-{$APPTYPE CONSOLE}
-
 uses
   SysUtils,
   Variants,
   Forms,
-  MainUnit in 'MainUnit.pas' {MainForm};
+  EU2_Form in 'EU2_Form.pas' {MainForm};
 
 {$R *.res}
 
 begin
   Application.Initialize;
-  Application.CreateForm(TMainForm, MainForm);
+  Application.MainFormOnTaskbar := True;
+  Application.Title := '—борƒанных';
   Application.CreateForm(TMainForm, MainForm);
   Application.Run;
 end.

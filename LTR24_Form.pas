@@ -1,4 +1,4 @@
-unit MainUnit;
+unit LTR24_Form;
 
 interface
 
@@ -13,53 +13,22 @@ type TLTR_MODULE_LOCATION = record
   slot : Word; //номер слота
 end;
 
-
+const
+ ChanelsAmount: integer = 2;
 type
   TMainForm = class(TForm)
-    cbbModulesList: TComboBox;
-    btnRefreshDevList: TButton;
-    btnOpen: TButton;
     btnStart: TButton;
     btnStop: TButton;
-    grpDevInfo: TGroupBox;
-    lblDevSerial: TLabel;
-    lblVerPld: TLabel;
-    lblVerFPGA: TLabel;
-    edtDevSerial: TEdit;
-    edtICPSupport: TEdit;
-    edtVerPld: TEdit;
     grpConfig: TGroupBox;
     lblRange1: TLabel;
     lblChAc1: TLabel;
-    lblDigBit1: TLabel;
     lblAdcFreq: TLabel;
-    grpCfgCh1: TGroupBox;
-    chkChEn1: TCheckBox;
     cbbRange1: TComboBox;
     cbbAC1: TComboBox;
-    cbbICPMode1: TComboBox;
     cbbAdcFreq: TComboBox;
-    chkTestModes: TCheckBox;
     cbbDataFmt: TComboBox;
     lblDataFmt: TLabel;
-    cbbISrcValue: TComboBox;
-    lblISrcVal: TLabel;
     lblChAc2: TLabel;
-    grp1: TGroupBox;
-    chkChEn2: TCheckBox;
-    cbbRange2: TComboBox;
-    cbbAC2: TComboBox;
-    cbbICPMode2: TComboBox;
-    grp2: TGroupBox;
-    chkChEn3: TCheckBox;
-    cbbRange3: TComboBox;
-    cbbAC3: TComboBox;
-    cbbICPMode3: TComboBox;
-    grp3: TGroupBox;
-    chkChEn4: TCheckBox;
-    cbbRange4: TComboBox;
-    cbbAC4: TComboBox;
-    cbbICPMode4: TComboBox;
     grpResult: TGroupBox;
     edtCh1Avg: TEdit;
     edtCh2Avg: TEdit;
@@ -67,11 +36,12 @@ type
     edtCh4Avg: TEdit;
     procedure btnRefreshDevListClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure btnOpenClick(Sender: TObject);
+
     procedure btnStartClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnStopClick(Sender: TObject);
     procedure cfgChanged(Sender: TObject);
+    procedure edtDevSerial2Change(Sender: TObject);
 
   private
     { Private declarations }
@@ -85,6 +55,7 @@ type
     procedure closeDevice();
     procedure OnThreadTerminate(par : TObject);
 
+    procedure Open();
     procedure assignComboList(comboBox: TComboBox; list : TStrings);
     procedure setRangeComboList(rangeBox: TComboBox; icpBox : TComboBox);
   public
@@ -92,7 +63,7 @@ type
   end;
 
 var
-  MainForm: TMainForm;
+  Form24: TMainForm;
 
 
 
@@ -110,7 +81,6 @@ var
 begin
   //обнуляем список ранее найденных модулей
   modules_cnt:=0;
-  cbbModulesList.Items.Clear;
   SetLength(ltr24_list, 0);
 
   // устанавливаем связь с управляющим каналом сервера, чтобы получить список крейтов
@@ -157,9 +127,6 @@ begin
                     SetLength(ltr24_list, modules_cnt);
                     ltr24_list[modules_cnt-1].csn := serial_list[crate_ind];
                     ltr24_list[modules_cnt-1].slot := module_ind+CC_MODULE1;
-                    // и добавляем в ComboBox для возможности выбора нужного
-                    cbbModulesList.Items.Add('Крейт ' + ltr24_list[modules_cnt-1].csn +
-                                            ', Слот ' + IntToStr(ltr24_list[modules_cnt-1].slot));
                 end;
               end;
           end;
@@ -169,7 +136,6 @@ begin
       end;
     end;
 
-    cbbModulesList.ItemIndex := 0;
     updateControls;
 
   end;
@@ -214,21 +180,9 @@ var
 
 begin
   module_opened:=LTR24_IsOpened(hltr24)=LTR_OK;
-  devsel := (Length(ltr24_list) > 0) and (cbbModulesList.ItemIndex >= 0);
+  devsel := (Length(ltr24_list) > 0);
 
   icp_support := hltr24.ModuleInfo.SupportICP;
-
-  //обновление списка устройств и выбор можно делать только пока не открыто конкретное устройство
-  btnRefreshDevList.Enabled := not module_opened;
-  cbbModulesList.Enabled := not module_opened;
-
-  //установить связь можно только если выбрано устройство
-  btnOpen.Enabled := devsel;
-  if module_opened then
-    btnOpen.Caption := 'Закрыть соединение'
-  else
-    btnOpen.Caption := 'Установить соединение';
-
 
   btnStart.Enabled := module_opened and not threadRunning;
   btnStop.Enabled := module_opened and threadRunning;
@@ -239,68 +193,17 @@ begin
 
   cbbAdcFreq.Enabled := cfg_en;
   cbbDataFmt.Enabled := cfg_en;
-  cbbISrcValue.Enabled := cfg_en and icp_support;
-  chkTestModes.Enabled := cfg_en;
-
-  //если нет поддержки ICP, то если был выставлен ICP-режим, сбрасываем на диф. вход
-  if cfg_en and not icp_support then
-  begin
-     cbbICPMode1.ItemIndex := 0;
-     cbbICPMode2.ItemIndex := 0;
-     cbbICPMode3.ItemIndex := 0;
-     cbbICPMode4.ItemIndex := 0;
-  end;
-
-
-  chkChEn1.Enabled := cfg_en;
-  chkChEn2.Enabled := cfg_en;
-  chkChEn3.Enabled := cfg_en;
-  chkChEn4.Enabled := cfg_en;
-
   cbbRange1.Enabled := cfg_en;
-  cbbRange2.Enabled := cfg_en;
-  cbbRange3.Enabled := cfg_en;
-  cbbRange4.Enabled := cfg_en;
-
-  // AC не имеет значения при ICP-режиме => запрет выбора
-  cbbAC1.Enabled := cfg_en and (cbbICPMode1.ItemIndex=0);
-  cbbAC2.Enabled := cfg_en and (cbbICPMode2.ItemIndex=0);
-  cbbAC3.Enabled := cfg_en and (cbbICPMode3.ItemIndex=0);
-  cbbAC4.Enabled := cfg_en and (cbbICPMode4.ItemIndex=0);
-
-  cbbICPMode1.Enabled := cfg_en and icp_support;
-  cbbICPMode2.Enabled := cfg_en and icp_support;
-  cbbICPMode3.Enabled := cfg_en and icp_support;
-  cbbICPMode4.Enabled := cfg_en and icp_support;
 
   { В зависимости от того, выбран ли тестовый режим или
     обычный, устанавливаем соответствующие названия элементов ComboBox'а.
     При этом сохраняем индекс выбранного элемента неизменным }
   modeStrings := TStringList.Create;
-  if chkTestModes.Checked then
-  begin
-    modeStrings.Add(String('Собств. ноль'));
-    modeStrings.Add(String('ICP тест'));
-  end
-  else
-  begin
+
     modeStrings.Add(String('Диф. вход'));
     modeStrings.Add(String('ICP вход'));
-  end;
 
-  assignComboList(cbbICPMode1, modeStrings);
-  assignComboList(cbbICPMode2, modeStrings);
-  assignComboList(cbbICPMode3, modeStrings);
-  assignComboList(cbbICPMode4, modeStrings);
   modeStrings.Destroy;
-
-
-  setRangeComboList(cbbRange1, cbbICPMode1);
-  setRangeComboList(cbbRange2, cbbICPMode2);
-  setRangeComboList(cbbRange3, cbbICPMode3);
-  setRangeComboList(cbbRange4, cbbICPMode4);
-
-
 end;
 
 procedure TMainForm.closeDevice();
@@ -313,6 +216,11 @@ begin
   end;
 
   LTR24_Close(hltr24);
+end;
+
+procedure TMainForm.edtDevSerial2Change(Sender: TObject);
+begin
+
 end;
 
 //функция, вызываемая по завершению потока сбора данных
@@ -339,9 +247,10 @@ procedure TMainForm.FormCreate(Sender: TObject);
 begin
   LTR24_Init(hltr24);
   refreshDeviceList;
+  Open();
 end;
 
-procedure TMainForm.btnOpenClick(Sender: TObject);
+procedure TMainForm.Open();
 var
   location :  TLTR_MODULE_LOCATION;
   res : Integer;
@@ -351,7 +260,7 @@ begin
   begin
     // информацию о крейте и слоте берем из сохраненного списка по индексу
     // текущей выбранной записи
-    location := ltr24_list[ cbbModulesList.ItemIndex ];
+    location := ltr24_list[ 0 ];
     LTR24_Init(hltr24);
     res:=LTR24_Open(hltr24, SADDR_DEFAULT, SPORT_DEFAULT, location.csn, location.slot);
     if res<>LTR_OK then
@@ -365,59 +274,37 @@ begin
         MessageDlg('Не удалось прочитать конфигурацию из модуля: ' + LTR24_GetErrorString(res), mtError, [mbOK], 0);
     end;
 
-    if res=LTR_OK then
-    begin
-      edtDevSerial.Text := String(hltr24.ModuleInfo.Serial);
-      edtVerPld.Text := IntToStr(hltr24.ModuleInfo.VerPLD);
-      if hltr24.ModuleInfo.SupportICP then
-        edtICPSupport.Text := 'Есть'
-      else
-        edtICPSupport.Text := 'Нет';
-    end
-    else
-    begin
+    if res<>LTR_OK then
       LTR24_Close(hltr24);
-    end;
   end
   else
-  begin
     closeDevice;
-  end;
 
   updateControls;
 end;
 
 procedure TMainForm.btnStartClick(Sender: TObject);
 var
-  res : Integer;
+  i, res : Integer;
 begin
    { Сохраняем значения из элементов управления в соответствующие
     поля описателя модуля. Для простоты здесь не делается доп. проверок, что
     введены верные значения... }
    hltr24.ADCFreqCode := cbbAdcFreq.ItemIndex;
    hltr24.DataFmt     := cbbDataFmt.ItemIndex;
-   hltr24.ISrcValue   := cbbISrcValue.ItemIndex;
-   hltr24.TestMode    := chkTestModes.Checked;
+   hltr24.ISrcValue   := 0;
+   hltr24.TestMode    := false; //Измерение себя
 
-   hltr24.ChannelMode[0].Enable   := chkChEn1.Checked;
-   hltr24.ChannelMode[0].AC       := cbbAC1.ItemIndex <> 0;
-   hltr24.ChannelMode[0].Range    := cbbRange1.ItemIndex;
-   hltr24.ChannelMode[0].ICPMode  := cbbICPMode1.ItemIndex <> 0;
+   for i := 0 to ChanelsAmount - 1 do
+   begin
+    hltr24.ChannelMode[i].Enable   := true;
+    hltr24.ChannelMode[i].AC       := cbbAC1.ItemIndex <> 0;
+    hltr24.ChannelMode[i].Range    := cbbRange1.ItemIndex;
+    hltr24.ChannelMode[i].ICPMode  := false;
+   end;
+   for i := ChanelsAmount to 3 do
+    hltr24.ChannelMode[i].Enable   := false;
 
-   hltr24.ChannelMode[1].Enable   := chkChEn2.Checked;
-   hltr24.ChannelMode[1].AC       := cbbAC2.ItemIndex <> 0;
-   hltr24.ChannelMode[1].Range    := cbbRange2.ItemIndex;
-   hltr24.ChannelMode[1].ICPMode  := cbbICPMode2.ItemIndex <> 0;
-
-   hltr24.ChannelMode[2].Enable   := chkChEn3.Checked;
-   hltr24.ChannelMode[2].AC       := cbbAC3.ItemIndex <> 0;
-   hltr24.ChannelMode[2].Range    := cbbRange3.ItemIndex;
-   hltr24.ChannelMode[2].ICPMode  := cbbICPMode3.ItemIndex <> 0;
-
-   hltr24.ChannelMode[3].Enable   := chkChEn4.Checked;
-   hltr24.ChannelMode[3].AC       := cbbAC4.ItemIndex <> 0;
-   hltr24.ChannelMode[3].Range    := cbbRange4.ItemIndex;
-   hltr24.ChannelMode[3].ICPMode  := cbbICPMode4.ItemIndex <> 0;
 
    res:= LTR24_SetADC(hltr24);
    if res <> LTR_OK then
