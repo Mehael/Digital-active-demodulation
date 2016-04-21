@@ -5,13 +5,14 @@ program ltr_eu_2;
 uses
   SysUtils,
   Variants,
-  LTR24_ProcessThread in 'LTR24_ProcessThread.pas';
+  Forms,
+  MainUnit in 'MainUnit.pas' {MainForm};
+
+{$R *.res}
 
 begin
-  try
-    { TODO -oUser -cConsole Main : Insert code here }
-  except
-    on E:Exception do
-      Writeln(E.Classname, ': ', E.Message);
-  end;
+  Application.Initialize;
+  Application.CreateForm(TMainForm, MainForm);
+  Application.CreateForm(TMainForm, MainForm);
+  Application.Run;
 end.
