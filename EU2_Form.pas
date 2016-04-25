@@ -84,14 +84,15 @@ var i: integer;
 begin
   if (bnStart.Caption = 'Старт') then begin
      bnStart.Caption := 'Стоп';
+
     CreateFiles();
     StartProcess();
 
   end else begin
     bnStart.Caption := 'Старт';
+
     if threadRunning then
       thread.stop:=True;
-
 
   end;
 end;

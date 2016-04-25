@@ -58,18 +58,18 @@ implementation
   begin
     if visChAvg[0].Series[0].Count = 0 then begin
       for i := 0 to recv_size-1 do begin
-        visChAvg[1].Series[0].Add(0);
         visChAvg[0].Series[0].Add(0);
+        visChAvg[1].Series[0].Add(0);
       end;
     end;
-
+    
       for ch:=0 to LTR24_CHANNEL_NUM-1 do
       begin
         if ChValidData[ch] then
         begin
           for i := 0 to recv_size-1 do begin
             writeln(Files[ch], data[ch_cnt*i + ch]);
-            visChAvg[ch].Series[0].YValue[i-1] := data[ch_cnt*i + ch];
+            visChAvg[ch].Series[0].YValue[i] := data[ch_cnt*i + ch];
           end;
         end;
       end;
@@ -120,7 +120,7 @@ implementation
     else
       recv_wrd_cnt :=  recv_data_cnt;
 
-    
+
 
 
     { выделяем массивы для приема данных }
@@ -180,6 +180,12 @@ implementation
         err:= stoperr;
 
     end;
+
+      for i := 0 to recv_size-1 do begin
+        visChAvg[0].Series[0].YValue[i] := 0;
+        visChAvg[1].Series[0].YValue[i] := 0;
+      end;
+
     for i := 0 to ch_cnt-1 do
       CloseFile(Files[i]);
   end;
