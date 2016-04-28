@@ -36,6 +36,6 @@
     <DCCReference Include="EU2_Form.pas">
       <Form>MainForm</Form>
     </DCCReference>
-    <DCCReference Include="LTR24_ProcessThread.pas" />
+    <DCCReference Include="ProcessThread.pas" />
   </ItemGroup>
 </Project>

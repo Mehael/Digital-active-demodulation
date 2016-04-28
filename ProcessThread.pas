@@ -1,21 +1,23 @@
-unit LTR24_ProcessThread;
+unit ProcessThread;
 
 interface
-uses Classes, Math, SyncObjs, Graphics, Chart, Series, StdCtrls,SysUtils, ltr24api, ltrapi;
+uses Classes, Math, SyncObjs, Graphics, Chart, Series, StdCtrls,SysUtils, ltr24api, ltr34api, ltrapi;
 // Время, за которое будет отображаться блок (в мс)
 const RECV_BLOCK_TIME          = 500;
 // Дополнительный  постоянный таймаут на прием данных (в мс)
 const RECV_TOUT                = 1000;
 
 
-type TLTR24_ProcessThread = class(TThread)
+type TProcessThread = class(TThread)
   public
     //элементы управления для отображения результатов обработки
     visChAvg : array [0..LTR24_CHANNEL_NUM-1] of TChart;
     MilisecsToWork:  Int64;
     MilisecsProcessed:  Int64;
+    phltr34: pTLTR34;
     phltr24: pTLTR24; //указатель на описатель модуля
     bnStart:  TButton;
+
     err : Integer; //код ошибки при выполнении потока сбора
     stop : Boolean; //запрос на останов (устанавливается из основного потока)
     Files : array of TextFile;
@@ -31,20 +33,21 @@ type TLTR24_ProcessThread = class(TThread)
     recv_size : Integer;
     
     procedure updateData;
+    procedure sendDAC(signal: Integer);
   protected
     procedure Execute; override;
   end;
 implementation
 
 
-  constructor TLTR24_ProcessThread.Create(SuspendCreate : Boolean);
+  constructor TProcessThread.Create(SuspendCreate : Boolean);
   begin
      Inherited Create(SuspendCreate);
      stop:=False;
      err:=LTR_OK;
   end;
 
-  destructor TLTR24_ProcessThread.Free();
+  destructor TProcessThread.Free();
   begin
       Inherited Free();
   end;
@@ -52,7 +55,7 @@ implementation
   { обновление индикаторов формы результатами последнего измерения.
    Метод должен выполняться только через Synchronize, который нужен
    для доступа к элементам VCL не из основного потока }
-  procedure TLTR24_ProcessThread.updateData;
+  procedure TProcessThread.updateData;
   var
     ch,i: Integer;
   begin
@@ -62,7 +65,7 @@ implementation
         visChAvg[1].Series[0].Add(0);
       end;
     end;
-    
+      sendDAC(0);
       for ch:=0 to LTR24_CHANNEL_NUM-1 do
       begin
         if ChValidData[ch] then
@@ -75,8 +78,27 @@ implementation
       end;
   end;
 
+  procedure TProcessThread.sendDAC(signal: Integer);
+  var
+    i, dataSize, timeForSending : Integer;
+    DATA:array[0..99]of DOUBLE;
+    WORD_DATA:array[0..99]of integer;
+  begin
+    dataSize:= 100;
+    timeForSending := 2000;
 
-  procedure TLTR24_ProcessThread.Execute;
+    for i:=0 to dataSize-1 do
+       //DATA[i]:= signal;
+       DATA[i]:=10*sin(i*(pi/250));
+
+    err:=LTR34_ProcessData(@phltr34,@DATA,@WORD_DATA, dataSize, 1);//true- указываем что значения в Вольтах
+    err:=LTR34_Send(@phltr34,@WORD_DATA, dataSize, timeForSending);
+
+    //LastCalibrateSignal[deviceNumber]:= signal;
+  end;
+
+
+  procedure TProcessThread.Execute;
   type WordArray = array[0..0] of LongWord;
   type PWordArray = ^WordArray;
   var
@@ -120,13 +142,12 @@ implementation
     else
       recv_wrd_cnt :=  recv_data_cnt;
 
-
-
-
     { выделяем массивы для приема данных }
     SetLength(rcv_buf, recv_wrd_cnt);
     SetLength(data, recv_data_cnt);
     err:= LTR24_Start(phltr24^);
+    err:=LTR34_DACStart(phltr34);
+
     if err = LTR_OK then
     begin
       while not stop and (err = LTR_OK) do
@@ -177,21 +198,22 @@ implementation
 
       for i := 0 to ch_cnt-1 do
         CloseFile(Files[i]);
-      bnStart.Caption := 'Старт';
+
       { По выходу из цикла отсанавливаем сбор данных.
         Чтобы не сбросить код ошибки (если вышли по ошибке)
         результат останова сохраняем в отдельную переменную }
+
       stoperr:= LTR24_Stop(phltr24^);
       if err = LTR_OK then
         err:= stoperr;
 
+      err:=LTR34_DACStop(phltr34);
     end;
 
-
-
+    bnStart.Caption := 'Старт';
   end;
   {
-  
+
 
   }
   {

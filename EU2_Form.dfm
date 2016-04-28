@@ -248,9 +248,9 @@ object MainForm: TMainForm
       Width = 76
       Height = 21
       ItemHeight = 13
-      ItemIndex = 0
+      ItemIndex = 12
       TabOrder = 0
-      Text = '117188'
+      Text = '1831'
       Items.Strings = (
         '117188'
         '78125'

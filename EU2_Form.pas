@@ -3,7 +3,7 @@ interface uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, FileCtrl, StdCtrls, Buttons, ExtCtrls,
   Math, TeeProcs, TeEngine, Chart, Series, ComCtrls,
-  ltrapi, ltrapitypes, ltrapidefine, ltr24api, LTR24_ProcessThread;
+  ltrapi, ltrapitypes, ltrapidefine, ltr24api, ltr34api, ProcessThread;
 
 { Информация, необходимая для установления соединения с модулем }
 type TLTR_MODULE_LOCATION = record
@@ -12,8 +12,8 @@ type TLTR_MODULE_LOCATION = record
 end;
 
 const
-  DevicesAmount     = 1;
-  ChannelsPerDevice = 2;
+  DevicesAmount     = 2;
+  ChannelsPerDevice = 1;
   ChannelsAmount    = DevicesAmount*ChannelsPerDevice;
 
 type
@@ -46,18 +46,21 @@ type
     procedure FormDestroy(Sender: TObject);
 
     private
-      ltr24_list: array of TLTR_MODULE_LOCATION; //список найденных модулей
-      hltr24 : TLTR24; // Описатель модуля, с которым идет работа
+      ltr_list: array[0..1] of TLTR_MODULE_LOCATION; //список найденных модулей 0-24, 1 - 34
+      hltr_24 : TLTR24; // Описатель модуля, с которым идет работа
+      hltr_34 : TLTR34;
       threadRunning : Boolean; // Признак, запущен ли поток сбора данных
-      thread : TLTR24_ProcessThread; //Объект потока для выполнения сбора данных
+      thread : TProcessThread; //Объект потока для выполнения сбора данных
       Files : array[0..ChannelsAmount] of TextFile;
 
       procedure refreshDeviceList();
       procedure closeDevice();
       procedure OnThreadTerminate(par : TObject);
-      procedure OpenCreate();
+      procedure Open24Ltr();
       procedure StartProcess();
       procedure CreateFiles();
+      procedure open34Ltr;
+    procedure CheckError(err: Integer);
     published
       procedure Button1Click(Sender: TObject);
       procedure bnStartClick(Sender: TObject);
@@ -66,8 +69,6 @@ type
 
 var
   MainForm:     TMainForm;
-
-//  Files :       array[0..ChannelsAmount] of TextFile;
 
 implementation
 {$R *.dfm}
@@ -88,26 +89,20 @@ begin
     StartProcess();
 
   end else begin
-    //bnStart.Caption := 'Старт';
-
     if threadRunning then
       thread.stop:=True;
 
   end;
 end;
-//----------------------------------------------------------------
+
 procedure TMainForm.refreshDeviceList();
 var
   srv : TLTR; //Описатель для управляющего соединения с LTR-сервером
   crate: TLTR; //Описатель для соединения с крейтом
-  res, crates_cnt, crate_ind, module_ind, modules_cnt : integer;
+  res, crates_cnt, crate_ind, module_ind: integer;
   serial_list : array [0..CRATE_MAX-1] of string; //список номеров керйтов
   mids : array [0..MODULE_MAX-1] of Word; //список идентификаторов модулей для текущего крейта
 begin
-  //обнуляем список ранее найденных модулей
-  modules_cnt:=0;
-  SetLength(ltr24_list, 0);
-
   // устанавливаем связь с управляющим каналом сервера, чтобы получить список крейтов
   LTR_Init(srv);
   srv.cc := CC_CONTROL;    //используем управляющий канал
@@ -143,15 +138,16 @@ begin
           begin
               for module_ind:=0 to MODULE_MAX-1 do
               begin
-                //ищем модули LTR210
+                if mids[module_ind]=MID_LTR34 then
+                begin
+                    ltr_list[1].csn := crate.csn;
+                    ltr_list[1].slot := module_ind+CC_MODULE1;
+                end;
+
                 if mids[module_ind]=MID_LTR24 then
                 begin
-                    // сохраняем информацию о найденном модуле, необходимую для
-                    // последующего установления соединения с ним, в список
-                    modules_cnt:=modules_cnt+1;
-                    SetLength(ltr24_list, modules_cnt);
-                    ltr24_list[modules_cnt-1].csn := serial_list[crate_ind];
-                    ltr24_list[modules_cnt-1].slot := module_ind+CC_MODULE1;
+                    ltr_list[0].csn := serial_list[crate_ind];
+                    ltr_list[0].slot := module_ind+CC_MODULE1;
                 end;
               end;
           end;
@@ -172,7 +168,8 @@ begin
     thread.WaitFor;
   end;
 
-  LTR24_Close(hltr24);
+  LTR24_Close(hltr_24);
+  LTR34_Close(@hltr_34);
 end;
 
 //функция, вызываемая по завершению потока сбора данных
@@ -180,21 +177,73 @@ end;
 procedure TMainForm.OnThreadTerminate(par : TObject);
 begin
     if thread.err <> LTR_OK then
-    begin
         MessageDlg('Сбор данных завершен с ошибкой: ' + LTR24_GetErrorString(thread.err),
                   mtError, [mbOK], 0);
-      //bnStartClick(par);
-    end;
 
     threadRunning := false;
 end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  LTR24_Init(hltr24);
+  LTR24_Init(hltr_24);
+  LTR34_Init(@hltr_34);
   refreshDeviceList;
-  OpenCreate();
+
+  Open24Ltr();
+  Open34Ltr();
 end;
+
+procedure TMainForm.CheckError(err: Integer);
+begin
+  if err < LTR_OK then
+    MessageDlg('LTR34: ' + LTR34_GetErrorString(err), mtError, [mbOK], 0);
+end;
+
+procedure TMainForm.open34Ltr;
+var i:integer;
+    err:integer;
+    CrateSelect:byte;
+    MID:array[0..MODULE_MAX-1]of WORD;
+    LIST34:array[0..MODULE_MAX-1]of byte;
+    Total34:byte;
+    LTR34SELECT:byte;
+    LTR: TLTR;
+    CSNLIST:array[0..CRATE_MAX-1,0..SERIAL_NUMBER_SIZE-1]of char;
+begin
+  //Определяем список крейтов подключенных к этому компьютеру (LocalHost 127.0.0.1)
+  for i:=0 to CRATE_MAX-1 do CSNLIST[i]:='';
+  LTR_Init(@LTR);
+  err:=LTR_Open(@LTR);                      CheckError(err);
+  err:=LTR_GetCrates(@LTR,@CSNLIST[0,0]);   CheckError(err);
+
+  CrateSelect:=0;//Откроеться первый наёденный LTR крейт
+  For i:=0 to CRATE_MAX-1 do
+
+  err:=LTR_Close(@LTR);                     CheckError(err);
+  //Ищем модули в выбранном крейте
+  LTR_Init(@LTR);
+  for i:=0 to SERIAL_NUMBER_SIZE-1 do
+  LTR.csn[i]:=CSNLIST[CrateSelect][i];
+
+  err:=LTR_Open(@LTR);                      CheckError(err);
+  err:=LTR_GetCrateModules(@LTR,@MID[0]);   CheckError(err);
+  Total34:=0;
+  //Отображаем список крейтов
+  for i:=0 to MODULE_MAX-1 do
+  begin
+    if MID[i]=MID_LTR34 then
+      begin
+        LIST34[Total34]:=i;
+        Total34:=Total34+1;
+      end;
+  end;
+  LTR34SELECT:=0;//первый найденный LTR34
+  //  Подключаемся к выбранному модулю
+  LTR34_Init(@hltr_34);
+  err:=LTR34_Open(@hltr_34,LTR.saddr,LTR.sport,@CSNLIST[CrateSelect][0],LIST34[LTR34SELECT]+1);
+  CheckError(err);
+
+  end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
@@ -203,65 +252,96 @@ begin
     FreeAndNil(thread);
 end;
 
-procedure TMainForm.OpenCreate();
+procedure TMainForm.Open24Ltr();
 var
   location :  TLTR_MODULE_LOCATION;
   res : Integer;
 begin
   // если соединение с модулем закрыто - то открываем новое
-  if LTR24_IsOpened(hltr24)<>LTR_OK then
+  if LTR24_IsOpened(hltr_24)<>LTR_OK then
   begin
     // информацию о крейте и слоте берем из сохраненного списка по индексу
     // текущей выбранной записи
-    location := ltr24_list[ 0 ];
-    LTR24_Init(hltr24);
-    res:=LTR24_Open(hltr24, SADDR_DEFAULT, SPORT_DEFAULT, location.csn, location.slot);
+    location := ltr_list[ 0 ];
+    LTR24_Init(hltr_24);
+    res:=LTR24_Open(hltr_24, SADDR_DEFAULT, SPORT_DEFAULT, location.csn, location.slot);
     if res<>LTR_OK then
       MessageDlg('Не удалось установить связь с модулем: ' + LTR24_GetErrorString(res), mtError, [mbOK], 0);
 
     if res=LTR_OK then
     begin
-      // чтение информации из Flash-памяти (включая калибровочные коэффициенты) 
-      res:=LTR24_GetConfig(hltr24);
+      // чтение информации из Flash-памяти (включая калибровочные коэффициенты)
+      res:=LTR24_GetConfig(hltr_24);
       if res <> LTR_OK then
         MessageDlg('Не удалось прочитать конфигурацию из модуля: ' + LTR24_GetErrorString(res), mtError, [mbOK], 0);
     end;
 
     if res<>LTR_OK then
-      LTR24_Close(hltr24);
+      LTR24_Close(hltr_24);
   end
   else
     closeDevice;
+
 end;
 
 procedure TMainForm.StartProcess();
 var
-  i, res : Integer;
-  MilisecsWork:  Int64; 
+  i, err, res, dataSize, timeForSending : Integer;
+  MilisecsWork:  Int64;
+  DATA:array[0..999]of DOUBLE;
+  WORD_DATA:array[0..999]of integer;
 begin
    { Сохраняем значения из элементов управления в соответствующие
     поля описателя модуля. Для простоты здесь не делается доп. проверок, что
     введены верные значения... }
-   hltr24.ADCFreqCode := cbbAdcFreq.ItemIndex;
-   hltr24.DataFmt     := cbbDataFmt.ItemIndex;
-   hltr24.ISrcValue   := 0;
-   hltr24.TestMode    := false; //Измерение себя
+    //------LTR24-------
+   hltr_24.ADCFreqCode := cbbAdcFreq.ItemIndex;
+   hltr_24.DataFmt     := cbbDataFmt.ItemIndex;
+   hltr_24.ISrcValue   := 0;
+   hltr_24.TestMode    := false; //Измерение себя
 
    for i := 0 to ChannelsAmount - 1 do
    begin
-    hltr24.ChannelMode[i].Enable   := true;
-    hltr24.ChannelMode[i].AC       := cbbAC1.ItemIndex <> 0;
-    hltr24.ChannelMode[i].Range    := cbbRange1.ItemIndex;
-    hltr24.ChannelMode[i].ICPMode  := false;
+    hltr_24.ChannelMode[i].Enable   := true;
+    hltr_24.ChannelMode[i].AC       := cbbAC1.ItemIndex <> 0;
+    hltr_24.ChannelMode[i].Range    := cbbRange1.ItemIndex;
+    hltr_24.ChannelMode[i].ICPMode  := false;
    end;
    for i := ChannelsAmount to 3 do
-    hltr24.ChannelMode[i].Enable   := false;
+    hltr_24.ChannelMode[i].Enable   := false;
 
 
-   res:= LTR24_SetADC(hltr24);
+   res:= LTR24_SetADC(hltr_24);
    if res <> LTR_OK then
       MessageDlg('Не удалось установить настройки: ' + LTR24_GetErrorString(res), mtError, [mbOK], 0);
 
+    //-------LTR34-----------
+    dataSize:= 1000;
+    timeForSending := 2000;
+
+    err:=LTR34_Reset(@hltr_34);  CheckError(err);
+
+    hltr_34.ChannelQnt:=1;        // число каналов
+    hltr_34.RingMode:=false;          // режим кольца  true - режим кольца, false - потоковый режим
+    hltr_34.FrequencyDivisor:=60; // делитель частоты дискретизации 0..60 (31.25..500 кГц)
+    hltr_34.UseClb:=true;            // Фабричные Коэффициэнты.
+    hltr_34.AcknowledgeType:=false;   // тип подтверждения true - высылать подтверждение каждого слова, false- высылать состояние буффера каждые 100 мс
+
+    hltr_34.LChTbl[0]:=LTR34_CreateLChannel(1,0);
+    //hltr_34.LChTbl[1]:=LTR34_CreateLChannel(2,0); // (номер канала, 0-без усиления 1- 10х)
+
+    err:=LTR34_Config(@hltr_34);  CheckError(err);
+
+    for i:=0 to dataSize-1 do
+       //DATA[i]:= 0;
+       DATA[i]:=10*sin(i*(pi/250));
+
+    err:=LTR34_ProcessData(@hltr_34,@DATA,@WORD_DATA, dataSize, 1);//true- указываем что значения в Вольтах
+    CheckError(err);
+
+    err:=LTR34_Send(@hltr_34,@WORD_DATA, dataSize, timeForSending);
+      CheckError(err);
+    // ---- strart---------
   if res = LTR_OK then
   begin
     if thread <> nil then
@@ -269,10 +349,12 @@ begin
       FreeAndNil(thread);
     end;
 
-    thread := TLTR24_ProcessThread.Create(True);
+    thread := TProcessThread.Create(True);
     { Так как структура должна быть одна и та же, что используемая потоком,
      что в классе основного окна, то вынуждены передать ее как pointer }
-    thread.phltr24 := @hltr24;
+    thread.phltr24 := @hltr_24;
+    thread.phltr34 := @hltr_34;
+
     { Сохраняем элементы интерфейса, которые должны изменяться обрабатывающим
       потоком в класс потока }
     thread.visChAvg[0]:= chGraph;
