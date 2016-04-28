@@ -80,7 +80,6 @@ begin
 end;
 
 procedure TMainForm.bnStartClick(Sender: TObject);
-var i: integer;
 begin
   if (bnStart.Caption = 'Старт') then begin
      bnStart.Caption := 'Стоп';
@@ -89,7 +88,7 @@ begin
     StartProcess();
 
   end else begin
-    bnStart.Caption := 'Старт';
+    //bnStart.Caption := 'Старт';
 
     if threadRunning then
       thread.stop:=True;
@@ -184,7 +183,7 @@ begin
     begin
         MessageDlg('Сбор данных завершен с ошибкой: ' + LTR24_GetErrorString(thread.err),
                   mtError, [mbOK], 0);
-      bnStartClick(par);
+      //bnStartClick(par);
     end;
 
     threadRunning := false;
@@ -288,6 +287,7 @@ begin
       MilisecsWork := MilisecsWork*60*24;
 
     thread.MilisecsToWork := MilisecsWork*60*1000;
+    thread.bnStart := bnStart;
     { устанавливаем функцию на событие завершения потока (в частности,
     чтобы отследить, если поток завершился сам из-за ошибки при сборе
     данных) }

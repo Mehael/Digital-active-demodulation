@@ -15,7 +15,7 @@ type TLTR24_ProcessThread = class(TThread)
     MilisecsToWork:  Int64;
     MilisecsProcessed:  Int64;
     phltr24: pTLTR24; //указатель на описатель модуля
-
+    bnStart:  TButton;
     err : Integer; //код ошибки при выполнении потока сбора
     stop : Boolean; //запрос на останов (устанавливается из основного потока)
     Files : array of TextFile;
@@ -172,6 +172,12 @@ implementation
 
       end; //while not stop and (err = LTR_OK) do
 
+      visChAvg[0].Series[0].Clear();
+      visChAvg[1].Series[0].Clear();
+
+      for i := 0 to ch_cnt-1 do
+        CloseFile(Files[i]);
+      bnStart.Caption := 'Старт';
       { По выходу из цикла отсанавливаем сбор данных.
         Чтобы не сбросить код ошибки (если вышли по ошибке)
         результат останова сохраняем в отдельную переменную }
@@ -181,13 +187,8 @@ implementation
 
     end;
 
-      for i := 0 to recv_size-1 do begin
-        visChAvg[0].Series[0].YValue[i] := 0;
-        visChAvg[1].Series[0].YValue[i] := 0;
-      end;
 
-    for i := 0 to ch_cnt-1 do
-      CloseFile(Files[i]);
+
   end;
   {
   
