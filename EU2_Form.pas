@@ -323,7 +323,7 @@ begin
 
     hltr_34.ChannelQnt:=1;        // число каналов
     hltr_34.RingMode:=false;          // режим кольца  true - режим кольца, false - потоковый режим
-    hltr_34.FrequencyDivisor:=60; // делитель частоты дискретизации 0..60 (31.25..500 к√ц)
+    hltr_34.FrequencyDivisor:= 0; // делитель частоты дискретизации 0..60 (31.25..500 к√ц)
     hltr_34.UseClb:=true;            // ‘абричные  оэффициэнты.
     hltr_34.AcknowledgeType:=false;   // тип подтверждени€ true - высылать подтверждение каждого слова, false- высылать состо€ние буффера каждые 100 мс
 
@@ -333,7 +333,6 @@ begin
     err:=LTR34_Config(@hltr_34);  CheckError(err);
 
     for i:=0 to dataSize-1 do
-       //DATA[i]:= 0;
        DATA[i]:=10*sin(i*(pi/250));
 
     err:=LTR34_ProcessData(@hltr_34,@DATA,@WORD_DATA, dataSize, 1);//true- указываем что значени€ в ¬ольтах
@@ -360,6 +359,7 @@ begin
     thread.visChAvg[0]:= chGraph;
     thread.visChAvg[1]:= chGraph2;
 
+    thread.doUseCalibration := CheckBox1.Checked;
     thread.Files := @Files;
 
     MilisecsWork := StrToInt(txWorkTime.Text);  // врем€ сбора данных в минутах, минимум 1 минута!!!

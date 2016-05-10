@@ -197,7 +197,8 @@ object MainForm: TMainForm
     Width = 97
     Height = 17
     Caption = #1050#1072#1083#1080#1073#1088#1086#1074#1082#1072
-    Enabled = False
+    Checked = True
+    State = cbChecked
     TabOrder = 9
   end
   object grpConfig: TGroupBox

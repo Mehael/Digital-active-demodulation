@@ -1,23 +1,25 @@
 unit ProcessThread;
 
 interface
-uses Classes, Math, SyncObjs, Graphics, Chart, Series, StdCtrls,SysUtils, ltr24api, ltr34api, ltrapi;
+uses Classes, Math, SyncObjs, Graphics, Chart, Series, StdCtrls, SysUtils, ltr24api, ltr34api, ltrapi, DACThread;
 // Время, за которое будет отображаться блок (в мс)
 const RECV_BLOCK_TIME          = 500;
 // Дополнительный  постоянный таймаут на прием данных (в мс)
 const RECV_TOUT                = 1000;
-
+const ChannelsPerDevice = 1;
+const CalibrateSecondsCut= 4;
 
 type TProcessThread = class(TThread)
   public
     //элементы управления для отображения результатов обработки
     visChAvg : array [0..LTR24_CHANNEL_NUM-1] of TChart;
+    DACthread : TDACThread; //Объект потока для выполнения сбора данных
     MilisecsToWork:  Int64;
     MilisecsProcessed:  Int64;
     phltr34: pTLTR34;
     phltr24: pTLTR24; //указатель на описатель модуля
     bnStart:  TButton;
-
+    doUseCalibration:boolean;
     err : Integer; //код ошибки при выполнении потока сбора
     stop : Boolean; //запрос на останов (устанавливается из основного потока)
     Files : array of TextFile;
@@ -29,11 +31,21 @@ type TProcessThread = class(TThread)
     // признак, что есть вычесленные данные по каналам в ChAvg
     ChValidData : array [0..LTR24_CHANNEL_NUM-1] of Boolean;
     data     : array of Double;    //обработанные данные
-    ch_cnt   : Integer;  //количество разрешенных каналов
-    recv_size : Integer;
-    
-    procedure updateData;
+    DevicesAmount   : Integer;  //количество разрешенных каналов
+    ChannelPackageSize : Integer;
+    ChannelData: array of array of integer; //массивы одного буфера разложенного по каналам
+    Cycle, AccelerationSign, OptimalPoint, OptimalDACSignal, Period, LastCalibrateSignal : Integer;
+
     procedure sendDAC(signal: Integer);
+    {
+    procedure SaveChannelsData;
+    procedure NextTick();
+    procedure SaveBigSignalData(deviceNumber: Integer; cycle: Integer);
+    procedure doWorkPointShift(deviceNumber: Integer);
+    procedure CalibrateData(deviceNumber: Integer; cycle: Integer);
+    procedure RecalculateOptimumPoint(deviceNumber: Integer);
+    procedure doBigSignal(deviceNumber: Integer; Cycle: Integer);
+    procedure ParseChannelsData;                             //}
   protected
     procedure Execute; override;
   end;
@@ -49,51 +61,34 @@ implementation
 
   destructor TProcessThread.Free();
   begin
+      if DACthread <> nil then
+        FreeAndNil(DACthread);
       Inherited Free();
-  end;
-
-  { обновление индикаторов формы результатами последнего измерения.
-   Метод должен выполняться только через Synchronize, который нужен
-   для доступа к элементам VCL не из основного потока }
-  procedure TProcessThread.updateData;
-  var
-    ch,i: Integer;
-  begin
-    if visChAvg[0].Series[0].Count = 0 then begin
-      for i := 0 to recv_size-1 do begin
-        visChAvg[0].Series[0].Add(0);
-        visChAvg[1].Series[0].Add(0);
-      end;
-    end;
-      sendDAC(0);
-      for ch:=0 to LTR24_CHANNEL_NUM-1 do
-      begin
-        if ChValidData[ch] then
-        begin
-          for i := 0 to recv_size-1 do begin
-            writeln(Files[ch], data[ch_cnt*i + ch]);
-            visChAvg[ch].Series[0].YValue[i] := data[ch_cnt*i + ch];
-          end;
-        end;
-      end;
   end;
 
   procedure TProcessThread.sendDAC(signal: Integer);
   var
     i, dataSize, timeForSending : Integer;
-    DATA:array[0..99]of DOUBLE;
-    WORD_DATA:array[0..99]of integer;
+    DATA:array[0..1]of DOUBLE;
+    WORD_DATA:array[0..1]of integer;
   begin
-    dataSize:= 100;
+    {dataSize:= 50000;
     timeForSending := 2000;
 
     for i:=0 to dataSize-1 do
-       //DATA[i]:= signal;
-       DATA[i]:=10*sin(i*(pi/250));
+       //DATA[i]:= 5;
+       DATA[i]:=10*sin(i*(pi/600));
+    Cycle:=Cycle+1;
 
     err:=LTR34_ProcessData(@phltr34,@DATA,@WORD_DATA, dataSize, 1);//true- указываем что значения в Вольтах
-    err:=LTR34_Send(@phltr34,@WORD_DATA, dataSize, timeForSending);
+    err:=LTR34_Send(phltr34,@WORD_DATA, dataSize, timeForSending);
 
+    if err=dataSize then begin
+      err:=0;
+    end else begin
+      MessageDlg('Не успел отправить данные на ЦАП', mtError, [mbOK], 0);
+    end;
+         }
     //LastCalibrateSignal[deviceNumber]:= signal;
   end;
 
@@ -102,7 +97,7 @@ implementation
   type WordArray = array[0..0] of LongWord;
   type PWordArray = ^WordArray;
   var
-    stoperr,i : Integer;
+    stoperr,i,test : Integer;
     rcv_buf  : array of LongWord;  //сырые принятые слова от модуля
 
     ch       : Integer;
@@ -119,22 +114,21 @@ implementation
     //обнуляем переменные
     for ch:=0 to LTR24_CHANNEL_NUM-1 do
       ChValidData[ch]:=False;
-    Synchronize(updateData);
-
+    Cycle:=0;
     //Проверяем, сколько и какие каналы разрешены
-    ch_cnt := 0;
+    DevicesAmount := 0;
     for ch:=0 to LTR24_CHANNEL_NUM-1 do
     begin
       if phltr24^.ChannelMode[ch].Enable then
       begin
-        ch_nums[ch_cnt] := ch;
-        ch_cnt := ch_cnt+1;
+        ch_nums[DevicesAmount] := ch;
+        DevicesAmount := DevicesAmount+1;
       end;
     end;
 
     { Определяем, сколко преобразований будет выполненно за заданное время
       => будем принимать данные блоками такого размера }
-    recv_data_cnt:=  Round(phltr24^.ADCFreq*RECV_BLOCK_TIME/1000) * ch_cnt;
+    recv_data_cnt:=  Round(phltr24^.ADCFreq*RECV_BLOCK_TIME/1000) * DevicesAmount;
     { В 24-битном формате каждому отсчету соответствует два слова от модуля,
                    а в 20-битном - одно }
     if phltr24^.DataFmt = LTR24_FORMAT_24 then
@@ -148,26 +142,32 @@ implementation
     err:= LTR24_Start(phltr24^);
     err:=LTR34_DACStart(phltr34);
 
+    if doUseCalibration then begin
+      DACthread := TDACThread.Create(True);
+      DACthread.phltr34 := phltr34;
+      DACthread.Resume;
+    end;
+
     if err = LTR_OK then
     begin
       while not stop and (err = LTR_OK) do
       begin
         { Принимаем данные (здесь используется вариант без синхрометок, но есть
           и перегруженная функция с ними) }
-        recv_size := LTR24_Recv(phltr24^, rcv_buf, recv_wrd_cnt, RECV_TOUT + RECV_BLOCK_TIME);
+        ChannelPackageSize := LTR24_Recv(phltr24^, rcv_buf, recv_wrd_cnt, RECV_TOUT + RECV_BLOCK_TIME);
         MilisecsProcessed := MilisecsProcessed +  RECV_BLOCK_TIME;
 
         if MilisecsProcessed > MilisecsToWork then
           stop := true;
 
         //Значение меньше нуля соответствуют коду ошибки
-        if recv_size < 0 then
-          err:=recv_size
-        else  if recv_size < recv_wrd_cnt then
+        if ChannelPackageSize < 0 then
+          err:=ChannelPackageSize
+        else  if ChannelPackageSize < recv_wrd_cnt then
           err:=LTR_ERROR_RECV_INSUFFICIENT_DATA
         else
         begin
-          err:=LTR24_ProcessData(phltr24^, rcv_buf, data, recv_size,
+          err:=LTR24_ProcessData(phltr24^, rcv_buf, data, ChannelPackageSize,
                                   LTR24_PROC_FLAG_CALIBR or
                                   LTR24_PROC_FLAG_VOLT or
                                   LTR24_PROC_FLAG_AFC_COR);
@@ -180,14 +180,14 @@ implementation
             end;
 
             // получаем кол-во отсчетов на канал
-            recv_size := Trunc(recv_size/ch_cnt) ;
-            for ch:=0 to ch_cnt-1 do
+            ChannelPackageSize := Trunc(ChannelPackageSize/DevicesAmount) ;
+            for ch:=0 to DevicesAmount-1 do
             begin
               ChValidData[ch] := True;
             end;
 
-            // обновляем значения элементов управления
-            Synchronize(updateData);
+            //SendDAC(0);
+            //NextTick();
           end;
         end;
 
@@ -196,7 +196,7 @@ implementation
       visChAvg[0].Series[0].Clear();
       visChAvg[1].Series[0].Clear();
 
-      for i := 0 to ch_cnt-1 do
+      for i := 0 to DevicesAmount-1 do
         CloseFile(Files[i]);
 
       { По выходу из цикла отсанавливаем сбор данных.
@@ -207,54 +207,147 @@ implementation
       if err = LTR_OK then
         err:= stoperr;
 
-      err:=LTR34_DACStop(phltr34);
     end;
+    if doUseCalibration then
+       DACthread.stop := true;
 
     bnStart.Caption := 'Старт';
   end;
-  {
+   {
+  procedure TProcessThread.doWorkPointShift(deviceNumber: Integer);
+  var
+    Shift, newCalibrateSignal: Integer;
+  begin
+    Shift := OptimalPoint[deviceNumber] - ChannelData[deviceNumber*ChannelsPerDevice+LOW_FREQ_CHANNEL, ChannelPackageSize];
+    Shift := Round(Shift * AccelerationSign[deviceNumber] * 0.1);
+    newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
 
+    if newCalibrateSignal > 1400 then
+      newCalibrateSignal := newCalibrateSignal - (2 * Period[deviceNumber]);
+    if newCalibrateSignal < 1 then
+      newCalibrateSignal := newCalibrateSignal + (2 * Period[deviceNumber]);
 
-  }
-  {
-procedure TMainForm.SaveChannelsData;
-var
-  channel: Integer;
-  i: Integer;
-begin
-  for i := 0 to ChannelPackageSize do begin
-    chGraph.Series[0].YValue[i] := chGraph.Series[0].YValue[ChannelPackageSize+i];
-    chGraph2.Series[0].YValue[i] := chGraph2.Series[0].YValue[ChannelPackageSize+i];
+    SendDAC(deviceNumber, newCalibrateSignal);
   end;
 
-  for channel := 1 to ChannelsAmount do
-    for i := 1 to ChannelPackageSize do begin
-      writeln(Files[channel], ChannelData[channel, i]);
-      if channel = SelectedChannel1 then
-          chGraph.Series[0].YValue[ChannelPackageSize+i-1] := ChannelData[channel, i];
-      if channel = SelectedChannel2 then
-          chGraph2.Series[0].YValue[ChannelPackageSize+i-1] := ChannelData[channel, i];
+  procedure TProcessThread.SaveBigSignalData(deviceNumber: Integer; cycle: Integer);
+  var
+    indexShift: Integer;
+    i: Integer;
+  begin
+  indexShift := cycle * ChannelPackageSize;
+  for i := 1 to ChannelPackageSize do
+    BigSignal[deviceNumber, indexShift + i] :=
+      ChannelData[deviceNumber*ChannelsPerDevice+NATIVE_CHANNEL, i];
+  end;
 
+  Procedure TProcessThread.RecalculateOptimumPoint(deviceNumber: Integer);
+  var i: integer;
+    AmplitudeWidth,indexMin,indexMax:integer;
+    valueMax,valueMin:Short;
+  begin
+    valueMin := 14000; valueMax := -14000;
+    indexMin := 0; indexMax := 0;
+
+    for i := 20 to Length(BigSignal[deviceNumber])-1 do begin
+      if valueMin >= BigSignal[deviceNumber,i] then begin
+        valueMin := BigSignal[deviceNumber,i];
+        indexMin := i;
+      end;
+      if valueMax <= BigSignal[deviceNumber,i] then begin
+        valueMax := BigSignal[deviceNumber,i];
+        indexMax := i;
+      end;
     end;
+    OptimalPoint[deviceNumber] := Ceil((valueMax+valueMin)/2);     //оптим положение раб точки
+    AmplitudeWidth := Round((indexMax+indexMin)/2);
+    if indexMax > indexMin then
+      AccelerationSign[deviceNumber]:= 1
+    else
+      AccelerationSign[deviceNumber]:= -1;
 
-    for i := 1 to ChannelPackageSize do
-        writeln(Files[DEBUG_DATA], LastCalibrateSignal[1]);
-end;
-      }
-      {
-procedure TMainForm.RecalculateConfigValues;
-begin
-  doUseCalibration:= CheckBox1.Checked;
-  SelectedChannel1:=StrToInt(Ch1.Text);
-  SelectedChannel2:=StrToInt(Ch2.Text);
-  MinutesWork := StrToInt(txWorkTime.Text);  // время сбора данных в минутах, минимум 1 минута!!!
-  if cbTimeMetric.Text = 'часов' then
-    MinutesWork := MinutesWork*60;
-  if cbTimeMetric.Text = 'дней' then
-    MinutesWork := MinutesWork*60*24;
-  //CalibrationDelay := BlockAccseleration* 60 * StrToInt(txCalibrationDelay.Text);  //период калибровки в блоках (1 блок = 1 с)
-  CyclesWork := Round((MinutesWork * 60) / (BufferSize / (1000 * (Frequency))));
-end;   }
+    if (DeviceNumber=1) then
+        AccelerationSign[deviceNumber]:= AccelerationSign[deviceNumber]*(-1);
 
+    Period[0]:= 383; //383 Round((BigSignal[deviceNumber,indexMax]-BigSignal[deviceNumber,indexMin])*AccelerationSign[deviceNumber]/2.45);
+    Period[1]:= 433; //433
+
+    OptimalDACSignal[deviceNumber] := Round(BigSignalStep*(indexMax+indexMin)/ChannelPackageSize/2);
+    SendDAC(deviceNumber, OptimalDACSignal[deviceNumber]);
+
+  end;
+
+  procedure TProcessThread.CalibrateData(deviceNumber: Integer; cycle: Integer);
+  begin
+    if cycle < BlockAccseleration*CalibrateSecondsCut then begin
+      doBigSignal(deviceNumber, Cycle);
+      SaveBigSignalData(deviceNumber, cycle);
+    end else
+    if cycle = BlockAccseleration*CalibrateSecondsCut then begin
+       RecalculateOptimumPoint(deviceNumber);
+    end else
+    if cycle > BlockAccseleration*CalibrateSecondsCut+3 then
+      doWorkPointShift(deviceNumber);
+
+  end;
+
+  // обновление индикаторов формы результатами последнего измерения.
+  // Метод должен выполняться только через Synchronize, который нужен
+  // для доступа к элементам VCL не из основного потока
+  procedure TProcessThread.SaveChannelsData;
+  var
+    ch,i: Integer;
+  begin
+    if visChAvg[0].Series[0].Count = 0 then begin
+      for i := 0 to ChannelPackageSize-1 do begin
+        visChAvg[0].Series[0].Add(0);
+        visChAvg[1].Series[0].Add(0);
+      end;
+    end;
+      for ch:=0 to DevicesAmount-1 do
+      begin
+        for i := 0 to ChannelPackageSize-1 do begin
+          writeln(Files[ch], ChannelData[ch, i]);
+          visChAvg[ch].Series[0].YValue[i] := ChannelData[ch, i];
+        end;
+      end;
+  end;
+
+
+  procedure TProcessThread.ParseChannelsData;
+  var
+    ch: Integer;
+    i: Integer;
+    IndexShift: Integer;
+  begin
+    for ch:=0 to LTR24_CHANNEL_NUM-1 do begin
+      if ChValidData[ch] then begin
+        for i := 0 to ChannelPackageSize-1 do begin
+          IndexShift := DevicesAmount*i + ch;
+          ChannelData[ch, i] := data[IndexShift];
+        end;
+      end;
+    end;
+  end;
+
+  procedure TProcessThread.doBigSignal(deviceNumber: Integer; Cycle: Integer);
+  var
+    i,j: Integer;
+  begin
+    //for j := 0  to DevicesAmount - 1 do begin
+      SendDAC(deviceNumber, Cycle * BigSignalStep);
+    //end;
+  end;
+
+  procedure TProcessThread.NextTick();
+  var i:Integer;
+  begin
+    ParseChannelsData;
+    if doUseCalibration then  begin
+      for i := 0  to DevicesAmount - 1 do
+        CalibrateData(i, MilisecsProcessed);
+    end;
+    Synchronize(SaveChannelsData);
+  end;  //}
 end.
 

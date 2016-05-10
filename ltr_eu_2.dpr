@@ -4,7 +4,8 @@ uses
   SysUtils,
   Variants,
   Forms,
-  EU2_Form in 'EU2_Form.pas' {MainForm};
+  EU2_Form in 'EU2_Form.pas' {MainForm},
+  DACThread in 'DACThread.pas';
 
 {$R *.res}
 
