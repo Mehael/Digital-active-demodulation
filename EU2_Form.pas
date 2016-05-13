@@ -3,18 +3,13 @@ interface uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, FileCtrl, StdCtrls, Buttons, ExtCtrls,
   Math, TeeProcs, TeEngine, Chart, Series, ComCtrls,
-  ltrapi, ltrapitypes, ltrapidefine, ltr24api, ltr34api, ProcessThread;
+  ltrapi, ltrapitypes, ltrapidefine, ltr24api, ltr34api, ProcessThread, Config;
 
 { Информация, необходимая для установления соединения с модулем }
 type TLTR_MODULE_LOCATION = record
   csn : string; //серийный номер крейта
   slot : Word; //номер слота
 end;
-
-const
-  DevicesAmount     = 2;
-  ChannelsPerDevice = 1;
-  ChannelsAmount    = DevicesAmount*ChannelsPerDevice;
 
 type
   TMainForm = class(TForm)
@@ -286,7 +281,7 @@ end;
 
 procedure TMainForm.StartProcess();
 var
-  i, err, res, dataSize, timeForSending : Integer;
+  i, err, res, t, dataSize, timeForSending : Integer;
   MilisecsWork:  Int64;
   DATA:array[0..999]of DOUBLE;
   WORD_DATA:array[0..999]of integer;
@@ -321,14 +316,21 @@ begin
 
     err:=LTR34_Reset(@hltr_34);  CheckError(err);
 
-    hltr_34.ChannelQnt:=1;        // число каналов
+    hltr_34.ChannelQnt:= ChannelsAmount;        // число каналов
     hltr_34.RingMode:=false;          // режим кольца  true - режим кольца, false - потоковый режим
-    hltr_34.FrequencyDivisor:= 0; // делитель частоты дискретизации 0..60 (31.25..500 кГц)
+    t:= Round(64-1000000/(StrToFloat(cbbAdcFreq.Text)*hltr_34.ChannelQnt));
+
+    if t<0 then
+       hltr_34.FrequencyDivisor:=0;
+    if t>60 then
+        hltr_34.FrequencyDivisor:=60;
+    if (t>=0) and (t<=60) then
+        hltr_34.FrequencyDivisor:=t;
     hltr_34.UseClb:=true;            // Фабричные Коэффициэнты.
     hltr_34.AcknowledgeType:=false;   // тип подтверждения true - высылать подтверждение каждого слова, false- высылать состояние буффера каждые 100 мс
 
-    hltr_34.LChTbl[0]:=LTR34_CreateLChannel(1,0);
-    //hltr_34.LChTbl[1]:=LTR34_CreateLChannel(2,0); // (номер канала, 0-без усиления 1- 10х)
+    for i := 0 to ChannelsAmount - 1 do
+      hltr_34.LChTbl[i]:=LTR34_CreateLChannel(i+1,0); // (номер канала, 0-без усиления 1- 10х)
 
     err:=LTR34_Config(@hltr_34);  CheckError(err);
 

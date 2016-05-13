@@ -1,13 +1,8 @@
 unit ProcessThread;
 
 interface
-uses Classes, Math, SyncObjs, Graphics, Chart, Series, StdCtrls, SysUtils, ltr24api, ltr34api, ltrapi, DACThread;
-// Время, за которое будет отображаться блок (в мс)
-const RECV_BLOCK_TIME          = 500;
-// Дополнительный  постоянный таймаут на прием данных (в мс)
-const RECV_TOUT                = 1000;
-const ChannelsPerDevice = 1;
-const CalibrateSecondsCut= 4;
+uses Classes, Math, SyncObjs, Graphics, Chart, Series,
+StdCtrls, SysUtils, ltr24api, ltr34api, ltrapi, DACThread, Config;
 
 type TProcessThread = class(TThread)
   public
@@ -67,28 +62,9 @@ implementation
   end;
 
   procedure TProcessThread.sendDAC(signal: Integer);
-  var
-    i, dataSize, timeForSending : Integer;
-    DATA:array[0..1]of DOUBLE;
-    WORD_DATA:array[0..1]of integer;
   begin
-    {dataSize:= 50000;
-    timeForSending := 2000;
+    DACthread.send(0,signal);
 
-    for i:=0 to dataSize-1 do
-       //DATA[i]:= 5;
-       DATA[i]:=10*sin(i*(pi/600));
-    Cycle:=Cycle+1;
-
-    err:=LTR34_ProcessData(@phltr34,@DATA,@WORD_DATA, dataSize, 1);//true- указываем что значения в Вольтах
-    err:=LTR34_Send(phltr34,@WORD_DATA, dataSize, timeForSending);
-
-    if err=dataSize then begin
-      err:=0;
-    end else begin
-      MessageDlg('Не успел отправить данные на ЦАП', mtError, [mbOK], 0);
-    end;
-         }
     //LastCalibrateSignal[deviceNumber]:= signal;
   end;
 
@@ -128,7 +104,7 @@ implementation
 
     { Определяем, сколко преобразований будет выполненно за заданное время
       => будем принимать данные блоками такого размера }
-    recv_data_cnt:=  Round(phltr24^.ADCFreq*RECV_BLOCK_TIME/1000) * DevicesAmount;
+    recv_data_cnt:=  Round(phltr24^.ADCFreq*ADC_reading_time/1000) * DevicesAmount;
     { В 24-битном формате каждому отсчету соответствует два слова от модуля,
                    а в 20-битном - одно }
     if phltr24^.DataFmt = LTR24_FORMAT_24 then
@@ -143,8 +119,7 @@ implementation
     err:=LTR34_DACStart(phltr34);
 
     if doUseCalibration then begin
-      DACthread := TDACThread.Create(True);
-      DACthread.phltr34 := phltr34;
+      DACthread := TDACThread.Create(phltr34, True);
       DACthread.Resume;
     end;
 
@@ -154,8 +129,8 @@ implementation
       begin
         { Принимаем данные (здесь используется вариант без синхрометок, но есть
           и перегруженная функция с ними) }
-        ChannelPackageSize := LTR24_Recv(phltr24^, rcv_buf, recv_wrd_cnt, RECV_TOUT + RECV_BLOCK_TIME);
-        MilisecsProcessed := MilisecsProcessed +  RECV_BLOCK_TIME;
+        ChannelPackageSize := LTR24_Recv(phltr24^, rcv_buf, recv_wrd_cnt, ADC_possible_delay + ADC_reading_time);
+        MilisecsProcessed := MilisecsProcessed +  ADC_reading_time;
 
         if MilisecsProcessed > MilisecsToWork then
           stop := true;
@@ -209,7 +184,7 @@ implementation
 
     end;
     if doUseCalibration then
-       DACthread.stop := true;
+       DACthread.stopThread();
 
     bnStart.Caption := 'Старт';
   end;

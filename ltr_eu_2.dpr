@@ -5,7 +5,8 @@ uses
   Variants,
   Forms,
   EU2_Form in 'EU2_Form.pas' {MainForm},
-  DACThread in 'DACThread.pas';
+  DACThread in 'DACThread.pas',
+  Config in 'Config.pas';
 
 {$R *.res}
 

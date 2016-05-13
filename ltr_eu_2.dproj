@@ -33,6 +33,7 @@
     <DelphiCompile Include="ltr_eu_2.dpr">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
+    <DCCReference Include="Config.pas" />
     <DCCReference Include="DACThread.pas" />
     <DCCReference Include="EU2_Form.pas">
       <Form>MainForm</Form>

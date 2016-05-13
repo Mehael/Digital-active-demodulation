@@ -1,44 +1,79 @@
 unit DACThread;
 
 interface
-uses Classes, ltr34api, Dialogs, ltrapi;
+uses Classes, SysUtils, ltr34api, Dialogs, ltrapi, Config;
 
 type TDACThread = class(TThread)
   public
+    destructor Free();
+    procedure CheckError(err: Integer);
+    constructor Create(ltr34: pTLTR34; SuspendCreate : Boolean);
+    procedure send(channel:integer; value:DOUBLE);
+    procedure stopThread();
+    procedure Execute; override;
+  private
     phltr34: pTLTR34;
     stop:boolean;
 
-    destructor Free();
-    constructor Create(SuspendCreate : Boolean);
-    procedure sendDAC(signal: Integer);
-    procedure Execute; override;
+    DATA:array[0..DAC_packSize-1] of DOUBLE;
+    WORD_DATA:array[0..DAC_packSize-1] of integer;
+    DAC_level:array of DOUBLE;
+
+    procedure updateDAC();
 end;
 implementation
 
-  procedure TDACThread.sendDAC(signal: Integer);
+  procedure TDACThread.updateDAC();
   var
-    i, dataSize, timeForSending, err : Integer;
-    DATA:array[0..100-1]of DOUBLE;
-    WORD_DATA:array[0..100-1]of integer;
+    i, ch, ulimit: Integer;
+    summator, step: single;
   begin
-    dataSize := 100;
-    timeForSending := 2000;
 
-    for i:=0 to dataSize-1 do
-       //DATA[i]:= 5;
-       DATA[i]:=10*sin(i*(pi/600));
-    
-    err:=LTR34_ProcessData(@phltr34,@DATA,@WORD_DATA, dataSize, 1);//true- указываем что значения в Вольтах
-    err:=LTR34_Send(phltr34,@WORD_DATA, dataSize, timeForSending);
+    for ch:=0 to phltr34.ChannelQnt-1 do begin
+      ulimit:=ch*DAC_dataByChannel+DAC_dataByChannel-1;
+      //--new spline
+      if DAC_level[ch]<>DATA[ulimit] then begin
+        step:=(DAC_level[ch]-DATA[ulimit])/(DAC_dataByChannel-1);
+        summator:=0;
+        for i:=ch*DAC_dataByChannel to ulimit-1 do begin
+          summator:=summator+step;
+          DATA[i]:= summator+DATA[ulimit];
+        end;
+        DATA[ulimit]:= DAC_level[ch];
+      //--spline to line
+      end else if DAC_level[ch]<>DATA[ch*DAC_dataByChannel] then
+        for i:=ch*DAC_dataByChannel to ulimit do
+          DATA[i]:= DAC_level[ch];
+          //DATA[i]:=10*sin(i*(pi/600));
+    end;
 
-    if err>dataSize then
-      err:=0;
+    CheckError(LTR34_ProcessData(phltr34,@DATA,@WORD_DATA, DAC_packSize, 1)); //1- указываем что значения в Вольтах
+    CheckError(LTR34_Send(phltr34,@WORD_DATA, DAC_packSize, DAC_possible_delay));
   end;
 
-  constructor TDACThread.Create(SuspendCreate : Boolean);
+  procedure TDACThread.stopThread();
+  begin
+      stop:=true;
+  end;
+
+  procedure TDACThread.CheckError(err: Integer);
+  begin
+  if err < LTR_OK then
+    MessageDlg('LTR34: ' + LTR34_GetErrorString(err), mtError, [mbOK], 0);
+  end;
+
+  procedure TDACThread.send(channel:integer; value:DOUBLE);
+  begin
+      DAC_level[channel]:=value;
+  end;
+
+  constructor TDACThread.Create(ltr34: pTLTR34; SuspendCreate : Boolean);
+  var i:integer;
   begin
      Inherited Create(SuspendCreate);
      stop:=False;
+     phltr34:= ltr34;
+     SetLength(DAC_level, phltr34.ChannelQnt);
   end;
 
   destructor TDACThread.Free();
@@ -47,12 +82,9 @@ implementation
   end;
 
   procedure TDACThread.Execute;
-  var
-    stoperr,i,test : Integer;
   begin
       while not stop do begin
-        sendDAC(4);
-
+        updateDAC();
       end;
       LTR34_DACStop(phltr34);
   end;
