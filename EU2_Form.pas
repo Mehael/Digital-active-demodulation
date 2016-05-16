@@ -46,7 +46,7 @@ type
       hltr_34 : TLTR34;
       threadRunning : Boolean; // Признак, запущен ли поток сбора данных
       thread : TProcessThread; //Объект потока для выполнения сбора данных
-      Files : array[0..ChannelsAmount] of TextFile;
+      Files : TFilePack;
 
       procedure refreshDeviceList();
       procedure closeDevice();
@@ -55,7 +55,7 @@ type
       procedure StartProcess();
       procedure CreateFiles();
       procedure open34Ltr;
-    procedure CheckError(err: Integer);
+      procedure CheckError(err: Integer);
     published
       procedure Button1Click(Sender: TObject);
       procedure bnStartClick(Sender: TObject);
@@ -363,6 +363,7 @@ begin
 
     thread.doUseCalibration := CheckBox1.Checked;
     thread.Files := @Files;
+    writeln(Files[0], '0');
 
     MilisecsWork := StrToInt(txWorkTime.Text);  // время сбора данных в минутах, минимум 1 минута!!!
     if cbTimeMetric.Text = 'часов' then

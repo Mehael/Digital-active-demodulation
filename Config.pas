@@ -16,6 +16,7 @@ const
   DAC_dataByChannel     = 100;
   DAC_possible_delay    = 2000;
   DAC_packSize          = DevicesAmount*DAC_dataByChannel;
-
+type
+  TFilePack = array[0..ChannelsAmount] of TextFile;
 implementation
 end.

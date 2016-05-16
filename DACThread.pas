@@ -82,9 +82,15 @@ implementation
   end;
 
   procedure TDACThread.Execute;
+  var i:integer;
   begin
+  i:=0;
       while not stop do begin
+        i:=i+1;
         updateDAC();
+        send(0, i);
+        if i>10 then
+          i:=0;
       end;
       LTR34_DACStop(phltr34);
   end;

@@ -17,7 +17,7 @@ type TProcessThread = class(TThread)
     doUseCalibration:boolean;
     err : Integer; //код ошибки при выполнении потока сбора
     stop : Boolean; //запрос на останов (устанавливается из основного потока)
-    Files : array of TextFile;
+    Files : ^TFilePack;
     constructor Create(SuspendCreate : Boolean);
     destructor Free();
 
@@ -28,24 +28,24 @@ type TProcessThread = class(TThread)
     data     : array of Double;    //обработанные данные
     DevicesAmount   : Integer;  //количество разрешенных каналов
     ChannelPackageSize : Integer;
-    ChannelData: array of array of integer; //массивы одного буфера разложенного по каналам
+    ChannelData: array[0..ChannelsAmount-1] of array of Double; //массивы одного буфера разложенного по каналам
     Cycle, AccelerationSign, OptimalPoint, OptimalDACSignal, Period, LastCalibrateSignal : Integer;
 
-    procedure sendDAC(signal: Integer);
-    {
+    procedure sendDAC(channel: Integer; signal: Integer);
     procedure SaveChannelsData;
     procedure NextTick();
+    procedure ParseChannelsData;
+    {
     procedure SaveBigSignalData(deviceNumber: Integer; cycle: Integer);
     procedure doWorkPointShift(deviceNumber: Integer);
     procedure CalibrateData(deviceNumber: Integer; cycle: Integer);
     procedure RecalculateOptimumPoint(deviceNumber: Integer);
     procedure doBigSignal(deviceNumber: Integer; Cycle: Integer);
-    procedure ParseChannelsData;                             //}
+                             //}
   protected
     procedure Execute; override;
   end;
 implementation
-
 
   constructor TProcessThread.Create(SuspendCreate : Boolean);
   begin
@@ -61,11 +61,10 @@ implementation
       Inherited Free();
   end;
 
-  procedure TProcessThread.sendDAC(signal: Integer);
+  procedure TProcessThread.sendDAC(channel: Integer; signal: Integer);
   begin
-    DACthread.send(0,signal);
-
-    //LastCalibrateSignal[deviceNumber]:= signal;
+    DACthread.send(channel, signal);
+    //LastCalibrateSignal[channel]:= signal;
   end;
 
 
@@ -115,6 +114,9 @@ implementation
     { выделяем массивы для приема данных }
     SetLength(rcv_buf, recv_wrd_cnt);
     SetLength(data, recv_data_cnt);
+    for I := 0 to ChannelsAmount - 1 do
+       SetLength(ChannelData[i], Trunc(recv_data_cnt/DevicesAmount));
+
     err:= LTR24_Start(phltr24^);
     err:=LTR34_DACStart(phltr34);
 
@@ -161,8 +163,7 @@ implementation
               ChValidData[ch] := True;
             end;
 
-            //SendDAC(0);
-            //NextTick();
+            NextTick();
           end;
         end;
 
@@ -266,12 +267,22 @@ implementation
 
   end;
 
-  // обновление индикаторов формы результатами последнего измерения.
+  procedure TProcessThread.doBigSignal(deviceNumber: Integer; Cycle: Integer);
+  var
+    i,j: Integer;
+  begin
+    //for j := 0  to DevicesAmount - 1 do begin
+      SendDAC(deviceNumber, Cycle * BigSignalStep);
+    //end;
+  end;  //}
+
+    // обновление индикаторов формы результатами последнего измерения.
   // Метод должен выполняться только через Synchronize, который нужен
   // для доступа к элементам VCL не из основного потока
   procedure TProcessThread.SaveChannelsData;
   var
     ch,i: Integer;
+    filePack: TFilePack;
   begin
     if visChAvg[0].Series[0].Count = 0 then begin
       for i := 0 to ChannelPackageSize-1 do begin
@@ -279,15 +290,15 @@ implementation
         visChAvg[1].Series[0].Add(0);
       end;
     end;
+      filePack:=Files^;
       for ch:=0 to DevicesAmount-1 do
       begin
         for i := 0 to ChannelPackageSize-1 do begin
-          writeln(Files[ch], ChannelData[ch, i]);
+          writeln(filePack[ch], ChannelData[ch, i]);
           visChAvg[ch].Series[0].YValue[i] := ChannelData[ch, i];
         end;
       end;
   end;
-
 
   procedure TProcessThread.ParseChannelsData;
   var
@@ -305,24 +316,16 @@ implementation
     end;
   end;
 
-  procedure TProcessThread.doBigSignal(deviceNumber: Integer; Cycle: Integer);
-  var
-    i,j: Integer;
-  begin
-    //for j := 0  to DevicesAmount - 1 do begin
-      SendDAC(deviceNumber, Cycle * BigSignalStep);
-    //end;
-  end;
-
   procedure TProcessThread.NextTick();
   var i:Integer;
   begin
-    ParseChannelsData;
+    {ParseChannelsData;
     if doUseCalibration then  begin
       for i := 0  to DevicesAmount - 1 do
         CalibrateData(i, MilisecsProcessed);
-    end;
+    end;}
     Synchronize(SaveChannelsData);
-  end;  //}
+  end;
+
 end.
 
