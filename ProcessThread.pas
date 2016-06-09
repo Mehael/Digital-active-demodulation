@@ -25,24 +25,25 @@ type TProcessThread = class(TThread)
     { Private declarations }
     // признак, что есть вычесленные данные по каналам в ChAvg
     ChValidData : array [0..LTR24_CHANNEL_NUM-1] of Boolean;
+    AccelerationSign, OptimalPoint: array [0..LTR24_CHANNEL_NUM-1] of Integer;
+    OptimalDACSignal , LastCalibrateSignal: array [0..LTR24_CHANNEL_NUM-1] of DOUBLE;
     data     : array of Double;    //обработанные данные
+    calibration_signal_step: double;
     DevicesAmount   : Integer;  //количество разрешенных каналов
     ChannelPackageSize : Integer;
-    ChannelData: array[0..ChannelsAmount-1] of array of Double; //массивы одного буфера разложенного по каналам
-    Cycle, AccelerationSign, OptimalPoint, OptimalDACSignal, Period, LastCalibrateSignal : Integer;
+    History: array[0..ChannelsAmount-1] of array of Double;
+    HistoryIndex, HistoryPage : Integer;
 
-    procedure sendDAC(channel: Integer; signal: Integer);
     procedure SaveChannelsData;
     procedure NextTick();
     procedure ParseChannelsData;
-    {
-    procedure SaveBigSignalData(deviceNumber: Integer; cycle: Integer);
+    procedure sendDAC(channel: Integer; signal: Double);
+    procedure CalibrateData(deviceNumber: Integer);
     procedure doWorkPointShift(deviceNumber: Integer);
-    procedure CalibrateData(deviceNumber: Integer; cycle: Integer);
+    function GetLowFreq(deviceNumber: Integer) : Integer;
     procedure RecalculateOptimumPoint(deviceNumber: Integer);
-    procedure doBigSignal(deviceNumber: Integer; Cycle: Integer);
-                             //}
-  protected
+    procedure doBigSignal(deviceNumber: Integer);
+   protected
     procedure Execute; override;
   end;
 implementation
@@ -61,18 +62,16 @@ implementation
       Inherited Free();
   end;
 
-  procedure TProcessThread.sendDAC(channel: Integer; signal: Integer);
+  procedure TProcessThread.sendDAC(channel: Integer; signal: Double);
   begin
     DACthread.send(channel, signal);
-    //LastCalibrateSignal[channel]:= signal;
+    LastCalibrateSignal[channel]:= signal;
   end;
 
 
   procedure TProcessThread.Execute;
-  type WordArray = array[0..0] of LongWord;
-  type PWordArray = ^WordArray;
   var
-    stoperr,i,test : Integer;
+    stoperr,i,historyPagesAmount : Integer;
     rcv_buf  : array of LongWord;  //сырые принятые слова от модуля
 
     ch       : Integer;
@@ -89,7 +88,7 @@ implementation
     //обнуляем переменные
     for ch:=0 to LTR24_CHANNEL_NUM-1 do
       ChValidData[ch]:=False;
-    Cycle:=0;
+
     //Проверяем, сколько и какие каналы разрешены
     DevicesAmount := 0;
     for ch:=0 to LTR24_CHANNEL_NUM-1 do
@@ -114,8 +113,12 @@ implementation
     { выделяем массивы для приема данных }
     SetLength(rcv_buf, recv_wrd_cnt);
     SetLength(data, recv_data_cnt);
-    for I := 0 to ChannelsAmount - 1 do
-       SetLength(ChannelData[i], Trunc(recv_data_cnt/DevicesAmount));
+
+    historyPagesAmount :=   Trunc((recv_data_cnt*InnerBufferPagesAmount)/DevicesAmount);
+    calibration_signal_step := DAC_max_signal/historyPagesAmount;
+    for i := 0 to ChannelsAmount - 1 do begin
+       SetLength(History[i], historyPagesAmount);
+    end;
 
     err:= LTR24_Start(phltr24^);
     err:=LTR34_DACStart(phltr34);
@@ -189,115 +192,116 @@ implementation
 
     bnStart.Caption := 'Старт';
   end;
-   {
+
+
+  function TProcessThread.GetLowFreq(deviceNumber: Integer) : Integer;
+  var i : Integer;
+    sum: Double;
+  begin
+    sum:=0;
+    for i := 0 to ChannelPackageSize - 1 do
+      sum:=sum+History[deviceNumber, HistoryIndex+i];
+
+    GetLowFreq:= Floor(sum/ChannelPackageSize);
+  end;
+
   procedure TProcessThread.doWorkPointShift(deviceNumber: Integer);
   var
-    Shift, newCalibrateSignal: Integer;
+    Shift, newCalibrateSignal: Double;
   begin
-    Shift := OptimalPoint[deviceNumber] - ChannelData[deviceNumber*ChannelsPerDevice+LOW_FREQ_CHANNEL, ChannelPackageSize];
-    Shift := Round(Shift * AccelerationSign[deviceNumber] * 0.1);
+    Shift := OptimalPoint[deviceNumber] - GetLowFreq(deviceNumber);
+    Shift := Shift * AccelerationSign[deviceNumber] * 0.1;
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
 
-    if newCalibrateSignal > 1400 then
-      newCalibrateSignal := newCalibrateSignal - (2 * Period[deviceNumber]);
-    if newCalibrateSignal < 1 then
-      newCalibrateSignal := newCalibrateSignal + (2 * Period[deviceNumber]);
+    if newCalibrateSignal > DAC_max_signal then
+      newCalibrateSignal := newCalibrateSignal - (2 * DevicePeriod[deviceNumber]);
+    if newCalibrateSignal < DAC_min_signal then
+      newCalibrateSignal := newCalibrateSignal + (2 * DevicePeriod[deviceNumber]);
 
     SendDAC(deviceNumber, newCalibrateSignal);
   end;
 
-  procedure TProcessThread.SaveBigSignalData(deviceNumber: Integer; cycle: Integer);
-  var
-    indexShift: Integer;
-    i: Integer;
-  begin
-  indexShift := cycle * ChannelPackageSize;
-  for i := 1 to ChannelPackageSize do
-    BigSignal[deviceNumber, indexShift + i] :=
-      ChannelData[deviceNumber*ChannelsPerDevice+NATIVE_CHANNEL, i];
-  end;
-
   Procedure TProcessThread.RecalculateOptimumPoint(deviceNumber: Integer);
   var i: integer;
-    AmplitudeWidth,indexMin,indexMax:integer;
-    valueMax,valueMin:Short;
+    indexMin,indexMax:integer;
+    OpHistoryPage, OpHistoryIndex: Integer;
+    BefPageSignal, SignalStepByIndex, PageSignalChange: single;
+    valueMax,valueMin: Double;
   begin
     valueMin := 14000; valueMax := -14000;
     indexMin := 0; indexMax := 0;
 
-    for i := 20 to Length(BigSignal[deviceNumber])-1 do begin
-      if valueMin >= BigSignal[deviceNumber,i] then begin
-        valueMin := BigSignal[deviceNumber,i];
+    for i := 200 to Length(History[deviceNumber])-1 do begin
+      if valueMin >= History[deviceNumber,i] then begin
+        valueMin := History[deviceNumber,i];
         indexMin := i;
       end;
-      if valueMax <= BigSignal[deviceNumber,i] then begin
-        valueMax := BigSignal[deviceNumber,i];
+      if valueMax <= History[deviceNumber,i] then begin
+        valueMax := History[deviceNumber,i];
         indexMax := i;
       end;
     end;
     OptimalPoint[deviceNumber] := Ceil((valueMax+valueMin)/2);     //оптим положение раб точки
-    AmplitudeWidth := Round((indexMax+indexMin)/2);
+
     if indexMax > indexMin then
       AccelerationSign[deviceNumber]:= 1
     else
       AccelerationSign[deviceNumber]:= -1;
 
-    if (DeviceNumber=1) then
-        AccelerationSign[deviceNumber]:= AccelerationSign[deviceNumber]*(-1);
+    //DAC signal calculating
+    OpHistoryIndex := Round((indexMax+indexMin)/2);
+    OpHistoryPage := Trunc(OpHistoryIndex/ChannelPackageSize);
+    SignalStepByIndex := (calibration_signal_step/ChannelPackageSize);
+    BefPageSignal := OpHistoryPage*calibration_signal_step;
+    PageSignalChange :=  (OpHistoryIndex mod ChannelPackageSize)*SignalStepByIndex;
 
-    Period[0]:= 383; //383 Round((BigSignal[deviceNumber,indexMax]-BigSignal[deviceNumber,indexMin])*AccelerationSign[deviceNumber]/2.45);
-    Period[1]:= 433; //433
-
-    OptimalDACSignal[deviceNumber] := Round(BigSignalStep*(indexMax+indexMin)/ChannelPackageSize/2);
+    OptimalDACSignal[deviceNumber] :=  BefPageSignal +  PageSignalChange;
     SendDAC(deviceNumber, OptimalDACSignal[deviceNumber]);
 
   end;
 
-  procedure TProcessThread.CalibrateData(deviceNumber: Integer; cycle: Integer);
+  procedure TProcessThread.doBigSignal(deviceNumber: Integer);
   begin
-    if cycle < BlockAccseleration*CalibrateSecondsCut then begin
-      doBigSignal(deviceNumber, Cycle);
-      SaveBigSignalData(deviceNumber, cycle);
+      DACthread.unsafeAdd(deviceNumber, calibration_signal_step);
+  end;
+
+  procedure TProcessThread.CalibrateData(deviceNumber: Integer);
+  begin
+    if MilisecsProcessed < CalibrateMiliSecondsCut then begin
+      doBigSignal(deviceNumber);
     end else
-    if cycle = BlockAccseleration*CalibrateSecondsCut then begin
+    if MilisecsProcessed = CalibrateMiliSecondsCut then begin
        RecalculateOptimumPoint(deviceNumber);
     end else
-    if cycle > BlockAccseleration*CalibrateSecondsCut+3 then
+    if MilisecsProcessed > CalibrateMiliSecondsCut+3 then
       doWorkPointShift(deviceNumber);
 
   end;
 
-  procedure TProcessThread.doBigSignal(deviceNumber: Integer; Cycle: Integer);
-  var
-    i,j: Integer;
-  begin
-    //for j := 0  to DevicesAmount - 1 do begin
-      SendDAC(deviceNumber, Cycle * BigSignalStep);
-    //end;
-  end;  //}
-
-    // обновление индикаторов формы результатами последнего измерения.
+  // обновление индикаторов формы результатами последнего измерения.
   // Метод должен выполняться только через Synchronize, который нужен
   // для доступа к элементам VCL не из основного потока
   procedure TProcessThread.SaveChannelsData;
   var
-    ch,i: Integer;
+    ch,i, size: Integer;
     filePack: TFilePack;
   begin
+    size:= Length(History[0])-1;
     if visChAvg[0].Series[0].Count = 0 then begin
-      for i := 0 to ChannelPackageSize-1 do begin
+      for i := 0 to size do begin
         visChAvg[0].Series[0].Add(0);
         visChAvg[1].Series[0].Add(0);
       end;
     end;
-      filePack:=Files^;
-      for ch:=0 to DevicesAmount-1 do
-      begin
-        for i := 0 to ChannelPackageSize-1 do begin
-          writeln(filePack[ch], ChannelData[ch, i]);
-          visChAvg[ch].Series[0].YValue[i] := ChannelData[ch, i];
-        end;
+
+    filePack:=Files^;
+    for ch:=0 to DevicesAmount-1 do
+    begin
+      for i := 0 to size do begin
+        writeln(filePack[ch], History[ch, i]);
+        visChAvg[ch].Series[0].YValue[i] := History[ch, i];
       end;
+    end;
   end;
 
   procedure TProcessThread.ParseChannelsData;
@@ -310,7 +314,7 @@ implementation
       if ChValidData[ch] then begin
         for i := 0 to ChannelPackageSize-1 do begin
           IndexShift := DevicesAmount*i + ch;
-          ChannelData[ch, i] := data[IndexShift];
+          History[ch, HistoryIndex+i] := data[IndexShift];
         end;
       end;
     end;
@@ -319,12 +323,19 @@ implementation
   procedure TProcessThread.NextTick();
   var i:Integer;
   begin
-    {ParseChannelsData;
+    ParseChannelsData;
+    if HistoryPage >= InnerBufferPagesAmount then begin
+      Synchronize(SaveChannelsData);
+      HistoryPage := 0;
+    end;
+    HistoryIndex:= HistoryPage*ChannelPackageSize;
+
     if doUseCalibration then  begin
       for i := 0  to DevicesAmount - 1 do
-        CalibrateData(i, MilisecsProcessed);
-    end;}
-    Synchronize(SaveChannelsData);
+        CalibrateData(i);
+    end;
+
+    HistoryPage:= HistoryPage+1;
   end;
 
 end.

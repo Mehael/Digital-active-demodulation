@@ -11,6 +11,7 @@ type TDACThread = class(TThread)
     procedure send(channel:integer; value:DOUBLE);
     procedure stopThread();
     procedure Execute; override;
+    procedure unsafeAdd(channel:integer; value:DOUBLE);
   private
     phltr34: pTLTR34;
     stop:boolean;
@@ -67,8 +68,12 @@ implementation
       DAC_level[channel]:=value;
   end;
 
+  procedure TDACThread.unsafeAdd(channel:integer; value:DOUBLE);
+  begin
+      DAC_level[channel]:= DAC_level[channel]+value;
+  end;
+
   constructor TDACThread.Create(ltr34: pTLTR34; SuspendCreate : Boolean);
-  var i:integer;
   begin
      Inherited Create(SuspendCreate);
      stop:=False;
@@ -82,15 +87,9 @@ implementation
   end;
 
   procedure TDACThread.Execute;
-  var i:integer;
   begin
-  i:=0;
       while not stop do begin
-        i:=i+1;
         updateDAC();
-        send(0, i);
-        if i>10 then
-          i:=0;
       end;
       LTR34_DACStop(phltr34);
   end;
