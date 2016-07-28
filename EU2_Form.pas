@@ -38,6 +38,10 @@ type
     cbbDataFmt: TComboBox;
     cbbAC1: TComboBox;
     cbbRange1: TComboBox;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    Label3: TLabel;
+    skipVal: TEdit;
     procedure FormDestroy(Sender: TObject);
 
     private
@@ -363,7 +367,7 @@ begin
 
     thread.doUseCalibration := CheckBox1.Checked;
     thread.Files := @Files;
-    writeln(Files[0], '0');
+    thread.skipAmount := StrToInt(SkipVal.Text);
 
     MilisecsWork := StrToInt(txWorkTime.Text);  // время сбора данных в минутах, минимум 1 минута!!!
     if cbTimeMetric.Text = 'часов' then
@@ -391,12 +395,12 @@ begin
   TimeMark := DateToStr(Now) + TimeSeparator + TimeToStr(Now);
   TimeMark := StringReplace(TimeMark, '/', TimeSeparator, [rfReplaceAll]);
   TimeMark := StringReplace(TimeMark, ' ', TimeSeparator, [rfReplaceAll]);
-  Path:= txPath.Text+'\EU2.' + cbbAdcFreq.Text + '.' + TimeMark;
+  Path:= txPath.Text+'\EU2.' + FloatToStr(Trunc(StrToInt(cbbAdcFreq.Text)/StrToInt(skipVal.Text))) + '.' + TimeMark;
   System.MkDir(Path);
 
   for deviceN := 0 to DevicesAmount-1 do  begin
     for i := 0 to ChannelsPerDevice-1 do begin
-      fileIndex :=   i+deviceN*(ChannelsPerDevice);
+      fileIndex := i+deviceN*(ChannelsPerDevice);
       System.Assign(Files[fileIndex], Path + '\Device'+
          InttoStr(deviceN) +'-Cn' + InttoStr(i) + '.txt');
       ReWrite(Files[fileIndex]);

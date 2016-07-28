@@ -14,6 +14,8 @@ type TProcessThread = class(TThread)
     phltr34: pTLTR34;
     phltr24: pTLTR24; //указатель на описатель модуля
     bnStart:  TButton;
+    skipAmount: integer;
+
     doUseCalibration:boolean;
     err : Integer; //код ошибки при выполнении потока сбора
     stop : Boolean; //запрос на останов (устанавливается из основного потока)
@@ -25,8 +27,8 @@ type TProcessThread = class(TThread)
     { Private declarations }
     // признак, что есть вычесленные данные по каналам в ChAvg
     ChValidData : array [0..LTR24_CHANNEL_NUM-1] of Boolean;
-    AccelerationSign, OptimalPoint: array [0..LTR24_CHANNEL_NUM-1] of Integer;
-    OptimalDACSignal , LastCalibrateSignal: array [0..LTR24_CHANNEL_NUM-1] of DOUBLE;
+    AccelerationSign: array [0..LTR24_CHANNEL_NUM-1] of Integer;
+    OptimalDACSignal , LastCalibrateSignal, OptimalPoint: array [0..LTR24_CHANNEL_NUM-1] of DOUBLE;
     data     : array of Double;    //обработанные данные
     calibration_signal_step: double;
     DevicesAmount   : Integer;  //количество разрешенных каналов
@@ -40,7 +42,7 @@ type TProcessThread = class(TThread)
     procedure sendDAC(channel: Integer; signal: Double);
     procedure CalibrateData(deviceNumber: Integer);
     procedure doWorkPointShift(deviceNumber: Integer);
-    function GetLowFreq(deviceNumber: Integer) : Integer;
+    function GetLowFreq(deviceNumber: Integer) : Double;
     procedure RecalculateOptimumPoint(deviceNumber: Integer);
     procedure doBigSignal(deviceNumber: Integer);
    protected
@@ -58,13 +60,15 @@ implementation
   destructor TProcessThread.Free();
   begin
       if DACthread <> nil then
+        DACthread.stop := true;
         FreeAndNil(DACthread);
       Inherited Free();
   end;
 
   procedure TProcessThread.sendDAC(channel: Integer; signal: Double);
   begin
-    DACthread.send(channel, signal);
+    DACthread.DAC_level[channel]:=  signal;
+    //DACthread.send(channel, signal);
     LastCalibrateSignal[channel]:= signal;
   end;
 
@@ -115,7 +119,7 @@ implementation
     SetLength(data, recv_data_cnt);
 
     historyPagesAmount :=   Trunc((recv_data_cnt*InnerBufferPagesAmount)/DevicesAmount);
-    calibration_signal_step := DAC_max_signal/historyPagesAmount;
+    calibration_signal_step := DAC_max_signal/InnerBufferPagesAmount;
     for i := 0 to ChannelsAmount - 1 do begin
        SetLength(History[i], historyPagesAmount);
     end;
@@ -125,6 +129,7 @@ implementation
 
     if doUseCalibration then begin
       DACthread := TDACThread.Create(phltr34, True);
+      DACthread.Priority := tphigher;
       DACthread.Resume;
     end;
 
@@ -187,22 +192,33 @@ implementation
         err:= stoperr;
 
     end;
-    if doUseCalibration then
+    if doUseCalibration then begin
        DACthread.stopThread();
-
+       DACthread.stop := true;
+    end;
     bnStart.Caption := 'Старт';
   end;
 
 
-  function TProcessThread.GetLowFreq(deviceNumber: Integer) : Integer;
-  var i : Integer;
-    sum: Double;
+  function TProcessThread.GetLowFreq(deviceNumber: Integer) : Double;
+  var i, index : Integer;
+    sum, sinArgStep, collectedStep, weight: Double;
   begin
-    sum:=0;
-    for i := 0 to ChannelPackageSize - 1 do
-      sum:=sum+History[deviceNumber, HistoryIndex+i];
+    sum:= 0;
+    sinArgStep:=1.57/ChannelPackageSize;  //pi/(2*ChannelPackageSize)
+    collectedStep:=1;
 
-    GetLowFreq:= Floor(sum/ChannelPackageSize);
+    for i := 1 to  ChannelPackageSize do begin
+      index:= HistoryIndex-i;
+      if index<0 then
+        index:= Length(History[deviceNumber])+index;
+
+      weight:= sin(collectedStep);
+      collectedStep:=collectedStep-sinArgStep;
+      sum:=sum+(History[deviceNumber, index]*weight);
+    end;
+
+    GetLowFreq:= sum/ ChannelPackageSize;
   end;
 
   procedure TProcessThread.doWorkPointShift(deviceNumber: Integer);
@@ -210,7 +226,7 @@ implementation
     Shift, newCalibrateSignal: Double;
   begin
     Shift := OptimalPoint[deviceNumber] - GetLowFreq(deviceNumber);
-    Shift := Shift * AccelerationSign[deviceNumber] * 0.1;
+    Shift := Shift * AccelerationSign[deviceNumber];
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
 
     if newCalibrateSignal > DAC_max_signal then
@@ -231,7 +247,7 @@ implementation
     valueMin := 14000; valueMax := -14000;
     indexMin := 0; indexMax := 0;
 
-    for i := 200 to Length(History[deviceNumber])-1 do begin
+    for i := 20 to Length(History[deviceNumber])-1 do begin
       if valueMin >= History[deviceNumber,i] then begin
         valueMin := History[deviceNumber,i];
         indexMin := i;
@@ -241,7 +257,7 @@ implementation
         indexMax := i;
       end;
     end;
-    OptimalPoint[deviceNumber] := Ceil((valueMax+valueMin)/2);     //оптим положение раб точки
+    OptimalPoint[deviceNumber] := (valueMax+valueMin)/2;     //оптим положение раб точки
 
     if indexMax > indexMin then
       AccelerationSign[deviceNumber]:= 1
@@ -262,7 +278,8 @@ implementation
 
   procedure TProcessThread.doBigSignal(deviceNumber: Integer);
   begin
-      DACthread.unsafeAdd(deviceNumber, calibration_signal_step);
+      DACthread.DAC_level[deviceNumber]:= DACthread.DAC_level[deviceNumber]+calibration_signal_step;
+      //DACthread.unsafeAdd(deviceNumber, calibration_signal_step);
   end;
 
   procedure TProcessThread.CalibrateData(deviceNumber: Integer);
@@ -283,7 +300,8 @@ implementation
   // для доступа к элементам VCL не из основного потока
   procedure TProcessThread.SaveChannelsData;
   var
-    ch,i, size: Integer;
+    ch,i,skipInd, size, skips: Integer;
+    sum:double;
     filePack: TFilePack;
   begin
     size:= Length(History[0])-1;
@@ -295,11 +313,16 @@ implementation
     end;
 
     filePack:=Files^;
+    skips:=Trunc(size/skipAmount);
     for ch:=0 to DevicesAmount-1 do
     begin
-      for i := 0 to size do begin
-        writeln(filePack[ch], History[ch, i]);
-        visChAvg[ch].Series[0].YValue[i] := History[ch, i];
+      for i := 0 to skips do begin
+        sum:=0;
+        for skipInd:= 0 to skipAmount do begin
+           sum := sum+History[ch, i+skipInd];
+        end;
+        writeln(filePack[ch], Format('%.5g', [sum/skipAmount]));
+        //visChAvg[ch].Series[0].YValue[i] := History[ch, i];
       end;
     end;
   end;

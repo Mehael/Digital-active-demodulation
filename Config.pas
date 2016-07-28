@@ -2,10 +2,10 @@ unit Config;
 
 interface
 const
-  DevicesAmount     = 2;
-  DevicePeriod : array[0..DevicesAmount-1] of Integer =
+  DevicesAmount     = 1;
+  DevicePeriod : array[0..1] of Integer =
   (
-      390,
+      390,       //????????????
       390
   );
   ChannelsPerDevice = 1;
@@ -17,14 +17,14 @@ const
   ADC_possible_delay = 1000;
 
   CalibrateMiliSecondsCut = 4000;
-  InnerBufferPagesAmount = (CalibrateMiliSecondsCut/ADC_reading_time);
+  InnerBufferPagesAmount = 4*(CalibrateMiliSecondsCut/ADC_reading_time);
 
-  DAC_max_VOLT_signal   = 2.5;
-  DAC_100signal_to_VOLT = 1.8;
-  DAC_max_signal        = ((DAC_max_VOLT_signal*1000)/DAC_100signal_to_VOLT);
+  DAC_max_VOLT_signal   = 8;
+  //DAC_100signal_to_VOLT = 1000; //1.8;   вроде 1 к 1
+  DAC_max_signal        = DAC_max_VOLT_signal;
   DAC_min_signal        = 0;
 
-  DAC_dataByChannel     = 100;
+  DAC_dataByChannel     = 10;
   DAC_possible_delay    = 2000;
 
   DAC_packSize          = DevicesAmount*DAC_dataByChannel;

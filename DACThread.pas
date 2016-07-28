@@ -1,24 +1,29 @@
 unit DACThread;
 
 interface
-uses Classes, SysUtils, ltr34api, Dialogs, ltrapi, Config;
+uses Classes,  Math, SysUtils, ltr34api, Dialogs, ltrapi, Config;
 
 type TDACThread = class(TThread)
   public
+    stop:boolean;
+    DAC_level:array of DOUBLE;
+    
     destructor Free();
     procedure CheckError(err: Integer);
     constructor Create(ltr34: pTLTR34; SuspendCreate : Boolean);
     procedure send(channel:integer; value:DOUBLE);
     procedure stopThread();
     procedure Execute; override;
+    procedure TestExecute;
     procedure unsafeAdd(channel:integer; value:DOUBLE);
+
   private
     phltr34: pTLTR34;
-    stop:boolean;
+    debugFile: TextFile;
 
     DATA:array[0..DAC_packSize-1] of DOUBLE;
     WORD_DATA:array[0..DAC_packSize-1] of integer;
-    DAC_level:array of DOUBLE;
+
 
     procedure updateDAC();
 end;
@@ -45,7 +50,10 @@ implementation
       end else if DAC_level[ch]<>DATA[ch*DAC_dataByChannel] then
         for i:=ch*DAC_dataByChannel to ulimit do
           DATA[i]:= DAC_level[ch];
-          //DATA[i]:=10*sin(i*(pi/600));
+
+      //for i:=ch*DAC_dataByChannel to ulimit do  begin
+      //    writeln(debugFile, Format('%.5g', [DATA[i]]));
+      //end;
     end;
 
     CheckError(LTR34_ProcessData(phltr34,@DATA,@WORD_DATA, DAC_packSize, 1)); //1- указываем что значения в Вольтах
@@ -74,11 +82,17 @@ implementation
   end;
 
   constructor TDACThread.Create(ltr34: pTLTR34; SuspendCreate : Boolean);
+  var i: integer;
   begin
      Inherited Create(SuspendCreate);
      stop:=False;
      phltr34:= ltr34;
      SetLength(DAC_level, phltr34.ChannelQnt);
+
+    // for i := 0 to ChannelsPerDevice-1 do begin
+    //  System.Assign(debugFile, 'D:\debug.txt');
+     // ReWrite(debugFile);
+    //end;
   end;
 
   destructor TDACThread.Free();
@@ -86,11 +100,31 @@ implementation
       Inherited Free();
   end;
 
+  procedure TDACThread.TestExecute;
+  var s,step:double;
+  begin
+    s:=0;
+    step:= Floor(8/InnerBufferPagesAmount);
+    while not stop do begin
+
+      if s+step>8 then
+        step:=step*(-1);
+      if s+step<0 then
+        step:=step*(-1);
+       s:=s+step;
+
+      DAC_level[0]:=s;
+
+      updateDAC();
+    end;
+    LTR34_DACStop(phltr34);
+  end;
+
   procedure TDACThread.Execute;
   begin
-      while not stop do begin
-        updateDAC();
-      end;
-      LTR34_DACStop(phltr34);
+    while not stop do
+      updateDAC();
+
+    LTR34_DACStop(phltr34);
   end;
 end.
