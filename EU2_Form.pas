@@ -50,14 +50,12 @@ type
       hltr_34 : TLTR34;
       threadRunning : Boolean; // Признак, запущен ли поток сбора данных
       thread : TProcessThread; //Объект потока для выполнения сбора данных
-      Files : TFilePack;
 
       procedure refreshDeviceList();
       procedure closeDevice();
       procedure OnThreadTerminate(par : TObject);
       procedure Open24Ltr();
       procedure StartProcess();
-      procedure CreateFiles();
       procedure open34Ltr;
       procedure CheckError(err: Integer);
     published
@@ -84,7 +82,6 @@ begin
   if (bnStart.Caption = 'Старт') then begin
      bnStart.Caption := 'Стоп';
 
-    CreateFiles();
     StartProcess();
 
   end else begin
@@ -166,6 +163,8 @@ begin
     thread.stop:=True;
     thread.WaitFor;
   end;
+  DeleteCriticalSection(HistorySection);
+  DeleteCriticalSection(DACSection);
 
   LTR24_Close(hltr_24);
   LTR34_Close(@hltr_34);
@@ -187,6 +186,10 @@ begin
   LTR24_Init(hltr_24);
   LTR34_Init(@hltr_34);
   refreshDeviceList;
+
+  //DecimalSeparator := ',';
+  InitializeCriticalSection(HistorySection);
+  InitializeCriticalSection(DACSection);
 
   Open24Ltr();
   Open34Ltr();
@@ -238,10 +241,10 @@ begin
   end;
   LTR34SELECT:=0;//первый найденный LTR34
   //  Подключаемся к выбранному модулю
-  LTR34_Init(@hltr_34);
+  CheckError(LTR34_Init(@hltr_34));
   err:=LTR34_Open(@hltr_34,LTR.saddr,LTR.sport,@CSNLIST[CrateSelect][0],LIST34[LTR34SELECT]+1);
   CheckError(err);
-
+  CheckError(LTR34_TestEEPROM(@hltr_34))
   end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -285,10 +288,11 @@ end;
 
 procedure TMainForm.StartProcess();
 var
-  i, err, res, t, dataSize, timeForSending : Integer;
+  err, res, t,  timeForSending : Integer;
+  i, dataSize: Longint;
   MilisecsWork:  Int64;
-  DATA:array[0..999]of DOUBLE;
-  WORD_DATA:array[0..999]of integer;
+  DATA:array[0..60000]of Double;
+  WORD_DATA:array[0..60000]of Double;
 begin
    { Сохраняем значения из элементов управления в соответствующие
     поля описателя модуля. Для простоты здесь не делается доп. проверок, что
@@ -315,33 +319,37 @@ begin
       MessageDlg('Не удалось установить настройки: ' + LTR24_GetErrorString(res), mtError, [mbOK], 0);
 
     //-------LTR34-----------
-    dataSize:= 1000;
+    dataSize:= 60000;
     timeForSending := 2000;
 
     err:=LTR34_Reset(@hltr_34);  CheckError(err);
 
     hltr_34.ChannelQnt:= ChannelsAmount;        // число каналов
-    hltr_34.RingMode:=false;          // режим кольца  true - режим кольца, false - потоковый режим
-    t:= Round(64-1000000/(StrToFloat(cbbAdcFreq.Text)*hltr_34.ChannelQnt));
+    hltr_34.RingMode:=true;          // режим кольца  true - режим кольца, false - потоковый режим
+    //t:= Round(64-1000000/(StrToFloat(cbbAdcFreq.Text)*hltr_34.ChannelQnt));
 
-    if t<0 then
-       hltr_34.FrequencyDivisor:=0;
-    if t>60 then
-        hltr_34.FrequencyDivisor:=60;
-    if (t>=0) and (t<=60) then
-        hltr_34.FrequencyDivisor:=t;
+    //if t<0 then
+    hltr_34.FrequencyDivisor:=0;  //31  кГц
+    //if t>60 then
+    //    hltr_34.FrequencyDivisor:=60;
+    //if (t>=0) and (t<=60) then
+    //    hltr_34.FrequencyDivisor:=t;
+
     hltr_34.UseClb:=true;            // Фабричные Коэффициэнты.
     hltr_34.AcknowledgeType:=false;   // тип подтверждения true - высылать подтверждение каждого слова, false- высылать состояние буффера каждые 100 мс
 
     for i := 0 to ChannelsAmount - 1 do
       hltr_34.LChTbl[i]:=LTR34_CreateLChannel(i+1,0); // (номер канала, 0-без усиления 1- 10х)
 
+
     err:=LTR34_Config(@hltr_34);  CheckError(err);
 
-    for i:=0 to dataSize-1 do
-       DATA[i]:=10*sin(i*(pi/250));
+   for i:=0 to dataSize do
+       DATA[i]:= VoltToCode(10*sin(i*(pi/dataSize)));//);
 
-    err:=LTR34_ProcessData(@hltr_34,@DATA,@WORD_DATA, dataSize, 1);//true- указываем что значения в Вольтах
+   DATA[dataSize]:= VoltToCode(0);
+
+    err:=LTR34_ProcessData(@hltr_34,@DATA,@WORD_DATA, dataSize, 0);//true- указываем что значения в Вольтах
     CheckError(err);
 
     err:=LTR34_Send(@hltr_34,@WORD_DATA, dataSize, timeForSending);
@@ -359,6 +367,11 @@ begin
      что в классе основного окна, то вынуждены передать ее как pointer }
     thread.phltr24 := @hltr_24;
     thread.phltr34 := @hltr_34;
+    thread.Priority := tpHigher;
+
+    {FIle System}
+    thread.path := txPath.Text;
+    thread.frequency := FloatToStr(Trunc(StrToInt(cbbAdcFreq.Text)/StrToInt(skipVal.Text)));
 
     { Сохраняем элементы интерфейса, которые должны изменяться обрабатывающим
       потоком в класс потока }
@@ -366,7 +379,6 @@ begin
     thread.visChAvg[1]:= chGraph2;
 
     thread.doUseCalibration := CheckBox1.Checked;
-    thread.Files := @Files;
     thread.skipAmount := StrToInt(SkipVal.Text);
 
     MilisecsWork := StrToInt(txWorkTime.Text);  // время сбора данных в минутах, минимум 1 минута!!!
@@ -386,25 +398,5 @@ begin
   end;
 
   end;
-procedure TMainForm.CreateFiles;
-var
-  TimeMark, Path: string;
-  i,deviceN,fileIndex: integer;
-begin
-  TimeSeparator := '-';
-  TimeMark := DateToStr(Now) + TimeSeparator + TimeToStr(Now);
-  TimeMark := StringReplace(TimeMark, '/', TimeSeparator, [rfReplaceAll]);
-  TimeMark := StringReplace(TimeMark, ' ', TimeSeparator, [rfReplaceAll]);
-  Path:= txPath.Text+'\EU2.' + FloatToStr(Trunc(StrToInt(cbbAdcFreq.Text)/StrToInt(skipVal.Text))) + '.' + TimeMark;
-  System.MkDir(Path);
 
-  for deviceN := 0 to DevicesAmount-1 do  begin
-    for i := 0 to ChannelsPerDevice-1 do begin
-      fileIndex := i+deviceN*(ChannelsPerDevice);
-      System.Assign(Files[fileIndex], Path + '\Device'+
-         InttoStr(deviceN) +'-Cn' + InttoStr(i) + '.txt');
-      ReWrite(Files[fileIndex]);
-    end;
-  end;
-end;
 end.

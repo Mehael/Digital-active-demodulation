@@ -6,7 +6,8 @@ uses
   Forms,
   EU2_Form in 'EU2_Form.pas' {MainForm},
   DACThread in 'DACThread.pas',
-  Config in 'Config.pas';
+  Config in 'Config.pas',
+  WriterThread in 'WriterThread.pas';
 
 {$R *.res}
 

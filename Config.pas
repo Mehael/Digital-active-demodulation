@@ -1,6 +1,15 @@
 unit Config;
-
 interface
+uses Windows;
+
+function VoltToCode(Volt: Double): Integer;
+function CodeToVolt(Code: Integer): Double;
+
+var
+  HistorySection: TRTLCriticalSection;
+  DACSection: TRTLCriticalSection;
+  DAC_max_signal : Integer;
+  DAC_min_signal : Integer;
 const
   DevicesAmount     = 1;
   DevicePeriod : array[0..1] of Integer =
@@ -16,19 +25,29 @@ const
 // Дополнительный  постоянный таймаут на прием данных (в мс)
   ADC_possible_delay = 1000;
 
-  CalibrateMiliSecondsCut = 4000;
+  CalibrateMiliSecondsCut = 3000;
   InnerBufferPagesAmount = 4*(CalibrateMiliSecondsCut/ADC_reading_time);
 
   DAC_max_VOLT_signal   = 8;
-  //DAC_100signal_to_VOLT = 1000; //1.8;   вроде 1 к 1
-  DAC_max_signal        = DAC_max_VOLT_signal;
-  DAC_min_signal        = 0;
+  DAC_min_VOLT_signal   = 0;
 
-  DAC_dataByChannel     = 10;
+  DAC_dataByChannel     = 1;
   DAC_possible_delay    = 2000;
 
   DAC_packSize          = DevicesAmount*DAC_dataByChannel;
 type
   TFilePack = array[0..ChannelsAmount] of TextFile;
+  THistory = array[0..ChannelsAmount-1] of array of Double;
 implementation
+
+function VoltToCode(Volt: Double): Integer;
+begin
+  Result :=  Trunc(Volt*65535/20);
+end;
+
+function CodeToVolt(Code: Integer): Double;
+begin
+  Result := Code*20/65535;
+end;
+
 end.

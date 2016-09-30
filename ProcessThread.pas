@@ -1,14 +1,16 @@
 unit ProcessThread;
 
 interface
-uses Classes, Math, SyncObjs, Graphics, Chart, Series,
-StdCtrls, SysUtils, ltr24api, ltr34api, ltrapi, DACThread, Config;
+uses Windows, Classes, Math, SyncObjs, Graphics, Chart, Series,
+StdCtrls, SysUtils, ltr24api, ltr34api, ltrapi, DACThread, WriterThread, Config;
 
 type TProcessThread = class(TThread)
   public
     //элементы управления для отображения результатов обработки
     visChAvg : array [0..LTR24_CHANNEL_NUM-1] of TChart;
     DACthread : TDACThread; //Объект потока для выполнения сбора данных
+    WriterThread : TWriter;
+    debugFile:TextFile;
     MilisecsToWork:  Int64;
     MilisecsProcessed:  Int64;
     phltr34: pTLTR34;
@@ -16,10 +18,13 @@ type TProcessThread = class(TThread)
     bnStart:  TButton;
     skipAmount: integer;
 
+    path:string;
+    frequency:string;
+
     doUseCalibration:boolean;
     err : Integer; //код ошибки при выполнении потока сбора
     stop : Boolean; //запрос на останов (устанавливается из основного потока)
-    Files : ^TFilePack;
+
     constructor Create(SuspendCreate : Boolean);
     destructor Free();
 
@@ -33,10 +38,9 @@ type TProcessThread = class(TThread)
     calibration_signal_step: double;
     DevicesAmount   : Integer;  //количество разрешенных каналов
     ChannelPackageSize : Integer;
-    History: array[0..ChannelsAmount-1] of array of Double;
+    History: THistory;
     HistoryIndex, HistoryPage : Integer;
 
-    procedure SaveChannelsData;
     procedure NextTick();
     procedure ParseChannelsData;
     procedure sendDAC(channel: Integer; signal: Double);
@@ -67,9 +71,11 @@ implementation
 
   procedure TProcessThread.sendDAC(channel: Integer; signal: Double);
   begin
+    EnterCriticalSection(DACSection);
     DACthread.DAC_level[channel]:=  signal;
     //DACthread.send(channel, signal);
     LastCalibrateSignal[channel]:= signal;
+    LeaveCriticalSection(DACSection);
   end;
 
 
@@ -92,6 +98,9 @@ implementation
     //обнуляем переменные
     for ch:=0 to LTR24_CHANNEL_NUM-1 do
       ChValidData[ch]:=False;
+
+    System.Assign(debugFile, 'D:\debug.txt');
+    ReWrite(debugFile);
 
     //Проверяем, сколько и какие каналы разрешены
     DevicesAmount := 0;
@@ -119,17 +128,20 @@ implementation
     SetLength(data, recv_data_cnt);
 
     historyPagesAmount :=   Trunc((recv_data_cnt*InnerBufferPagesAmount)/DevicesAmount);
-    calibration_signal_step := DAC_max_signal/InnerBufferPagesAmount;
+    calibration_signal_step := DAC_max_signal/(CalibrateMiliSecondsCut/ADC_reading_time);
     for i := 0 to ChannelsAmount - 1 do begin
        SetLength(History[i], historyPagesAmount);
     end;
 
     err:= LTR24_Start(phltr24^);
-    err:=LTR34_DACStart(phltr34);
+
+    WriterThread := TWriter.Create(path, frequency, skipAmount, True);
+    WriterThread.Priority := tpHighest;
+    WriterThread.History := @History;
 
     if doUseCalibration then begin
       DACthread := TDACThread.Create(phltr34, True);
-      DACthread.Priority := tphigher;
+      DACthread.Priority := tpHighest;
       DACthread.Resume;
     end;
 
@@ -177,11 +189,12 @@ implementation
 
       end; //while not stop and (err = LTR_OK) do
 
+      NextTick();
+
       visChAvg[0].Series[0].Clear();
       visChAvg[1].Series[0].Clear();
 
-      for i := 0 to DevicesAmount-1 do
-        CloseFile(Files[i]);
+      WriterThread.Terminate();
 
       { По выходу из цикла отсанавливаем сбор данных.
         Чтобы не сбросить код ошибки (если вышли по ошибке)
@@ -202,7 +215,8 @@ implementation
 
   function TProcessThread.GetLowFreq(deviceNumber: Integer) : Double;
   var i, index : Integer;
-    sum, sinArgStep, collectedStep, weight: Double;
+  sum: Extended;
+  sinArgStep, collectedStep, weight: Double;
   begin
     sum:= 0;
     sinArgStep:=1.57/ChannelPackageSize;  //pi/(2*ChannelPackageSize)
@@ -230,24 +244,26 @@ implementation
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
 
     if newCalibrateSignal > DAC_max_signal then
-      newCalibrateSignal := newCalibrateSignal - (2 * DevicePeriod[deviceNumber]);
-    if newCalibrateSignal < DAC_min_signal then
-      newCalibrateSignal := newCalibrateSignal + (2 * DevicePeriod[deviceNumber]);
+      newCalibrateSignal := newCalibrateSignal - (0.02 * DevicePeriod[deviceNumber]);
+    if newCalibrateSignal < 0 then
+      newCalibrateSignal := newCalibrateSignal + (0.02 * DevicePeriod[deviceNumber]);
 
     SendDAC(deviceNumber, newCalibrateSignal);
   end;
 
   Procedure TProcessThread.RecalculateOptimumPoint(deviceNumber: Integer);
   var i: integer;
-    indexMin,indexMax:integer;
-    OpHistoryPage, OpHistoryIndex: Integer;
+    indexMin,indexMax:longint;
+    OpHistoryPage, OpHistoryIndex: longint ;
     BefPageSignal, SignalStepByIndex, PageSignalChange: single;
     valueMax,valueMin: Double;
   begin
     valueMin := 14000; valueMax := -14000;
     indexMin := 0; indexMax := 0;
 
-    for i := 20 to Length(History[deviceNumber])-1 do begin
+    for i := 0 to Length(History[deviceNumber])-1 do begin
+    if (History[deviceNumber,i] = 0) then break; 
+
       if valueMin >= History[deviceNumber,i] then begin
         valueMin := History[deviceNumber,i];
         indexMin := i;
@@ -270,16 +286,22 @@ implementation
     SignalStepByIndex := (calibration_signal_step/ChannelPackageSize);
     BefPageSignal := OpHistoryPage*calibration_signal_step;
     PageSignalChange :=  (OpHistoryIndex mod ChannelPackageSize)*SignalStepByIndex;
-
     OptimalDACSignal[deviceNumber] :=  BefPageSignal +  PageSignalChange;
+
+    {OpHistoryIndex := Round((indexMax+indexMin)/2);
+    OpHistoryPage := Trunc(OpHistoryIndex/ChannelPackageSize);
+    OptimalDACSignal[deviceNumber] :=  OpHistoryPage*calibration_signal_step;}
+
     SendDAC(deviceNumber, OptimalDACSignal[deviceNumber]);
 
   end;
 
   procedure TProcessThread.doBigSignal(deviceNumber: Integer);
   begin
+      EnterCriticalSection(DACSection);
+     
       DACthread.DAC_level[deviceNumber]:= DACthread.DAC_level[deviceNumber]+calibration_signal_step;
-      //DACthread.unsafeAdd(deviceNumber, calibration_signal_step);
+      LeaveCriticalSection(DACSection);
   end;
 
   procedure TProcessThread.CalibrateData(deviceNumber: Integer);
@@ -288,43 +310,13 @@ implementation
       doBigSignal(deviceNumber);
     end else
     if MilisecsProcessed = CalibrateMiliSecondsCut then begin
-       RecalculateOptimumPoint(deviceNumber);
+      // RecalculateOptimumPoint(deviceNumber);
     end else
     if MilisecsProcessed > CalibrateMiliSecondsCut+3 then
-      doWorkPointShift(deviceNumber);
+      //doWorkPointShift(deviceNumber);
 
-  end;
+    writeln(debugFile, Format('%.5g', [DACthread.DAC_level[deviceNumber] ]));
 
-  // обновление индикаторов формы результатами последнего измерения.
-  // Метод должен выполняться только через Synchronize, который нужен
-  // для доступа к элементам VCL не из основного потока
-  procedure TProcessThread.SaveChannelsData;
-  var
-    ch,i,skipInd, size, skips: Integer;
-    sum:double;
-    filePack: TFilePack;
-  begin
-    size:= Length(History[0])-1;
-    if visChAvg[0].Series[0].Count = 0 then begin
-      for i := 0 to size do begin
-        visChAvg[0].Series[0].Add(0);
-        visChAvg[1].Series[0].Add(0);
-      end;
-    end;
-
-    filePack:=Files^;
-    skips:=Trunc(size/skipAmount);
-    for ch:=0 to DevicesAmount-1 do
-    begin
-      for i := 0 to skips do begin
-        sum:=0;
-        for skipInd:= 0 to skipAmount do begin
-           sum := sum+History[ch, i+skipInd];
-        end;
-        writeln(filePack[ch], Format('%.5g', [sum/skipAmount]));
-        //visChAvg[ch].Series[0].YValue[i] := History[ch, i];
-      end;
-    end;
   end;
 
   procedure TProcessThread.ParseChannelsData;
@@ -333,6 +325,7 @@ implementation
     i: Integer;
     IndexShift: Integer;
   begin
+  EnterCriticalSection(HistorySection);
     for ch:=0 to LTR24_CHANNEL_NUM-1 do begin
       if ChValidData[ch] then begin
         for i := 0 to ChannelPackageSize-1 do begin
@@ -341,6 +334,7 @@ implementation
         end;
       end;
     end;
+  LeaveCriticalSection(HistorySection);
   end;
 
   procedure TProcessThread.NextTick();
@@ -348,7 +342,7 @@ implementation
   begin
     ParseChannelsData;
     if HistoryPage >= InnerBufferPagesAmount then begin
-      Synchronize(SaveChannelsData);
+      WriterThread.Save();
       HistoryPage := 0;
     end;
     HistoryIndex:= HistoryPage*ChannelPackageSize;

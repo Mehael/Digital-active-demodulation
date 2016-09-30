@@ -39,5 +39,6 @@
       <Form>MainForm</Form>
     </DCCReference>
     <DCCReference Include="ProcessThread.pas" />
+    <DCCReference Include="WriterThread.pas" />
   </ItemGroup>
 </Project>
