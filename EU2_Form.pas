@@ -325,27 +325,20 @@ begin
     err:=LTR34_Reset(@hltr_34);  CheckError(err);
 
     hltr_34.ChannelQnt:= ChannelsAmount;        // число каналов
-    hltr_34.RingMode:=true;          // режим кольца  true - режим кольца, false - потоковый режим
-    //t:= Round(64-1000000/(StrToFloat(cbbAdcFreq.Text)*hltr_34.ChannelQnt));
+    hltr_34.RingMode:=false;          // режим кольца  true - режим кольца, false - потоковый режим
 
-    //if t<0 then
     hltr_34.FrequencyDivisor:=0;  //31  кГц
-    //if t>60 then
-    //    hltr_34.FrequencyDivisor:=60;
-    //if (t>=0) and (t<=60) then
-    //    hltr_34.FrequencyDivisor:=t;
 
     hltr_34.UseClb:=true;            // Фабричные Коэффициэнты.
-    hltr_34.AcknowledgeType:=false;   // тип подтверждения true - высылать подтверждение каждого слова, false- высылать состояние буффера каждые 100 мс
+    hltr_34.AcknowledgeType:=true;   // тип подтверждения true - высылать подтверждение каждого слова, false- высылать состояние буффера каждые 100 мс
 
     for i := 0 to ChannelsAmount - 1 do
       hltr_34.LChTbl[i]:=LTR34_CreateLChannel(i+1,0); // (номер канала, 0-без усиления 1- 10х)
 
-
     err:=LTR34_Config(@hltr_34);  CheckError(err);
 
    for i:=0 to dataSize do
-       DATA[i]:= VoltToCode(10*sin(i*(pi/dataSize)));//);
+       DATA[i]:= VoltToCode(10*sin(i*(pi/dataSize)));
 
    DATA[dataSize]:= VoltToCode(0);
 
@@ -354,6 +347,7 @@ begin
 
     err:=LTR34_Send(@hltr_34,@WORD_DATA, dataSize, timeForSending);
       CheckError(err);
+
     // ---- strart---------
   if res = LTR_OK then
   begin

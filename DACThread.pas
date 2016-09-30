@@ -18,8 +18,8 @@ type TDACThread = class(TThread)
     phltr34: pTLTR34;
 
 
-    DATA:array[0..DAC_packSize-1] of DOUBLE;
-    WORD_DATA:array[0..DAC_packSize-1] of integer;
+    DATA:array[0..DAC_packSize-1] of Double;
+    WORD_DATA:array[0..DAC_packSize-1] of Double;
 
     procedure updateDAC();
 end;
@@ -28,35 +28,21 @@ implementation
   procedure TDACThread.updateDAC();
   var
     i, ch, ulimit: Integer;
+    ch_code: Double;
     summator, step: single;
   begin
     EnterCriticalSection(DACSection);
 
     for ch:=0 to phltr34.ChannelQnt-1 do begin
-      DATA[ch]:= DAC_level[ch];
-          
-      {ulimit:=ch*DAC_dataByChannel+DAC_dataByChannel-1;
-      //--new spline
-      if DAC_level[ch]<>DATA[ulimit] then begin
-        step:=(DAC_level[ch]-DATA[ulimit])/(DAC_dataByChannel-1);
-        summator:=0;
-        for i:=ch*DAC_dataByChannel to ulimit-1 do begin
-          summator:=summator+step;
-          DATA[i]:= summator+DATA[ulimit];
-        end;
-        DATA[ulimit]:= DAC_level[ch];
-      //--spline to line
-      end else if DAC_level[ch]<>DATA[ch*DAC_dataByChannel] then
-        for i:=ch*DAC_dataByChannel to ulimit do
-          DATA[i]:= DAC_level[ch];
-      }
+      ulimit:=ch*DAC_dataByChannel+DAC_dataByChannel-1;
+      ch_code := VoltToCode(DAC_level[ch]);
+      
+      for i:=ch*DAC_dataByChannel to ulimit do
+          DATA[i]:= ch_code;
     end;
 
-    //debug
-    //writeln(debugFile, Format('%.5g', [DATA[0]]));
-
-    CheckError(LTR34_ProcessData(phltr34,@DATA,@WORD_DATA, DAC_packSize, 1)); //1- указываем что значения в Вольтах
-    //CheckError(LTR34_Send(phltr34,@WORD_DATA, DAC_packSize, DAC_possible_delay));
+    CheckError(LTR34_ProcessData(phltr34,@DATA,@WORD_DATA, DAC_packSize, 0)); //1- указываем что значения в Вольтах
+    CheckError(LTR34_Send(phltr34,@WORD_DATA, DAC_packSize, DAC_possible_delay));
 
     LeaveCriticalSection(DACSection);
     
@@ -96,8 +82,8 @@ implementation
     ReWrite(debugFile);
     
     CheckError(LTR34_DACStart(phltr34));
-    while not stop do
-      updateDAC();
+    //while not stop do
+    //  updateDAC();
 
     CheckError(LTR34_DACStop(phltr34));
   end;
