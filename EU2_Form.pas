@@ -86,6 +86,7 @@ begin
 
   end else begin
     if threadRunning then
+
       thread.stop:=True;
 
   end;
@@ -187,7 +188,7 @@ begin
   LTR34_Init(@hltr_34);
   refreshDeviceList;
 
-  //DecimalSeparator := ',';
+  DecimalSeparator := '.';
   InitializeCriticalSection(HistorySection);
   InitializeCriticalSection(DACSection);
 
@@ -306,7 +307,7 @@ begin
    for i := 0 to ChannelsAmount - 1 do
    begin
     hltr_24.ChannelMode[i].Enable   := true;
-    hltr_24.ChannelMode[i].AC       := cbbAC1.ItemIndex <> 0;
+    hltr_24.ChannelMode[i].AC       := false;
     hltr_24.ChannelMode[i].Range    := cbbRange1.ItemIndex;
     hltr_24.ChannelMode[i].ICPMode  := false;
    end;
@@ -345,9 +346,8 @@ begin
     err:=LTR34_ProcessData(@hltr_34,@DATA,@WORD_DATA, dataSize, 0);//true- указываем что значения в Вольтах
     CheckError(err);
 
-    err:=LTR34_Send(@hltr_34,@WORD_DATA, dataSize, timeForSending);
-      CheckError(err);
-
+    //err:=LTR34_Send(@hltr_34,@WORD_DATA, dataSize, timeForSending);
+    //  CheckError(err);
     // ---- strart---------
   if res = LTR_OK then
   begin

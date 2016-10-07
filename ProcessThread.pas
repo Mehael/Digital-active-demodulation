@@ -49,6 +49,7 @@ type TProcessThread = class(TThread)
     function GetLowFreq(deviceNumber: Integer) : Double;
     procedure RecalculateOptimumPoint(deviceNumber: Integer);
     procedure doBigSignal(deviceNumber: Integer);
+    procedure DryData(wetData: array of LongWord; out dryData: array of Double);
    protected
     procedure Execute; override;
   end;
@@ -73,18 +74,44 @@ implementation
   begin
     EnterCriticalSection(DACSection);
     DACthread.DAC_level[channel]:=  signal;
-    //DACthread.send(channel, signal);
+
     LastCalibrateSignal[channel]:= signal;
     LeaveCriticalSection(DACSection);
   end;
 
+  procedure TProcessThread.DryData(wetData: array of LongWord; out dryData: array of Double);
+  var
+     i, b, c,  size: integer;
+     bitMask, newValue: LongWord;
+
+  begin
+    size := Length(wetData);
+
+    for i:=0 to size-1 do begin
+      c := 0;
+      newValue := 0;
+      for b:=16 to 31 do begin
+        bitMask := 1 shl b;
+        newValue := newValue or (bitMask and wetData[i]);
+      end;
+
+      newValue := newValue shr 16;
+
+      for b:=0 to 3 do begin
+        bitMask := 1 shl b;
+        newValue := newValue or ((bitMask and wetData[i]) shl 16);
+      end;
+      dryData[i] :=  newValue;
+    end;
+
+  end;
 
   procedure TProcessThread.Execute;
   var
     stoperr,i,historyPagesAmount : Integer;
     rcv_buf  : array of LongWord;  //сырые принятые слова от модуля
 
-    ch       : Integer;
+    ch, steps_amount       : Integer;
 
     recv_wrd_cnt : Integer;  //количество принимаемых сырых слов за раз
     recv_data_cnt : Integer; //количество обработанных слов, которые должны принять за раз
@@ -127,12 +154,16 @@ implementation
     SetLength(rcv_buf, recv_wrd_cnt);
     SetLength(data, recv_data_cnt);
 
+    DAC_max_signal := VoltToCode(DAC_max_VOLT_signal);
+    DAC_min_signal := VoltToCode(DAC_min_VOLT_signal);
+
     historyPagesAmount :=   Trunc((recv_data_cnt*InnerBufferPagesAmount)/DevicesAmount);
-    calibration_signal_step := DAC_max_signal/(CalibrateMiliSecondsCut/ADC_reading_time);
+
+    steps_amount :=  Trunc(CalibrateMiliSecondsCut/ADC_reading_time);
+    calibration_signal_step := (DAC_max_signal-DAC_min_signal)/steps_amount;
     for i := 0 to ChannelsAmount - 1 do begin
        SetLength(History[i], historyPagesAmount);
     end;
-
     err:= LTR24_Start(phltr24^);
 
     WriterThread := TWriter.Create(path, frequency, skipAmount, True);
@@ -164,10 +195,8 @@ implementation
           err:=LTR_ERROR_RECV_INSUFFICIENT_DATA
         else
         begin
-          err:=LTR24_ProcessData(phltr24^, rcv_buf, data, ChannelPackageSize,
-                                  LTR24_PROC_FLAG_CALIBR or
-                                  LTR24_PROC_FLAG_VOLT or
-                                  LTR24_PROC_FLAG_AFC_COR);
+          //err:=LTR24_ProcessData(phltr24^, rcv_buf, data, ChannelPackageSize, LTR24_PROC_FLAG_NONCONT_DATA);
+          DryData(rcv_buf, data);
           if err=LTR_OK then
           begin
             for ch:=0 to LTR24_CHANNEL_NUM-1 do
@@ -219,34 +248,30 @@ implementation
   sinArgStep, collectedStep, weight: Double;
   begin
     sum:= 0;
-    sinArgStep:=1.57/ChannelPackageSize;  //pi/(2*ChannelPackageSize)
-    collectedStep:=1;
 
-    for i := 1 to  ChannelPackageSize do begin
-      index:= HistoryIndex-i;
-      if index<0 then
-        index:= Length(History[deviceNumber])+index;
+     for i := 1 to  ChannelPackageSize do begin
+      sum:=sum+(History[deviceNumber, i]);
+     end;
 
-      weight:= sin(collectedStep);
-      collectedStep:=collectedStep-sinArgStep;
-      sum:=sum+(History[deviceNumber, index]*weight);
-    end;
-
-    GetLowFreq:= sum/ ChannelPackageSize;
+     GetLowFreq:= sum/ ChannelPackageSize;
   end;
 
   procedure TProcessThread.doWorkPointShift(deviceNumber: Integer);
   var
     Shift, newCalibrateSignal: Double;
   begin
-    Shift := OptimalPoint[deviceNumber] - GetLowFreq(deviceNumber);
+    newCalibrateSignal :=    GetLowFreq(deviceNumber);
+    Shift := OptimalPoint[deviceNumber] - newCalibrateSignal;
+
+    writeln(debugFile, Format('%.5g', [Shift]));
+
     Shift := Shift * AccelerationSign[deviceNumber];
-    newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
+    newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift*0.05;
 
     if newCalibrateSignal > DAC_max_signal then
-      newCalibrateSignal := newCalibrateSignal - (0.02 * DevicePeriod[deviceNumber]);
-    if newCalibrateSignal < 0 then
-      newCalibrateSignal := newCalibrateSignal + (0.02 * DevicePeriod[deviceNumber]);
+      newCalibrateSignal := - DevicePeriod[deviceNumber];
+    if newCalibrateSignal < DAC_min_signal then
+      newCalibrateSignal :=  + DevicePeriod[deviceNumber];
 
     SendDAC(deviceNumber, newCalibrateSignal);
   end;
@@ -258,7 +283,7 @@ implementation
     BefPageSignal, SignalStepByIndex, PageSignalChange: single;
     valueMax,valueMin: Double;
   begin
-    valueMin := 14000; valueMax := -14000;
+    valueMin := History[0,0] ; valueMax := History[0,0] ;
     indexMin := 0; indexMax := 0;
 
     for i := 0 to Length(History[deviceNumber])-1 do begin
@@ -288,18 +313,12 @@ implementation
     PageSignalChange :=  (OpHistoryIndex mod ChannelPackageSize)*SignalStepByIndex;
     OptimalDACSignal[deviceNumber] :=  BefPageSignal +  PageSignalChange;
 
-    {OpHistoryIndex := Round((indexMax+indexMin)/2);
-    OpHistoryPage := Trunc(OpHistoryIndex/ChannelPackageSize);
-    OptimalDACSignal[deviceNumber] :=  OpHistoryPage*calibration_signal_step;}
-
     SendDAC(deviceNumber, OptimalDACSignal[deviceNumber]);
-
   end;
 
   procedure TProcessThread.doBigSignal(deviceNumber: Integer);
   begin
       EnterCriticalSection(DACSection);
-     
       DACthread.DAC_level[deviceNumber]:= DACthread.DAC_level[deviceNumber]+calibration_signal_step;
       LeaveCriticalSection(DACSection);
   end;
@@ -307,15 +326,16 @@ implementation
   procedure TProcessThread.CalibrateData(deviceNumber: Integer);
   begin
     if MilisecsProcessed < CalibrateMiliSecondsCut then begin
-      doBigSignal(deviceNumber);
-    end else
+     doBigSignal(deviceNumber);
+    end
+    else
     if MilisecsProcessed = CalibrateMiliSecondsCut then begin
-      // RecalculateOptimumPoint(deviceNumber);
+      RecalculateOptimumPoint(deviceNumber);
     end else
     if MilisecsProcessed > CalibrateMiliSecondsCut+3 then
-      //doWorkPointShift(deviceNumber);
+      doWorkPointShift(deviceNumber);
 
-    writeln(debugFile, Format('%.5g', [DACthread.DAC_level[deviceNumber] ]));
+
 
   end;
 

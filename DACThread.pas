@@ -34,22 +34,23 @@ implementation
     EnterCriticalSection(DACSection);
 
     for ch:=0 to phltr34.ChannelQnt-1 do begin
-      ulimit:=ch*DAC_dataByChannel+DAC_dataByChannel-1;
-      ch_code := VoltToCode(DAC_level[ch]);
-      
-      for i:=ch*DAC_dataByChannel to ulimit do
-          DATA[i]:= ch_code;
+      DATA[ch]:= DAC_level[ch];
     end;
 
-    CheckError(LTR34_ProcessData(phltr34,@DATA,@WORD_DATA, DAC_packSize, 0)); //1- указываем что значения в Вольтах
-    CheckError(LTR34_Send(phltr34,@WORD_DATA, DAC_packSize, DAC_possible_delay));
+    CheckError(LTR34_ProcessData(phltr34,@DATA,@WORD_DATA, phltr34.ChannelQnt, 0)); //1- указываем что значения в Вольтах
+    CheckError(LTR34_Send(phltr34,@WORD_DATA, phltr34.ChannelQnt, DAC_possible_delay));
 
     LeaveCriticalSection(DACSection);
     
   end;
 
   procedure TDACThread.stopThread();
+   var ch: Integer;
   begin
+      for ch:=0 to phltr34.ChannelQnt-1 do begin
+          DAC_level[ch]:= 0;
+      end;
+      updateDAC();
       stop:=true;
   end;
 
@@ -67,8 +68,11 @@ implementation
      phltr34:= ltr34;
      SetLength(DAC_level, phltr34.ChannelQnt);
 
-     DAC_max_signal := VoltToCode(DAC_max_VOLT_signal);
-     DAC_min_signal := VoltToCode(DAC_min_VOLT_signal);
+     EnterCriticalSection(DACSection);
+     for i := 0 to ChannelsAmount - 1 do begin
+       DAC_level[i]:= DAC_min_signal;
+     end;
+     LeaveCriticalSection(DACSection);
   end;
 
   destructor TDACThread.Free();
@@ -85,6 +89,7 @@ implementation
     //while not stop do
     //  updateDAC();
 
+    LTR34_Reset(phltr34);
     CheckError(LTR34_DACStop(phltr34));
   end;
 end.
