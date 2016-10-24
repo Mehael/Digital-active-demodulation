@@ -195,8 +195,8 @@ implementation
           err:=LTR_ERROR_RECV_INSUFFICIENT_DATA
         else
         begin
-          //err:=LTR24_ProcessData(phltr24^, rcv_buf, data, ChannelPackageSize, LTR24_PROC_FLAG_NONCONT_DATA);
-          DryData(rcv_buf, data);
+          err:=LTR24_ProcessData(phltr24^, rcv_buf, data, ChannelPackageSize, LTR24_PROC_FLAG_VOLT);
+          //DryData(rcv_buf, data);
           if err=LTR_OK then
           begin
             for ch:=0 to LTR24_CHANNEL_NUM-1 do

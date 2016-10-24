@@ -243,7 +243,7 @@ object MainForm: TMainForm
       Width = 33
       Height = 21
       TabOrder = 7
-      Text = '5'
+      Text = '1'
     end
     object skipVal: TEdit
       Left = 108
