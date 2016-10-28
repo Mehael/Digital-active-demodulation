@@ -40,12 +40,12 @@ implementation
     skips:=Trunc(size/skipAmount);
 
     EnterCriticalSection(HistorySection);
-    for ch:=0 to DevicesAmount-1 do begin
+    {for ch:=0 to DevicesAmount-1 do begin
       for i := 0 to size do begin
         writeln(Files[ch], Format('%.5g', [History[ch, i]]));
       end;
-    end;
-    {for ch:=0 to DevicesAmount-1 do
+    end;}
+    for ch:=0 to DevicesAmount-1 do
     begin
       for i := 0 to skips do begin
         sum:=0;
@@ -54,7 +54,7 @@ implementation
         end;
         writeln(Files[ch], Format('%.5g', [(sum/skipAmount)]));
       end;
-    end;  }
+    end;
     LeaveCriticalSection(HistorySection);
   end;
 
