@@ -4,6 +4,7 @@ uses Windows;
 
 function VoltToCode(Volt: Double): Integer;
 function CodeToVolt(Code: Integer): Double;
+procedure Log(OutputDbgString: String);
 
 var
   HistorySection: TRTLCriticalSection;
@@ -25,10 +26,10 @@ const
 // Дополнительный  постоянный таймаут на прием данных (в мс)
   ADC_possible_delay = 1000;
 
-  CalibrateMiliSecondsCut = 3000;
+  CalibrateMiliSecondsCut = 2000;
   InnerBufferPagesAmount = 4*(CalibrateMiliSecondsCut/ADC_reading_time);   //1;//
 
-  DAC_max_VOLT_signal   = 10;
+  DAC_max_VOLT_signal   = 3;
   DAC_min_VOLT_signal   = 0;
 
   DAC_dataByChannel     = 1;
@@ -48,6 +49,11 @@ end;
 function CodeToVolt(Code: Integer): Double;
 begin
   Result := Code*20/65535;
+end;
+
+procedure Log(OutputDbgString: String);
+begin
+ OutputDebugString(PChar(' - '+OutputDbgString+'     - '));
 end;
 
 end.

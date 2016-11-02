@@ -339,15 +339,15 @@ begin
     err:=LTR34_Config(@hltr_34);  CheckError(err);
 
    for i:=0 to dataSize do
-       DATA[i]:= VoltToCode(10*sin(i*(pi/dataSize)));
+       DATA[i]:= VoltToCode(DAC_max_VOLT_signal*sin(i*(pi/dataSize)));
 
-   DATA[dataSize]:= VoltToCode(0);
+    DATA[dataSize]:= VoltToCode(0);
 
     err:=LTR34_ProcessData(@hltr_34,@DATA,@WORD_DATA, dataSize, 0);//true- указываем что значения в Вольтах
     CheckError(err);
 
-    //err:=LTR34_Send(@hltr_34,@WORD_DATA, dataSize, timeForSending);
-    //  CheckError(err);
+    err:=LTR34_Send(@hltr_34,@WORD_DATA, dataSize, timeForSending);
+      CheckError(err);
     // ---- strart---------
   if res = LTR_OK then
   begin

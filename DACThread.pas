@@ -31,8 +31,11 @@ implementation
     ch_code: Double;
     summator, step: single;
   begin
-    EnterCriticalSection(DACSection);
 
+    if DATA[0]=DAC_level[0] then exit;
+    //Log(FloatToStr(DAC_level[0]));
+
+    EnterCriticalSection(DACSection);
     for ch:=0 to phltr34.ChannelQnt-1 do begin
       DATA[ch]:= DAC_level[ch];
     end;
@@ -41,8 +44,9 @@ implementation
     CheckError(LTR34_ProcessData(phltr34,@DATA,@WORD_DATA, phltr34.ChannelQnt, 0)); //1- указываем что значения в Вольтах
     CheckError(LTR34_Send(phltr34,@WORD_DATA, phltr34.ChannelQnt, DAC_possible_delay));
 
-    writeln(debugFile, DAC_level[0]);
-    
+    if DAC_level[0] > 0 then
+      writeln(debugFile, FloatToStr((DAC_level[0])));
+
   end;
 
   procedure TDACThread.stopThread();

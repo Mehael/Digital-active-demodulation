@@ -73,7 +73,7 @@ implementation
   procedure TProcessThread.sendDAC(channel: Integer; signal: Double);
   begin
     EnterCriticalSection(DACSection);
-    DACthread.DAC_level[channel]:=  signal;
+    DACthread.DAC_level[channel]:= signal;
 
     LastCalibrateSignal[channel]:= signal;
     LeaveCriticalSection(DACSection);
@@ -250,7 +250,7 @@ implementation
     sum:= 0;
 
      for i := 1 to  ChannelPackageSize do begin
-      sum:=sum+(History[deviceNumber, i]);
+      sum:=sum+(History[deviceNumber, HistoryIndex+i]);
      end;
 
      GetLowFreq:= sum/ ChannelPackageSize;
@@ -260,20 +260,21 @@ implementation
   var
     Shift, newCalibrateSignal: Double;
   begin
-    newCalibrateSignal :=    GetLowFreq(deviceNumber);
+    newCalibrateSignal := GetLowFreq(deviceNumber);
     Shift := OptimalPoint[deviceNumber] - newCalibrateSignal;
 
-    writeln(debugFile, Format('%.5g', [Shift]));
+    writeln(debugFile, FloatToStr(Shift));
 
     Shift := Shift * AccelerationSign[deviceNumber];
-    newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift*0.05;
-
-    if newCalibrateSignal > DAC_max_signal then
-      newCalibrateSignal := - DevicePeriod[deviceNumber];
+    newCalibrateSignal := LastCalibrateSignal[deviceNumber] + VoltToCode(Shift*0.01);
+    
+    {if newCalibrateSignal > DAC_max_signal then
+     newCalibrateSignal := newCalibrateSignal - 2*DevicePeriod[deviceNumber];
     if newCalibrateSignal < DAC_min_signal then
-      newCalibrateSignal :=  + DevicePeriod[deviceNumber];
-
+      newCalibrateSignal := newCalibrateSignal + 2*DevicePeriod[deviceNumber];
+    }
     SendDAC(deviceNumber, newCalibrateSignal);
+
   end;
 
   Procedure TProcessThread.RecalculateOptimumPoint(deviceNumber: Integer);
@@ -281,13 +282,13 @@ implementation
     indexMin,indexMax:longint;
     OpHistoryPage, OpHistoryIndex: longint ;
     BefPageSignal, SignalStepByIndex, PageSignalChange: single;
-    valueMax,valueMin: Double;
+    valueMax,valueMin, CalibrationEndIndex: Double;
   begin
     valueMin := History[0,0] ; valueMax := History[0,0] ;
     indexMin := 0; indexMax := 0;
 
     for i := 0 to Length(History[deviceNumber])-1 do begin
-    if (History[deviceNumber,i] = 0) then break; 
+    if (History[deviceNumber,i] = 0) then break;
 
       if valueMin >= History[deviceNumber,i] then begin
         valueMin := History[deviceNumber,i];
@@ -300,18 +301,25 @@ implementation
     end;
     OptimalPoint[deviceNumber] := (valueMax+valueMin)/2;     //оптим положение раб точки
 
+    Log('OptVal: ' + FloatToStr(OptimalPoint[deviceNumber]));
+
     if indexMax > indexMin then
       AccelerationSign[deviceNumber]:= 1
     else
       AccelerationSign[deviceNumber]:= -1;
 
     //DAC signal calculating
+    CalibrationEndIndex:= CalibrateMiliSecondsCut * 14648;
+    calibration_signal_step:= DAC_max_VOLT_signal/CalibrationEndIndex;
+
     OpHistoryIndex := Round((indexMax+indexMin)/2);
-    OpHistoryPage := Trunc(OpHistoryIndex/ChannelPackageSize);
-    SignalStepByIndex := (calibration_signal_step/ChannelPackageSize);
-    BefPageSignal := OpHistoryPage*calibration_signal_step;
-    PageSignalChange :=  (OpHistoryIndex mod ChannelPackageSize)*SignalStepByIndex;
-    OptimalDACSignal[deviceNumber] :=  BefPageSignal +  PageSignalChange;
+
+    OptimalDACSignal[deviceNumber] :=  VoltToCode(OpHistoryIndex*calibration_signal_step);
+    Log('Dac: ' + FloatToStr(OpHistoryIndex*calibration_signal_step));
+
+    //1. калибровочный сигнал кончается, а минимумы-максимумы еще ищем
+    //2. calibration_signal_step вероятно неправьный, слишком маленькое число
+
 
     SendDAC(deviceNumber, OptimalDACSignal[deviceNumber]);
   end;
@@ -325,18 +333,14 @@ implementation
 
   procedure TProcessThread.CalibrateData(deviceNumber: Integer);
   begin
-    if MilisecsProcessed < CalibrateMiliSecondsCut then begin
-     doBigSignal(deviceNumber);
-    end
-    else
-    if MilisecsProcessed = CalibrateMiliSecondsCut then begin
+    if MilisecsProcessed = CalibrateMiliSecondsCut*2 then begin
       RecalculateOptimumPoint(deviceNumber);
+
+      Log(IntToStr(HistoryIndex));
     end else
-    if MilisecsProcessed > CalibrateMiliSecondsCut+3 then
+    if MilisecsProcessed > CalibrateMiliSecondsCut*20 then begin
       doWorkPointShift(deviceNumber);
-
-
-
+    end;
   end;
 
   procedure TProcessThread.ParseChannelsData;
@@ -360,12 +364,14 @@ implementation
   procedure TProcessThread.NextTick();
   var i:Integer;
   begin
-    ParseChannelsData;
     if HistoryPage >= InnerBufferPagesAmount then begin
       WriterThread.Save();
       HistoryPage := 0;
     end;
+
     HistoryIndex:= HistoryPage*ChannelPackageSize;
+
+    ParseChannelsData;
 
     if doUseCalibration then  begin
       for i := 0  to DevicesAmount - 1 do

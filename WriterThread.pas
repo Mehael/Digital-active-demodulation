@@ -47,13 +47,14 @@ implementation
     end;}
     for ch:=0 to DevicesAmount-1 do
     begin
-      for i := 0 to skips do begin
+      for i := 0 to skips-1 do begin
         sum:=0;
         for skipInd:= 0 to skipAmount-1 do begin
            sum := sum+History[ch, i*skipAmount +skipInd];
         end;
         writeln(Files[ch], Format('%.5g', [(sum/skipAmount)]));
       end;
+      //writeln(Files[ch], '0');
     end;
     LeaveCriticalSection(HistorySection);
   end;
