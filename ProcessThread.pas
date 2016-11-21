@@ -17,6 +17,7 @@ type TProcessThread = class(TThread)
     phltr24: pTLTR24; //указатель на описатель модуля
     bnStart:  TButton;
     skipAmount: integer;
+    WindowPercent: integer;
 
     path:string;
     frequency:string;
@@ -40,6 +41,9 @@ type TProcessThread = class(TThread)
     ChannelPackageSize : Integer;
     History: THistory;
     HistoryIndex, HistoryPage : Integer;
+
+    //YWindowVariables
+    YWindowMax, YWindowMin: Double;
 
     procedure NextTick();
     procedure ParseChannelsData;
@@ -265,6 +269,9 @@ implementation
 
     writeln(debugFile, FloatToStr(Shift));
 
+    if ((newCalibrateSignal > YWindowMin) and (newCalibrateSignal < YWindowMax)) then exit;
+    
+
     Shift := Shift * AccelerationSign[deviceNumber];
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + VoltToCode(Shift*0.1);
     
@@ -282,7 +289,7 @@ implementation
     indexMin,indexMax:longint;
     OpHistoryPage, OpHistoryIndex: longint ;
     BefPageSignal, SignalStepByIndex, PageSignalChange: single;
-    valueMax,valueMin, CalibrationEndIndex: Double;
+    valueMax,valueMin, amplitude, CalibrationEndIndex: Double;
   begin
     valueMin := History[0,0] ; valueMax := History[0,0] ;
     indexMin := 0; indexMax := 0;
@@ -300,6 +307,10 @@ implementation
       end;
     end;
     OptimalPoint[deviceNumber] := (valueMax+valueMin)/2;     //оптим положение раб точки
+
+    amplitude := (valueMax-valueMin)*WindowPercent*0.5;
+    YWindowMin:= OptimalPoint[deviceNumber] - amplitude;
+    YWindowMax:= OptimalPoint[deviceNumber] + amplitude;
 
     Log('OptVal: ' + FloatToStr(OptimalPoint[deviceNumber]));
 

@@ -61,11 +61,25 @@ object MainForm: TMainForm
       Caption = #1042#1088#1077#1084#1103' '#1088#1072#1073#1086#1090#1099':'
     end
     object Label3: TLabel
-      Left = 16
+      Left = 20
       Top = 105
       Width = 82
       Height = 13
       Caption = #1055#1080#1089#1072#1090#1100' '#1082#1072#1078#1076#1086#1077':'
+    end
+    object Label4: TLabel
+      Left = 36
+      Top = 135
+      Width = 66
+      Height = 13
+      Caption = #1056#1072#1079#1084#1077#1088' '#1086#1082#1085#1072':'
+    end
+    object Label5: TLabel
+      Left = 149
+      Top = 135
+      Width = 71
+      Height = 13
+      Caption = '% '#1072#1084#1087#1083#1080#1090#1091#1076#1099
     end
     object bnStart: TButton
       Left = 185
@@ -120,8 +134,8 @@ object MainForm: TMainForm
       Text = '1'
     end
     object grpConfig: TGroupBox
-      Left = 9
-      Top = 125
+      Left = 6
+      Top = 173
       Width = 309
       Height = 138
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
@@ -253,6 +267,16 @@ object MainForm: TMainForm
       Enabled = False
       TabOrder = 8
       Text = '10'
+    end
+    object PercentEdit: TSpinEdit
+      Left = 108
+      Top = 132
+      Width = 35
+      Height = 22
+      MaxValue = 100
+      MinValue = 0
+      TabOrder = 9
+      Value = 30
     end
   end
   object Panel2: TPanel

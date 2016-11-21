@@ -3,7 +3,8 @@ interface uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, FileCtrl, StdCtrls, Buttons, ExtCtrls,
   Math, TeeProcs, TeEngine, Chart, Series, ComCtrls,
-  ltrapi, ltrapitypes, ltrapidefine, ltr24api, ltr34api, ProcessThread, Config;
+  ltrapi, ltrapitypes, ltrapidefine, ltr24api, ltr34api, ProcessThread, Config,
+  Spin;
 
 { Информация, необходимая для установления соединения с модулем }
 type TLTR_MODULE_LOCATION = record
@@ -42,6 +43,9 @@ type
     Panel2: TPanel;
     Label3: TLabel;
     skipVal: TEdit;
+    Label4: TLabel;
+    PercentEdit: TSpinEdit;
+    Label5: TLabel;
     procedure FormDestroy(Sender: TObject);
 
     private
@@ -374,6 +378,7 @@ begin
 
     thread.doUseCalibration := CheckBox1.Checked;
     thread.skipAmount := StrToInt(SkipVal.Text);
+    thread.WindowPercent:=PercentEdit.Value;
 
     MilisecsWork := StrToInt(txWorkTime.Text);  // время сбора данных в минутах, минимум 1 минута!!!
     if cbTimeMetric.Text = 'часов' then
