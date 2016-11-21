@@ -266,13 +266,13 @@ implementation
     writeln(debugFile, FloatToStr(Shift));
 
     Shift := Shift * AccelerationSign[deviceNumber];
-    newCalibrateSignal := LastCalibrateSignal[deviceNumber] + VoltToCode(Shift*0.01);
+    newCalibrateSignal := LastCalibrateSignal[deviceNumber] + VoltToCode(Shift*0.1);
     
-    {if newCalibrateSignal > DAC_max_signal then
-     newCalibrateSignal := newCalibrateSignal - 2*DevicePeriod[deviceNumber];
+    if newCalibrateSignal > DAC_max_signal then
+     newCalibrateSignal := newCalibrateSignal - VoltToCode(0.002*DevicePeriod[deviceNumber]);
     if newCalibrateSignal < DAC_min_signal then
-      newCalibrateSignal := newCalibrateSignal + 2*DevicePeriod[deviceNumber];
-    }
+      newCalibrateSignal := newCalibrateSignal + VoltToCode(0.002*DevicePeriod[deviceNumber]);
+
     SendDAC(deviceNumber, newCalibrateSignal);
 
   end;
@@ -309,17 +309,13 @@ implementation
       AccelerationSign[deviceNumber]:= -1;
 
     //DAC signal calculating
-    CalibrationEndIndex:= CalibrateMiliSecondsCut * 14648;
+    CalibrationEndIndex:= 26000;
     calibration_signal_step:= DAC_max_VOLT_signal/CalibrationEndIndex;
 
     OpHistoryIndex := Round((indexMax+indexMin)/2);
 
     OptimalDACSignal[deviceNumber] :=  VoltToCode(OpHistoryIndex*calibration_signal_step);
     Log('Dac: ' + FloatToStr(OpHistoryIndex*calibration_signal_step));
-
-    //1. калибровочный сигнал кончается, а минимумы-максимумы еще ищем
-    //2. calibration_signal_step вероятно неправьный, слишком маленькое число
-
 
     SendDAC(deviceNumber, OptimalDACSignal[deviceNumber]);
   end;
@@ -333,12 +329,12 @@ implementation
 
   procedure TProcessThread.CalibrateData(deviceNumber: Integer);
   begin
-    if MilisecsProcessed = CalibrateMiliSecondsCut*2 then begin
+    if MilisecsProcessed = CalibrateMiliSecondsCut then begin
       RecalculateOptimumPoint(deviceNumber);
 
       Log(IntToStr(HistoryIndex));
     end else
-    if MilisecsProcessed > CalibrateMiliSecondsCut*20 then begin
+    if MilisecsProcessed > CalibrateMiliSecondsCut then begin
       doWorkPointShift(deviceNumber);
     end;
   end;

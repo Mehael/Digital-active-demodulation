@@ -22,7 +22,7 @@ const
   ChannelsAmount    = DevicesAmount*ChannelsPerDevice;
 
 // Время, за которое будет отображаться блок (в мс)
-  ADC_reading_time   = 500;
+  ADC_reading_time   = 50;
 // Дополнительный  постоянный таймаут на прием данных (в мс)
   ADC_possible_delay = 1000;
 
