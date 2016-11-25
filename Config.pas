@@ -13,10 +13,10 @@ var
   DAC_min_signal : Integer;
 const
   DevicesAmount     = 1;
-  DevicePeriod : array[0..1] of Integer =
+  DevicePeriod : array[0..1] of Double =
   (
-      390,       //????????????
-      390
+      0.78,
+      0.2
   );
   ChannelsPerDevice = 1;
   ChannelsAmount    = DevicesAmount*ChannelsPerDevice;

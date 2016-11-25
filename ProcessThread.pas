@@ -276,9 +276,9 @@ implementation
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + VoltToCode(Shift*0.1);
     
     if newCalibrateSignal > DAC_max_signal then
-     newCalibrateSignal := newCalibrateSignal - VoltToCode(0.002*DevicePeriod[deviceNumber]);
+     newCalibrateSignal := newCalibrateSignal - VoltToCode(DAC_max_VOLT_signal *DevicePeriod[deviceNumber]);
     if newCalibrateSignal < DAC_min_signal then
-      newCalibrateSignal := newCalibrateSignal + VoltToCode(0.002*DevicePeriod[deviceNumber]);
+      newCalibrateSignal := newCalibrateSignal + VoltToCode(DAC_max_VOLT_signal *DevicePeriod[deviceNumber]);
 
     SendDAC(deviceNumber, newCalibrateSignal);
 
@@ -308,7 +308,7 @@ implementation
     end;
     OptimalPoint[deviceNumber] := (valueMax+valueMin)/2;     //оптим положение раб точки
 
-    amplitude := (valueMax-valueMin)*WindowPercent*0.5;
+    amplitude := (valueMax-valueMin)*WindowPercent*0.005;
     YWindowMin:= OptimalPoint[deviceNumber] - amplitude;
     YWindowMax:= OptimalPoint[deviceNumber] + amplitude;
 

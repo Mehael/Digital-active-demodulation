@@ -276,7 +276,7 @@ object MainForm: TMainForm
       MaxValue = 100
       MinValue = 0
       TabOrder = 9
-      Value = 30
+      Value = 1
     end
   end
   object Panel2: TPanel
