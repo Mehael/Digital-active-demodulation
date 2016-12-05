@@ -2,7 +2,7 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = #1057#1073#1086#1088' '#1044#1072#1085#1085#1099#1093' EU2'
-  ClientHeight = 431
+  ClientHeight = 430
   ClientWidth = 648
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,7 +17,7 @@ object MainForm: TMainForm
   TextHeight = 13
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 412
+    Top = 411
     Width = 648
     Height = 19
     Panels = <
@@ -29,16 +29,18 @@ object MainForm: TMainForm
         Text = #1042#1089#1077' '#1089#1080#1089#1090#1077#1084#1099' '#1088#1072#1073#1086#1090#1072#1102#1090' '#1085#1086#1088#1084#1072#1083#1100#1085#1086
         Width = 50
       end>
+    ExplicitTop = 412
   end
   object Panel1: TPanel
     Left = 319
     Top = 0
     Width = 329
-    Height = 412
+    Height = 411
     Align = alRight
     Alignment = taLeftJustify
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitHeight = 412
     object Label1: TLabel
       Left = 4
       Top = 52
@@ -283,10 +285,11 @@ object MainForm: TMainForm
     Left = 0
     Top = 0
     Width = 319
-    Height = 412
+    Height = 411
     Align = alClient
     AutoSize = True
     TabOrder = 2
+    ExplicitHeight = 412
     object chGraph: TChart
       Left = 1
       Top = 1
@@ -326,7 +329,7 @@ object MainForm: TMainForm
     end
     object chGraph2: TChart
       Left = 1
-      Top = 204
+      Top = 203
       Width = 317
       Height = 207
       AllowPanning = pmNone
@@ -347,6 +350,7 @@ object MainForm: TMainForm
       Align = alBottom
       Color = clBlack
       TabOrder = 1
+      ExplicitTop = 204
       PrintMargins = (
         15
         24

@@ -18,6 +18,7 @@ type TProcessThread = class(TThread)
     bnStart:  TButton;
     skipAmount: integer;
     WindowPercent: integer;
+    PrevHistoryIndex: Integer;
 
     path:string;
     frequency:string;
@@ -41,9 +42,12 @@ type TProcessThread = class(TThread)
     ChannelPackageSize : Integer;
     History: THistory;
     HistoryIndex, HistoryPage : Integer;
+    historyPagesAmount : Integer;
 
     //YWindowVariables
     YWindowMax, YWindowMin: Double;
+    BlockMax, BlockMin: array [0..MedianDeep-1] of Double;
+    CurrentMedianIndex : Integer;
 
     procedure NextTick();
     procedure ParseChannelsData;
@@ -112,7 +116,7 @@ implementation
 
   procedure TProcessThread.Execute;
   var
-    stoperr,i,historyPagesAmount : Integer;
+    stoperr,i : Integer;
     rcv_buf  : array of LongWord;  //сырые принятые слова от модуля
 
     ch, steps_amount       : Integer;
@@ -247,17 +251,40 @@ implementation
 
 
   function TProcessThread.GetLowFreq(deviceNumber: Integer) : Double;
-  var i, index : Integer;
-  sum: Extended;
-  sinArgStep, collectedStep, weight: Double;
+  var i, index: Integer;
+  min, max, startValue, aver : Double;
+
   begin
-    sum:= 0;
+     if (HistoryIndex<0) then
+        HistoryIndex:=historyPagesAmount-1;
 
-     for i := 1 to  ChannelPackageSize do begin
-      sum:=sum+(History[deviceNumber, HistoryIndex+i]);
+     startValue:=History[deviceNumber, HistoryIndex];
+     min:= startValue;
+     max:= startValue;
+     aver:=0;
+     for i := 0 to ChannelPackageSize-1 do begin
+        aver:=aver+History[deviceNumber, HistoryIndex+i];
+        if History[deviceNumber, HistoryIndex+i] > max then max := History[deviceNumber, HistoryIndex+i];
+        if History[deviceNumber, HistoryIndex+i] < min then min := History[deviceNumber, HistoryIndex+i];
      end;
+     aver:=aver/ChannelPackageSize;
+     BlockMax[CurrentMedianIndex]:= max;
+     BlockMin[CurrentMedianIndex]:= min;
 
-     GetLowFreq:= sum/ ChannelPackageSize;
+     for i := 0 to MedianDeep-1 do begin
+      if BlockMax[i] > max then max := BlockMax[i];
+      if BlockMin[i] < min then min := BlockMin[i];
+     end;
+     GetLowFreq:=aver;
+     //if BlockMax[MedianDeep-1] = 0 then
+     //   GetLowFreq:=OptimalPoint[deviceNumber]
+     //else begin
+     //   GetLowFreq:=(max+min)/2;
+     //end;
+
+     CurrentMedianIndex:=CurrentMedianIndex+1;
+     if (CurrentMedianIndex = MedianDeep) then CurrentMedianIndex:=0;
+
   end;
 
   procedure TProcessThread.doWorkPointShift(deviceNumber: Integer);
