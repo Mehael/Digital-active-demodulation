@@ -43,10 +43,11 @@ type TProcessThread = class(TThread)
     History: THistory;
     HistoryIndex, HistoryPage : Integer;
     historyPagesAmount : Integer;
+    amplitude: Double;
 
     //YWindowVariables
     YWindowMax, YWindowMin: Double;
-    BlockMax, BlockMin: array [0..MedianDeep-1] of Double;
+    Median: array [0..MedianDeep-1] of Double;
     CurrentMedianIndex : Integer;
 
     procedure NextTick();
@@ -231,6 +232,14 @@ implementation
       visChAvg[0].Series[0].Clear();
       visChAvg[1].Series[0].Clear();
 
+      HistoryIndex:= HistoryPage*ChannelPackageSize;
+
+      for ch:=0 to DevicesAmount-1 do
+          for i := HistoryIndex to Length(History[0])-1 do
+             History[ch, i] := 0;
+
+      WriterThread.Save();
+
       WriterThread.Terminate();
 
       { По выходу из цикла отсанавливаем сбор данных.
@@ -252,35 +261,28 @@ implementation
 
   function TProcessThread.GetLowFreq(deviceNumber: Integer) : Double;
   var i, index: Integer;
-  min, max, startValue, aver : Double;
+  aver,startValue, dif : Double;
 
   begin
-     if (HistoryIndex<0) then
-        HistoryIndex:=historyPagesAmount-1;
-
      startValue:=History[deviceNumber, HistoryIndex];
-     min:= startValue;
-     max:= startValue;
      aver:=0;
      for i := 0 to ChannelPackageSize-1 do begin
         aver:=aver+History[deviceNumber, HistoryIndex+i];
-        if History[deviceNumber, HistoryIndex+i] > max then max := History[deviceNumber, HistoryIndex+i];
-        if History[deviceNumber, HistoryIndex+i] < min then min := History[deviceNumber, HistoryIndex+i];
      end;
-     aver:=aver/ChannelPackageSize;
-     BlockMax[CurrentMedianIndex]:= max;
-     BlockMin[CurrentMedianIndex]:= min;
+     Median[CurrentMedianIndex]:=aver/ChannelPackageSize;
 
-     for i := 0 to MedianDeep-1 do begin
-      if BlockMax[i] > max then max := BlockMax[i];
-      if BlockMin[i] < min then min := BlockMin[i];
+     if Median[MedianDeep-1] = 0 then
+        GetLowFreq:=OptimalPoint[deviceNumber]
+     else begin
+        index:=CurrentMedianIndex-1;
+        if index<0 then index:=MedianDeep-1;
+
+        dif:= Median[CurrentMedianIndex]-Median[index];
+        if Abs(dif)> amplitude*0.4 then
+            Median[CurrentMedianIndex]:= Median[index]+ Sign(dif)*amplitude*0.4;
+
+        GetLowFreq:= Median[CurrentMedianIndex];
      end;
-     GetLowFreq:=aver;
-     //if BlockMax[MedianDeep-1] = 0 then
-     //   GetLowFreq:=OptimalPoint[deviceNumber]
-     //else begin
-     //   GetLowFreq:=(max+min)/2;
-     //end;
 
      CurrentMedianIndex:=CurrentMedianIndex+1;
      if (CurrentMedianIndex = MedianDeep) then CurrentMedianIndex:=0;
@@ -300,7 +302,7 @@ implementation
     
 
     Shift := Shift * AccelerationSign[deviceNumber];
-    newCalibrateSignal := LastCalibrateSignal[deviceNumber] + VoltToCode(Shift*0.1);
+    newCalibrateSignal := LastCalibrateSignal[deviceNumber] + VoltToCode(Shift*0.01);
     
     if newCalibrateSignal > DAC_max_signal then
      newCalibrateSignal := newCalibrateSignal - VoltToCode(DAC_max_VOLT_signal *DevicePeriod[deviceNumber]);
@@ -316,7 +318,7 @@ implementation
     indexMin,indexMax:longint;
     OpHistoryPage, OpHistoryIndex: longint ;
     BefPageSignal, SignalStepByIndex, PageSignalChange: single;
-    valueMax,valueMin, amplitude, CalibrationEndIndex: Double;
+    valueMax,valueMin, CalibrationEndIndex: Double;
   begin
     valueMin := History[0,0] ; valueMax := History[0,0] ;
     indexMin := 0; indexMax := 0;
@@ -408,7 +410,7 @@ implementation
     ParseChannelsData;
 
     if doUseCalibration then  begin
-      for i := 0  to DevicesAmount - 1 do
+      for i := 0 to DevicesAmount - 1 do
         CalibrateData(i);
     end;
 

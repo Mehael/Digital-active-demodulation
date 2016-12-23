@@ -1,6 +1,6 @@
 object MainForm: TMainForm
-  Left = 0
-  Top = 0
+  Left = 356
+  Top = 162
   Caption = #1057#1073#1086#1088' '#1044#1072#1085#1085#1099#1093' EU2'
   ClientHeight = 430
   ClientWidth = 648
@@ -11,6 +11,7 @@ object MainForm: TMainForm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poDesigned
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 96
@@ -29,7 +30,6 @@ object MainForm: TMainForm
         Text = #1042#1089#1077' '#1089#1080#1089#1090#1077#1084#1099' '#1088#1072#1073#1086#1090#1072#1102#1090' '#1085#1086#1088#1084#1072#1083#1100#1085#1086
         Width = 50
       end>
-    ExplicitTop = 412
   end
   object Panel1: TPanel
     Left = 319
@@ -40,7 +40,6 @@ object MainForm: TMainForm
     Alignment = taLeftJustify
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitHeight = 412
     object Label1: TLabel
       Left = 4
       Top = 52
@@ -82,6 +81,19 @@ object MainForm: TMainForm
       Width = 71
       Height = 13
       Caption = '% '#1072#1084#1087#1083#1080#1090#1091#1076#1099
+    end
+    object TimerText: TLabel
+      Left = 192
+      Top = 322
+      Width = 121
+      Height = 33
+      Align = alCustom
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -27
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
     end
     object bnStart: TButton
       Left = 185
@@ -133,7 +145,7 @@ object MainForm: TMainForm
       Height = 21
       Enabled = False
       TabOrder = 4
-      Text = '1'
+      Text = '2'
     end
     object grpConfig: TGroupBox
       Left = 6
@@ -289,7 +301,6 @@ object MainForm: TMainForm
     Align = alClient
     AutoSize = True
     TabOrder = 2
-    ExplicitHeight = 412
     object chGraph: TChart
       Left = 1
       Top = 1
@@ -350,7 +361,6 @@ object MainForm: TMainForm
       Align = alBottom
       Color = clBlack
       TabOrder = 1
-      ExplicitTop = 204
       PrintMargins = (
         15
         24
@@ -370,5 +380,11 @@ object MainForm: TMainForm
         Data = {0000000000}
       end
     end
+  end
+  object Timer1: TTimer
+    Enabled = False
+    OnTimer = Timer1Timer
+    Left = 328
+    Top = 368
   end
 end

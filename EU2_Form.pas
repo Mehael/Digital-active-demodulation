@@ -46,7 +46,10 @@ type
     Label4: TLabel;
     PercentEdit: TSpinEdit;
     Label5: TLabel;
+    TimerText: TLabel;
+    Timer1: TTimer;
     procedure FormDestroy(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
 
     private
       ltr_list: array[0..1] of TLTR_MODULE_LOCATION; //список найденных модулей 0-24, 1 - 34
@@ -54,6 +57,7 @@ type
       hltr_34 : TLTR34;
       threadRunning : Boolean; // Признак, запущен ли поток сбора данных
       thread : TProcessThread; //Объект потока для выполнения сбора данных
+      secondsToWork: integer;
 
       procedure refreshDeviceList();
       procedure closeDevice();
@@ -90,7 +94,8 @@ begin
 
   end else begin
     if threadRunning then
-
+      Timer1.Enabled := false;
+      TimerText.Caption:= '';
       thread.stop:=True;
 
   end;
@@ -386,7 +391,10 @@ begin
     if cbTimeMetric.Text = 'дней' then
       MilisecsWork := MilisecsWork*60*24;
 
-    thread.MilisecsToWork := MilisecsWork*60*1000;
+    secondsToWork:=MilisecsWork*60;
+    thread.MilisecsToWork := secondsToWork*1000;
+    Timer1.Enabled := true;
+
     thread.bnStart := bnStart;
     { устанавливаем функцию на событие завершения потока (в частности,
     чтобы отследить, если поток завершился сам из-за ошибки при сборе
@@ -395,6 +403,18 @@ begin
     thread.Resume; //для Delphi 2010 и выше рекомендуется использовать Start
     threadRunning := True;
   end;
+
+  end;
+
+  procedure TMainForm.Timer1Timer(Sender: TObject);
+  begin
+   secondsToWork:=secondsToWork-1;
+
+   if secondsToWork<0 then begin
+      TimerText.Caption:= '';
+      Timer1.Enabled := false;
+   end else
+      TimerText.Caption:= IntToStr(secondsToWork div 60)+':'+IntToStr(secondsToWork mod 60);
 
   end;
 

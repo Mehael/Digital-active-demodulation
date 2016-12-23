@@ -16,7 +16,7 @@ const
   DevicePeriod : array[0..1] of Double =
   (
       0.68,
-      0.2
+      0.68
   );
   ChannelsPerDevice = 1;
   ChannelsAmount    = DevicesAmount*ChannelsPerDevice;
