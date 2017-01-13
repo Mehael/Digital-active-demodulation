@@ -9,7 +9,7 @@ type TProcessThread = class(TThread)
     //элементы управления для отображения результатов обработки
     visChAvg : array [0..LTR24_CHANNEL_NUM-1] of TChart;
     WriterThread : TWriter;
-    debugFile:TextFile;
+    debugFile,dacFile:TextFile;
     MilisecsToWork:  Int64;
     MilisecsProcessed:  Int64;
     phltr34: pTLTR34;
@@ -82,18 +82,14 @@ implementation
   procedure TProcessThread.sendDAC(channel: Integer; signal: Double);
   var
     i: integer;
-    DATA:array[0..DAC_packSize-1] of Double;
     WORD_DATA:array[0..DAC_packSize-1] of Double;
-    ph: pTLTR34;
   begin
     LastCalibrateSignal[channel]:= signal;
 
-    for i := 0 to DAC_packSize - 1 do
-      DATA[i]:= LastCalibrateSignal[i];
+    writeln(dacFile, FloatToStr(LastCalibrateSignal[channel]));
 
-    ph:= phltr34;
-    LTR34_ProcessData(ph,@DATA,@WORD_DATA, ph.ChannelQnt, 0); //1- указываем что значения в Вольтах
-    LTR34_Send(ph,@WORD_DATA, ph.ChannelQnt, DAC_possible_delay);
+    LTR34_ProcessData(phltr34,@LastCalibrateSignal,@WORD_DATA, phltr34.ChannelQnt, 0); //1- указываем что значения в Вольтах
+    LTR34_Send(phltr34,@WORD_DATA, phltr34.ChannelQnt, DAC_possible_delay);
   end;
 
   procedure TProcessThread.DryData(wetData: array of LongWord; out dryData: array of Double);
@@ -145,6 +141,11 @@ implementation
 
     System.Assign(debugFile, 'D:\debug.txt');
     ReWrite(debugFile);
+    System.Assign(dacFile, 'D:\Dac.txt');
+    ReWrite(dacFile);
+
+    if doUseCalibration then
+     LTR34_DACStart(phltr34);
 
     //Проверяем, сколько и какие каналы разрешены
     DevicesAmount := 0;
@@ -231,6 +232,11 @@ implementation
 
       NextTick();
 
+      if doUseCalibration then begin
+        LTR34_Reset(phltr34);
+        LTR34_DACStop(phltr34);
+      end;
+
       visChAvg[0].Series[0].Clear();
       visChAvg[1].Series[0].Clear();
 
@@ -258,8 +264,8 @@ implementation
 
 
   function TProcessThread.GetLowFreq(deviceNumber: Integer) : Double;
-  var i: Integer;
-  aver,startValue, dif, memory : Double;
+  var i, fresh_moar, fresh_less: Integer;
+  aver,startValue, dif, memory, fresh : Double;
 
   begin
      startValue:=History[deviceNumber, HistoryIndex];
@@ -270,26 +276,44 @@ implementation
 
         Median[deviceNumber, CurrentMedianIndex[deviceNumber]]:=aver/ChannelPackageSize;
 
+        fresh:=0;
         memory:= 0;
-        for i := 0 to MedianDeep-1 do begin
-           if (i<>CurrentMedianIndex[deviceNumber]) then
-             memory:=memory+Median[deviceNumber, i];
+
+        fresh_moar:=CurrentMedianIndex[deviceNumber];
+        fresh_less:=fresh_moar+freshDeep;
+        if (fresh_less>MedianDeep) then begin
+          fresh_less:=fresh_less-MedianDeep;
+           for i := 0 to MedianDeep-1 do begin
+           if ((i>=fresh_moar) or (i<fresh_less)) then
+              fresh:=fresh+Median[deviceNumber, i]
+           else
+              memory:=memory+Median[deviceNumber, i];
+          end;
+        end else begin
+          for i := 0 to MedianDeep-1 do begin
+           if ((i>=fresh_moar) and (i<fresh_less)) then
+              fresh:=fresh+Median[deviceNumber, i]
+           else
+              memory:=memory+Median[deviceNumber, i];
+          end;
         end;
 
         if MedianDeep>1 then memory:=memory/(MedianDeep-1)
         else memory:= Median[deviceNumber, CurrentMedianIndex[deviceNumber]];
 
         //dif:= Median[deviceNumber, CurrentMedianIndex[deviceNumber]]-memory;
+        //dif:=fresh-memory;
         //if Abs(dif)> amplitude*0.4 then
         //    Median[deviceNumber, CurrentMedianIndex[deviceNumber]] :=
         //       memory+ Sign(dif)*amplitude*0.4;//;
 
         //GetLowFreq:= Median[deviceNumber, CurrentMedianIndex[deviceNumber]];
-
         GetLowFreq:=  memory;
+
 
      CurrentMedianIndex[deviceNumber]:=CurrentMedianIndex[deviceNumber]+1;
      if (CurrentMedianIndex[deviceNumber] = MedianDeep) then CurrentMedianIndex[deviceNumber]:=0;
+
 
   end;
 
@@ -330,7 +354,7 @@ implementation
 
     for i := 0 to Length(History[deviceNumber])-1 do begin
     if (History[deviceNumber,i] = 0) then break;
-
+      visChAvg[deviceNumber].Series[0].Add(History[deviceNumber,i]);
       if valueMin >= History[deviceNumber,i] then begin
         valueMin := History[deviceNumber,i];
         indexMin := i;
@@ -423,4 +447,4 @@ implementation
   end;
 
 end.
-
+                                                                     

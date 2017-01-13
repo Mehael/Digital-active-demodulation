@@ -15,8 +15,8 @@ const
   DevicesAmount     = 2;
   DevicePeriod : array[0..1] of Double =
   (
-      0.60,
-      0.62
+      0.601,
+      0.55
   );
   ChannelsPerDevice = 1;
   ChannelsAmount    = DevicesAmount*ChannelsPerDevice;
@@ -37,7 +37,8 @@ const
 
   DAC_packSize          = DevicesAmount*DAC_dataByChannel;
 
-  MedianDeep    = 40;
+  MedianDeep    = 39;
+  FreshDeep    = 1;
 type
   TFilePack = array[0..ChannelsAmount] of TextFile;
   THistory = array[0..ChannelsAmount-1] of array of Double;
