@@ -2,13 +2,12 @@ unit ProcessThread;
 
 interface
 uses Windows, Classes, Math, SyncObjs, Graphics, Chart, Series,
-StdCtrls, SysUtils, ltr24api, ltr34api, ltrapi, DACThread, WriterThread, Config;
+StdCtrls, SysUtils, ltr24api, ltr34api, ltrapi, WriterThread, Config;
 
 type TProcessThread = class(TThread)
   public
     //элементы управления для отображения результатов обработки
     visChAvg : array [0..LTR24_CHANNEL_NUM-1] of TChart;
-    DACthread : TDACThread; //Объект потока для выполнения сбора данных
     WriterThread : TWriter;
     debugFile:TextFile;
     MilisecsToWork:  Int64;
@@ -47,8 +46,8 @@ type TProcessThread = class(TThread)
 
     //YWindowVariables
     YWindowMax, YWindowMin: Double;
-    Median: array [0..MedianDeep-1] of Double;
-    CurrentMedianIndex : Integer;
+    Median: array [0..DevicesAmount-1, 0..MedianDeep-1] of Double;
+    CurrentMedianIndex : array [0..DevicesAmount-1] of Integer;
 
     procedure NextTick();
     procedure ParseChannelsData;
@@ -65,27 +64,36 @@ type TProcessThread = class(TThread)
 implementation
 
   constructor TProcessThread.Create(SuspendCreate : Boolean);
+  var i:integer;
   begin
      Inherited Create(SuspendCreate);
      stop:=False;
      err:=LTR_OK;
+
+     for i := 0 to DAC_packSize - 1 do
+      LastCalibrateSignal[i]:=0;
   end;
 
   destructor TProcessThread.Free();
   begin
-      if DACthread <> nil then
-        DACthread.stop := true;
-        FreeAndNil(DACthread);
       Inherited Free();
   end;
 
   procedure TProcessThread.sendDAC(channel: Integer; signal: Double);
+  var
+    i: integer;
+    DATA:array[0..DAC_packSize-1] of Double;
+    WORD_DATA:array[0..DAC_packSize-1] of Double;
+    ph: pTLTR34;
   begin
-    EnterCriticalSection(DACSection);
-    DACthread.DAC_level[channel]:= signal;
-
     LastCalibrateSignal[channel]:= signal;
-    LeaveCriticalSection(DACSection);
+
+    for i := 0 to DAC_packSize - 1 do
+      DATA[i]:= LastCalibrateSignal[i];
+
+    ph:= phltr34;
+    LTR34_ProcessData(ph,@DATA,@WORD_DATA, ph.ChannelQnt, 0); //1- указываем что значения в Вольтах
+    LTR34_Send(ph,@WORD_DATA, ph.ChannelQnt, DAC_possible_delay);
   end;
 
   procedure TProcessThread.DryData(wetData: array of LongWord; out dryData: array of Double);
@@ -179,12 +187,6 @@ implementation
     WriterThread.Priority := tpHighest;
     WriterThread.History := @History;
 
-    if doUseCalibration then begin
-      DACthread := TDACThread.Create(phltr34, True);
-      DACthread.Priority := tpHighest;
-      DACthread.Resume;
-    end;
-
     if err = LTR_OK then
     begin
       while not stop and (err = LTR_OK) do
@@ -215,7 +217,7 @@ implementation
             end;
 
             // получаем кол-во отсчетов на канал
-            ChannelPackageSize := Trunc(ChannelPackageSize/DevicesAmount) ;
+            ChannelPackageSize := Trunc(ChannelPackageSize/DevicesAmount);
             for ch:=0 to DevicesAmount-1 do
             begin
               ChValidData[ch] := True;
@@ -251,17 +253,13 @@ implementation
         err:= stoperr;
 
     end;
-    if doUseCalibration then begin
-       DACthread.stopThread();
-       DACthread.stop := true;
-    end;
     bnStart.Caption := 'Старт';
   end;
 
 
   function TProcessThread.GetLowFreq(deviceNumber: Integer) : Double;
-  var i, index: Integer;
-  aver,startValue, dif : Double;
+  var i: Integer;
+  aver,startValue, dif, memory : Double;
 
   begin
      startValue:=History[deviceNumber, HistoryIndex];
@@ -269,23 +267,29 @@ implementation
      for i := 0 to ChannelPackageSize-1 do begin
         aver:=aver+History[deviceNumber, HistoryIndex+i];
      end;
-     Median[CurrentMedianIndex]:=aver/ChannelPackageSize;
 
-     if Median[MedianDeep-1] = 0 then
-        GetLowFreq:=OptimalPoint[deviceNumber]
-     else begin
-        index:=CurrentMedianIndex-1;
-        if index<0 then index:=MedianDeep-1;
+        Median[deviceNumber, CurrentMedianIndex[deviceNumber]]:=aver/ChannelPackageSize;
 
-        dif:= Median[CurrentMedianIndex]-Median[index];
-        if Abs(dif)> amplitude*0.4 then
-            Median[CurrentMedianIndex]:= Median[index]+ Sign(dif)*amplitude*0.4;
+        memory:= 0;
+        for i := 0 to MedianDeep-1 do begin
+           if (i<>CurrentMedianIndex[deviceNumber]) then
+             memory:=memory+Median[deviceNumber, i];
+        end;
 
-        GetLowFreq:= Median[CurrentMedianIndex];
-     end;
+        if MedianDeep>1 then memory:=memory/(MedianDeep-1)
+        else memory:= Median[deviceNumber, CurrentMedianIndex[deviceNumber]];
 
-     CurrentMedianIndex:=CurrentMedianIndex+1;
-     if (CurrentMedianIndex = MedianDeep) then CurrentMedianIndex:=0;
+        //dif:= Median[deviceNumber, CurrentMedianIndex[deviceNumber]]-memory;
+        //if Abs(dif)> amplitude*0.4 then
+        //    Median[deviceNumber, CurrentMedianIndex[deviceNumber]] :=
+        //       memory+ Sign(dif)*amplitude*0.4;//;
+
+        //GetLowFreq:= Median[deviceNumber, CurrentMedianIndex[deviceNumber]];
+
+        GetLowFreq:=  memory;
+
+     CurrentMedianIndex[deviceNumber]:=CurrentMedianIndex[deviceNumber]+1;
+     if (CurrentMedianIndex[deviceNumber] = MedianDeep) then CurrentMedianIndex[deviceNumber]:=0;
 
   end;
 
@@ -294,16 +298,17 @@ implementation
     Shift, newCalibrateSignal: Double;
   begin
     newCalibrateSignal := GetLowFreq(deviceNumber);
+    Shift := 0;
     Shift := OptimalPoint[deviceNumber] - newCalibrateSignal;
 
     writeln(debugFile, FloatToStr(Shift));
 
     if ((newCalibrateSignal > YWindowMin) and (newCalibrateSignal < YWindowMax)) then exit;
-    
 
-    Shift := Shift * AccelerationSign[deviceNumber];
-    newCalibrateSignal := LastCalibrateSignal[deviceNumber] + VoltToCode(Shift*0.01);
-    
+    Shift :=  Shift * AccelerationSign[deviceNumber]*0.01;
+    Shift := VoltToCode(Shift);
+    newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
+
     if newCalibrateSignal > DAC_max_signal then
      newCalibrateSignal := newCalibrateSignal - VoltToCode(DAC_max_VOLT_signal *DevicePeriod[deviceNumber]);
     if newCalibrateSignal < DAC_min_signal then
@@ -363,7 +368,7 @@ implementation
   procedure TProcessThread.doBigSignal(deviceNumber: Integer);
   begin
       EnterCriticalSection(DACSection);
-      DACthread.DAC_level[deviceNumber]:= DACthread.DAC_level[deviceNumber]+calibration_signal_step;
+      sendDAC(deviceNumber, LastCalibrateSignal[deviceNumber]+calibration_signal_step);
       LeaveCriticalSection(DACSection);
   end;
 
