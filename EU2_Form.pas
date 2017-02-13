@@ -374,7 +374,7 @@ begin
 
     {FIle System}
     thread.path := txPath.Text;
-    thread.frequency := FloatToStr(Trunc(StrToInt(cbbAdcFreq.Text)/StrToInt(skipVal.Text)));
+    thread.frequency := FloatToStr(Trunc(StrToInt(cbbAdcFreq.Text)/StrToInt(skipVal.Text)/DevicesAmount));
 
     { Сохраняем элементы интерфейса, которые должны изменяться обрабатывающим
       потоком в класс потока }

@@ -85,7 +85,7 @@ object MainForm: TMainForm
     object TimerText: TLabel
       Left = 192
       Top = 322
-      Width = 121
+      Width = 8
       Height = 33
       Align = alCustom
       Font.Charset = DEFAULT_CHARSET
@@ -222,9 +222,9 @@ object MainForm: TMainForm
         Width = 76
         Height = 21
         ItemHeight = 13
-        ItemIndex = 0
+        ItemIndex = 1
         TabOrder = 1
-        Text = '20 '#1073#1080#1090
+        Text = '24 '#1073#1080#1090#1072
         Items.Strings = (
           '20 '#1073#1080#1090
           '24 '#1073#1080#1090#1072)

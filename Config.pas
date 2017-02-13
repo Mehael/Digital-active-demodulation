@@ -13,11 +13,6 @@ var
   DAC_min_signal : Integer;
 const
   DevicesAmount     = 2;
-  DevicePeriod : array[0..1] of Double =
-  (
-      0.601,
-      0.55
-  );
   ChannelsPerDevice = 1;
   ChannelsAmount    = DevicesAmount*ChannelsPerDevice;
 
@@ -37,7 +32,7 @@ const
 
   DAC_packSize          = DevicesAmount*DAC_dataByChannel;
 
-  MedianDeep    = 39;
+  MedianDeep    = 29;
   FreshDeep    = 1;
 type
   TFilePack = array[0..ChannelsAmount] of TextFile;

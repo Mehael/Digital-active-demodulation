@@ -34,7 +34,7 @@ type TProcessThread = class(TThread)
     // признак, что есть вычесленные данные по каналам в ChAvg
     ChValidData : array [0..LTR24_CHANNEL_NUM-1] of Boolean;
     AccelerationSign: array [0..LTR24_CHANNEL_NUM-1] of Integer;
-    OptimalDACSignal , LastCalibrateSignal, OptimalPoint: array [0..LTR24_CHANNEL_NUM-1] of DOUBLE;
+    OptimalDACSignal , LastCalibrateSignal, OptimalPoint, Scale, DevicePeriod: array [0..LTR24_CHANNEL_NUM-1] of DOUBLE;
     data     : array of Double;    //обработанные данные
     calibration_signal_step: double;
     DevicesAmount   : Integer;  //количество разрешенных каналов
@@ -329,7 +329,7 @@ implementation
 
     if ((newCalibrateSignal > YWindowMin) and (newCalibrateSignal < YWindowMax)) then exit;
 
-    Shift :=  Shift * AccelerationSign[deviceNumber]*0.01;
+    Shift :=  Shift * AccelerationSign[deviceNumber]*Scale[deviceNumber];
     Shift := VoltToCode(Shift);
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
 
@@ -370,6 +370,10 @@ implementation
     YWindowMin:= OptimalPoint[deviceNumber] - amplitude;
     YWindowMax:= OptimalPoint[deviceNumber] + amplitude;
 
+    Scale[deviceNumber] :=  4/(valueMax-valueMin);
+    DevicePeriod[deviceNumber] := 0.57*Scale[deviceNumber];
+    Scale[deviceNumber]:=Scale[deviceNumber]*0.01;
+    Log('Scale: ' + FloatToStr(Scale[deviceNumber]));
     Log('OptVal: ' + FloatToStr(OptimalPoint[deviceNumber]));
 
     if indexMax > indexMin then
