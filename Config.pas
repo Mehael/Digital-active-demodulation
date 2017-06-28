@@ -17,9 +17,9 @@ const
   ChannelsAmount    = DevicesAmount*ChannelsPerDevice;
 
 // Время, за которое будет отображаться блок (в мс)
-  ADC_reading_time   = 10;
+  ADC_reading_time   = 5;
 // Дополнительный  постоянный таймаут на прием данных (в мс)
-  ADC_possible_delay = 1000;
+  ADC_possible_delay = 100;
 
   CalibrateMiliSecondsCut = 2000;
   InnerBufferPagesAmount = 4*(CalibrateMiliSecondsCut/ADC_reading_time);   //1;//
@@ -32,7 +32,7 @@ const
 
   DAC_packSize          = DevicesAmount*DAC_dataByChannel;
 
-  MedianDeep    = 29;
+  MedianDeep    = 29;//29
   FreshDeep    = 1;
 type
   TFilePack = array[0..ChannelsAmount] of TextFile;

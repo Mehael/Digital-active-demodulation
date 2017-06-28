@@ -329,7 +329,7 @@ implementation
 
     if ((newCalibrateSignal > YWindowMin) and (newCalibrateSignal < YWindowMax)) then exit;
 
-    Shift :=  Shift * AccelerationSign[deviceNumber]*Scale[deviceNumber];
+    Shift :=  Shift * AccelerationSign[deviceNumber]*Scale[deviceNumber]*0.007;
     Shift := VoltToCode(Shift);
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
 
@@ -364,15 +364,19 @@ implementation
         indexMax := i;
       end;
     end;
-    OptimalPoint[deviceNumber] := (valueMax+valueMin)/2;     //оптим положение раб точки
+    OptimalPoint[deviceNumber] := 0;//(valueMax+valueMin)/2;     //оптим положение раб точки
 
     amplitude := (valueMax-valueMin)*WindowPercent*0.005;
     YWindowMin:= OptimalPoint[deviceNumber] - amplitude;
     YWindowMax:= OptimalPoint[deviceNumber] + amplitude;
 
-    Scale[deviceNumber] :=  4/(valueMax-valueMin);
-    DevicePeriod[deviceNumber] := 0.57*Scale[deviceNumber];
-    Scale[deviceNumber]:=Scale[deviceNumber]*0.01;
+    Log('Ampl: ' + FloatToStr(valueMax-valueMin));
+
+     //amplitude 4.575, scale 0.087, period Scalex0.64
+     Scale[deviceNumber] :=  4/(valueMax-valueMin); // 4/
+     DevicePeriod[deviceNumber] := 0.64*Scale[deviceNumber];
+
+
     Log('Scale: ' + FloatToStr(Scale[deviceNumber]));
     Log('OptVal: ' + FloatToStr(OptimalPoint[deviceNumber]));
 
