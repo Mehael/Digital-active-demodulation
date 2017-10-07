@@ -18,20 +18,20 @@ var
   );
   BigSignalThreshold : Integer;
   outputMultiplicators : array [0..1] of Integer;
+  MedianDeep : Integer;
+  // Время, за которое будет отображаться блок (в мс)
+  ADC_reading_time : Integer;
+  InnerBufferPagesAmount : Integer; 
 
 const
-  MedianDeep        = 40;
   DevicesAmount     = 2;
   ChannelsPerDevice = 1;
   ChannelsAmount    = DevicesAmount*ChannelsPerDevice;
 
-// Время, за которое будет отображаться блок (в мс)
-  ADC_reading_time   = 10;
 // Дополнительный  постоянный таймаут на прием данных (в мс)
   ADC_possible_delay = 1000;
 
   CalibrateMiliSecondsCut = 2000;
-  InnerBufferPagesAmount = 8*(CalibrateMiliSecondsCut/ADC_reading_time);   //1;//
 
   DAC_max_VOLT_signal   = 3;
   DAC_min_VOLT_signal   = 0;

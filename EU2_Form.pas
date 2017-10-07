@@ -78,6 +78,14 @@ type
     Edit5: TEdit;
     Label22: TLabel;
     Edit6: TEdit;
+    TabSheet7: TTabSheet;
+    Label23: TLabel;
+    Label24: TLabel;
+    Edit7: TEdit;
+    Label25: TLabel;
+    Label26: TLabel;
+    Edit8: TEdit;
+    Label27: TLabel;
     procedure FormDestroy(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
 
@@ -251,6 +259,8 @@ begin
      Edit4.Text := Reestr.ReadString('Edit4');
      Edit5.Text := Reestr.ReadString('Edit5');
      Edit6.Text := Reestr.ReadString('Edit6');
+     Edit7.Text := Reestr.ReadString('Edit7');
+     Edit8.Text := Reestr.ReadString('Edit8');
 
      CheckBox1.Checked := Reestr.ReadBool('CheckBox1');
      CheckBox2.Checked := Reestr.ReadBool('CheckBox2');
@@ -339,6 +349,8 @@ begin
      Reestr.WriteString('Edit4', Edit4.Text);
      Reestr.WriteString('Edit5', Edit5.Text);
      Reestr.WriteString('Edit6', Edit6.Text);
+     Reestr.WriteString('Edit7', Edit7.Text);
+     Reestr.WriteString('Edit8', Edit8.Text);
 
      Reestr.WriteBool('CheckBox1', CheckBox1.Checked);
      Reestr.WriteBool('CheckBox2', CheckBox2.Checked);
@@ -400,6 +412,10 @@ var
   DATA:array[0..60000]of Double;
   WORD_DATA:array[0..60000]of Double;
 begin
+   ADC_reading_time := StrToInt(Edit8.Text);
+   InnerBufferPagesAmount := 8*Round(CalibrateMiliSecondsCut/ADC_reading_time);
+   MedianDeep := StrToInt(Edit7.Text);
+
    VoltResetByDevice[0] := StrToFloat(Edit2.Text);
    VoltResetByDevice[1] := StrToFloat(Edit3.Text);
 

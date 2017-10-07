@@ -154,8 +154,9 @@ object MainForm: TMainForm
       Left = 16
       Top = 199
       Width = 417
-      Height = 218
+      Height = 241
       ActivePage = TabSheet6
+      MultiLine = True
       TabOrder = 7
       object TabSheet6: TTabSheet
         Caption = #1056#1077#1078#1080#1084
@@ -399,6 +400,7 @@ object MainForm: TMainForm
       object TabSheet4: TTabSheet
         Caption = #1055#1086#1088#1086#1075
         ImageIndex = 3
+        ExplicitHeight = 162
         object Label14: TLabel
           Left = 16
           Top = 24
@@ -446,6 +448,7 @@ object MainForm: TMainForm
       object TabSheet5: TTabSheet
         Caption = #1052#1085#1086#1078#1080#1090'.'
         ImageIndex = 5
+        ExplicitHeight = 162
         object Label19: TLabel
           Left = 16
           Top = 16
@@ -489,6 +492,61 @@ object MainForm: TMainForm
           Height = 26
           TabOrder = 1
           Text = '100000'
+        end
+      end
+      object TabSheet7: TTabSheet
+        Caption = #1053#1080#1079#1082#1086#1095'.'
+        ImageIndex = 6
+        object Label23: TLabel
+          Left = 3
+          Top = 24
+          Width = 389
+          Height = 18
+          Caption = #1053#1080#1079#1082#1086#1095#1072#1089#1090#1086#1090#1085#1099#1081' '#1089#1080#1075#1085#1072#1083' '#1089#1095#1080#1090#1072#1077#1090#1089#1103' '#1089#1082#1086#1083#1100#1079#1103#1097#1080#1084' '#1089#1088#1077#1076#1085#1080#1084
+        end
+        object Label24: TLabel
+          Left = 3
+          Top = 56
+          Width = 121
+          Height = 18
+          Caption = #1041#1077#1088#1077#1090#1089#1103' '#1089#1088#1077#1076#1085#1077#1077' '
+        end
+        object Label25: TLabel
+          Left = 187
+          Top = 56
+          Width = 107
+          Height = 18
+          Caption = #1073#1083#1086#1082#1086#1074' '#1076#1072#1085#1085#1099#1093'.'
+        end
+        object Label26: TLabel
+          Left = 3
+          Top = 112
+          Width = 160
+          Height = 18
+          Caption = #1050#1072#1078#1076#1099#1081' '#1073#1083#1086#1082' '#1087#1080#1096#1077#1090#1089#1103' '
+        end
+        object Label27: TLabel
+          Left = 218
+          Top = 112
+          Width = 85
+          Height = 18
+          Caption = #1084#1080#1083#1080#1089#1077#1082#1091#1085#1076'.'
+        end
+        object Edit7: TEdit
+          Left = 135
+          Top = 56
+          Width = 46
+          Height = 26
+          TabOrder = 0
+          Text = '40'
+        end
+        object Edit8: TEdit
+          Left = 169
+          Top = 112
+          Width = 43
+          Height = 26
+          TabOrder = 1
+          Text = '10'
         end
       end
     end

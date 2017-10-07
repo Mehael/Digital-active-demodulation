@@ -37,7 +37,7 @@ type TProcessThread = class(TThread)
     OptimalDACSignal , LastCalibrateSignal, OptimalPoint: array [0..LTR24_CHANNEL_NUM-1] of DOUBLE;
     data     : array of Double;    //обработанные данные
     calibration_signal_step: double;
-    DevicesAmount   : Integer;  //количество разрешенных каналов
+    ActiveChannelsAmount   : Integer;  //количество разрешенных каналов
     ChannelPackageSize : Integer;
     History: THistory;
     HistoryIndex, HistoryPage : Integer;
@@ -46,7 +46,7 @@ type TProcessThread = class(TThread)
 
     //YWindowVariables
     YWindowMax, YWindowMin, LastLowFreq: array [0..DevicesAmount-1] of Double;
-    Median: array [0..DevicesAmount-1, 0..MedianDeep-1] of Double;
+    Median: array of array of Double;
     CurrentMedianIndex : array [0..DevicesAmount-1] of Integer;
 
     procedure NextTick();
@@ -72,6 +72,9 @@ implementation
 
      for i := 0 to DAC_packSize - 1 do
       LastCalibrateSignal[i]:=0;
+
+     SetLength(Median, DevicesAmount, MedianDeep);
+
   end;
 
   destructor TProcessThread.Free();
@@ -144,13 +147,13 @@ implementation
       ChValidData[ch]:=False;
 
     //Проверяем, сколько и какие каналы разрешены
-    DevicesAmount := 0;
+    ActiveChannelsAmount := 0;
     for ch:=0 to LTR24_CHANNEL_NUM-1 do
     begin
       if phltr24^.ChannelMode[ch].Enable then
       begin
-        ch_nums[DevicesAmount] := ch;
-        DevicesAmount := DevicesAmount+1;
+        ch_nums[ActiveChannelsAmount] := ch;
+        ActiveChannelsAmount := DevicesAmount+1;
       end;
     end;
 
