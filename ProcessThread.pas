@@ -10,7 +10,6 @@ type TProcessThread = class(TThread)
     visChAvg : array [0..LTR24_CHANNEL_NUM-1] of TChart;
     ShowSignal: TCheckBox;
     WriterThread : TWriter;
-    debugFile:TextFile;
     MilisecsToWork:  Int64;
     MilisecsProcessed:  Int64;
     phltr34: pTLTR34;
@@ -144,9 +143,6 @@ implementation
     for ch:=0 to LTR24_CHANNEL_NUM-1 do
       ChValidData[ch]:=False;
 
-    System.Assign(debugFile, 'D:\debug.txt');
-    ReWrite(debugFile);
-
     //Проверяем, сколько и какие каналы разрешены
     DevicesAmount := 0;
     for ch:=0 to LTR24_CHANNEL_NUM-1 do
@@ -187,7 +183,7 @@ implementation
     WriterThread := TWriter.Create(path, frequency, skipAmount, True);
     WriterThread.Priority := tpHighest;
     WriterThread.History := @History;
-
+    
     if err = LTR_OK then
     begin
       while not stop and (err = LTR_OK) do
@@ -254,7 +250,7 @@ implementation
         err:= stoperr;
 
     end;
-    CloseFile(debugFile);
+    CloseFile(WriterThread.debugFile);
 
     bnStart.Caption := 'Старт';
   end;
@@ -304,9 +300,10 @@ implementation
     Shift := 0;
     Shift := OptimalPoint[deviceNumber] - newCalibrateSignal;
 
-    writeln(debugFile, FloatToStr(Shift));
+    if deviceNumber = 0 then
+      writeln(WriterThread.debugFile, FloatToStr(LastCalibrateSignal[deviceNumber]));
 
-    if ((newCalibrateSignal  > YWindowMin) and (newCalibrateSignal < YWindowMax)) then exit;
+    //if ((newCalibrateSignal  > YWindowMin) and (newCalibrateSignal < YWindowMax)) then exit;
 
     Shift :=  Shift * AccelerationSign[deviceNumber]*0.01;
     Shift := VoltToCode(Shift);

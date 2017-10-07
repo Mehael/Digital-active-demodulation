@@ -17,15 +17,13 @@ type
     bnStart:  TButton;
     txWorkTime: TEdit;
     lbWorkTime: TLabel;
-    chGraph: TChart;
+    chGraph2: TChart;
     Series1: TFastLineSeries;
     StatusBar1: TStatusBar;
     Label1: TLabel;
     txPath: TEdit;
     cbTimeMetric: TComboBox;
     Button1: TButton;
-    chGraph2: TChart;
-    FastLineSeries1: TFastLineSeries;
     Label2: TLabel;
     Edit1: TEdit;
     CheckBox1: TCheckBox;
@@ -71,6 +69,8 @@ type
     Label16: TLabel;
     Label17: TLabel;
     Label18: TLabel;
+    chGraph: TChart;
+    FastLineSeries2: TFastLineSeries;
     procedure FormDestroy(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
 

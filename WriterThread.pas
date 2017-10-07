@@ -10,6 +10,7 @@ type TWriter = class(TThread)
     skipAmount: integer;
     History: ^THistory;
     stop:boolean;
+    debugFile:TextFile;
 
     constructor Create(ipath: string; ifrequency: string; iskipAmount: integer; SuspendCreate : Boolean);
     destructor Free();
@@ -50,7 +51,7 @@ implementation
       for i := 0 to skips-1 do begin
         sum:=0;
         for skipInd:= 0 to skipAmount-1 do begin
-           sum := sum+History[ch, i*skipAmount +skipInd];
+           sum := sum+History[ch, i*skipAmount + skipInd];
         end;
         writeln(Files[ch], Format('%.5g', [(sum/skipAmount)]));
       end;
@@ -86,6 +87,9 @@ implementation
       ReWrite(Files[fileIndex]);
     end;
   end;
+
+  System.Assign(debugFile, P + '\Device0-DAC.txt');
+  ReWrite(debugFile);
  end;
 
  procedure TWriter.CloseFiles;

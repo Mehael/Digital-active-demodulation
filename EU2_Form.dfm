@@ -454,6 +454,45 @@ object MainForm: TMainForm
     AutoSize = True
     TabOrder = 2
     ExplicitWidth = 442
+    object chGraph2: TChart
+      Left = 1
+      Top = 281
+      Width = 441
+      Height = 280
+      AllowPanning = pmNone
+      Legend.Visible = False
+      MarginLeft = 0
+      MarginRight = 10
+      Title.Font.Color = clLime
+      Title.Text.Strings = (
+        #1050#1072#1085#1072#1083)
+      ClipPoints = False
+      LeftAxis.Title.Visible = False
+      RightAxis.Labels = False
+      RightAxis.Title.Visible = False
+      View3D = False
+      View3DWalls = False
+      Zoom.Allow = False
+      Zoom.Animated = True
+      Align = alTop
+      Color = clBlack
+      TabOrder = 0
+      ExplicitLeft = 2
+      ExplicitTop = 37
+      object Series1: TFastLineSeries
+        Marks.Callout.Brush.Color = clBlack
+        Marks.Visible = False
+        SeriesColor = clLime
+        DrawAllPoints = False
+        LinePen.Color = clLime
+        LinePen.EndStyle = esFlat
+        XValues.Name = 'X'
+        XValues.Order = loAscending
+        YValues.Name = 'Y'
+        YValues.Order = loNone
+        Data = {0000000000}
+      end
+    end
     object chGraph: TChart
       Left = 1
       Top = 1
@@ -476,68 +515,9 @@ object MainForm: TMainForm
       Zoom.Animated = True
       Align = alTop
       Color = clBlack
-      TabOrder = 0
-      ExplicitWidth = 440
-      object Series1: TFastLineSeries
-        Marks.Callout.Brush.Color = clBlack
-        Marks.Visible = False
-        SeriesColor = clLime
-        DrawAllPoints = False
-        LinePen.Color = clLime
-        LinePen.EndStyle = esFlat
-        XValues.Name = 'X'
-        XValues.Order = loAscending
-        YValues.Name = 'Y'
-        YValues.Order = loNone
-        Data = {0000000000}
-      end
-    end
-    object chGraph2: TChart
-      Left = 1
-      Top = 288
-      Width = 441
-      Height = 287
-      AllowPanning = pmNone
-      Legend.Visible = False
-      MarginLeft = 0
-      MarginRight = 10
-      Title.Font.Color = clLime
-      Title.Text.Strings = (
-        #1050#1072#1085#1072#1083)
-      ClipPoints = False
-      DepthAxis.Automatic = False
-      DepthAxis.AutomaticMaximum = False
-      DepthAxis.AutomaticMinimum = False
-      DepthAxis.Maximum = 0.470000000000000000
-      DepthAxis.Minimum = -0.530000000000000000
-      DepthTopAxis.Automatic = False
-      DepthTopAxis.AutomaticMaximum = False
-      DepthTopAxis.AutomaticMinimum = False
-      DepthTopAxis.Maximum = 0.470000000000000000
-      DepthTopAxis.Minimum = -0.530000000000000000
-      LeftAxis.Automatic = False
-      LeftAxis.AutomaticMaximum = False
-      LeftAxis.AutomaticMinimum = False
-      LeftAxis.Title.Visible = False
-      RightAxis.Automatic = False
-      RightAxis.AutomaticMaximum = False
-      RightAxis.AutomaticMinimum = False
-      RightAxis.Labels = False
-      RightAxis.Title.Visible = False
-      View3D = False
-      View3DWalls = False
-      Zoom.Allow = False
-      Zoom.Animated = True
-      Align = alBottom
-      Color = clBlack
       TabOrder = 1
       ExplicitWidth = 440
-      PrintMargins = (
-        15
-        24
-        15
-        24)
-      object FastLineSeries1: TFastLineSeries
+      object FastLineSeries2: TFastLineSeries
         Marks.Callout.Brush.Color = clBlack
         Marks.Visible = False
         SeriesColor = clLime
