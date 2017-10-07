@@ -95,6 +95,7 @@ implementation
  procedure TWriter.CloseFiles;
  var i:integer;
  begin
+  CloseFile(debugFile);
   for i := 0 to DevicesAmount-1 do
     CloseFile(Files[i]);
  end;

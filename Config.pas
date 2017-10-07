@@ -31,7 +31,7 @@ const
   ADC_possible_delay = 1000;
 
   CalibrateMiliSecondsCut = 2000;
-  InnerBufferPagesAmount = 4*(CalibrateMiliSecondsCut/ADC_reading_time);   //1;//
+  InnerBufferPagesAmount = 8*(CalibrateMiliSecondsCut/ADC_reading_time);   //1;//
 
   DAC_max_VOLT_signal   = 3;
   DAC_min_VOLT_signal   = 0;

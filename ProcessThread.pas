@@ -42,10 +42,10 @@ type TProcessThread = class(TThread)
     History: THistory;
     HistoryIndex, HistoryPage : Integer;
     historyPagesAmount : Integer;
-    amplitude: Double;
+    amplitude: array [0..DevicesAmount-1] of Double;
 
     //YWindowVariables
-    YWindowMax, YWindowMin: Double;
+    YWindowMax, YWindowMin, LastLowFreq: array [0..DevicesAmount-1] of Double;
     Median: array [0..DevicesAmount-1, 0..MedianDeep-1] of Double;
     CurrentMedianIndex : array [0..DevicesAmount-1] of Integer;
 
@@ -250,7 +250,6 @@ implementation
         err:= stoperr;
 
     end;
-    CloseFile(WriterThread.debugFile);
 
     bnStart.Caption := 'Старт';
   end;
@@ -294,23 +293,22 @@ implementation
 
   procedure TProcessThread.doWorkPointShift(deviceNumber: Integer);
   var
-    Shift, newCalibrateSignal: Double;
+    Shift, newCalibrateSignal, lowFreq, shiftPercentFromAmplitude: Double;
   begin
-    newCalibrateSignal := GetLowFreq(deviceNumber);
+    lowFreq := GetLowFreq(deviceNumber);
     Shift := 0;
-    Shift := OptimalPoint[deviceNumber] - newCalibrateSignal;
+    Shift := OptimalPoint[deviceNumber] - lowFreq;
 
     if deviceNumber = 0 then
       writeln(WriterThread.debugFile, FloatToStr(LastCalibrateSignal[deviceNumber]));
 
-    //if ((newCalibrateSignal  > YWindowMin) and (newCalibrateSignal < YWindowMax)) then exit;
+    if ((lowFreq  > YWindowMin[deviceNumber]) and (lowFreq < YWindowMax[deviceNumber])) then exit;
+    shiftPercentFromAmplitude:= Abs(LastLowFreq[deviceNumber]-lowFreq) / amplitude[deviceNumber];
+    if shiftPercentFromAmplitude > (BigSignalThreshold / 100) then exit;
 
     Shift :=  Shift * AccelerationSign[deviceNumber]*0.01;
     Shift := VoltToCode(Shift);
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
-
-    if Abs(LastCalibrateSignal[deviceNumber]-newCalibrateSignal)
-      / amplitude > (BigSignalThreshold / 100) then exit; 
 
     if newCalibrateSignal > DAC_max_signal then
      newCalibrateSignal := newCalibrateSignal - VoltToCode(VoltResetByDevice[deviceNumber]);
@@ -318,7 +316,7 @@ implementation
       newCalibrateSignal := newCalibrateSignal + VoltToCode(VoltResetByDevice[deviceNumber]);
 
     SendDAC(deviceNumber, newCalibrateSignal);
-
+    LastLowFreq[deviceNumber]:=lowFreq;
   end;
 
   Procedure TProcessThread.RecalculateOptimumPoint(deviceNumber: Integer);
@@ -326,7 +324,7 @@ implementation
     indexMin,indexMax:longint;
     OpHistoryPage, OpHistoryIndex: longint ;
     BefPageSignal, SignalStepByIndex, PageSignalChange: single;
-    valueMax,valueMin, CalibrationEndIndex: Double;
+    valueMax,valueMin, CalibrationEndIndex,toPersentMult: Double;
   begin
     valueMin := History[0,0] ; valueMax := History[0,0] ;
     indexMin := 0; indexMax := 0;
@@ -345,9 +343,11 @@ implementation
     end;
     OptimalPoint[deviceNumber] := (valueMax+valueMin)/2;     //оптим положение раб точки
 
-    amplitude := (valueMax-valueMin)*WindowPercent;
-    YWindowMin:= OptimalPoint[deviceNumber] - amplitude;
-    YWindowMax:= OptimalPoint[deviceNumber] + amplitude;
+    amplitude[deviceNumber] := (valueMax-valueMin)*WindowPercent;
+    toPersentMult := 0.01 / 2;
+    YWindowMin[deviceNumber]:= OptimalPoint[deviceNumber] - amplitude[deviceNumber]*toPersentMult;
+    YWindowMax[deviceNumber]:= OptimalPoint[deviceNumber] + amplitude[deviceNumber]*toPersentMult;
+
 
     Log('OptVal: ' + FloatToStr(OptimalPoint[deviceNumber]));
 
