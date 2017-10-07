@@ -483,7 +483,7 @@ begin
     thread.ShowSignal := CheckBox3;
 
     outputMultiplicators[0]:= StrToInt(Edit5.Text);
-    outputMultiplicators[1]:= StrToInt(Edit5.Text);
+    outputMultiplicators[1]:= StrToInt(Edit6.Text);
 
     thread.doUseCalibration := CheckBox1.Checked;
     thread.skipAmount := StrToInt(SkipVal.Text);

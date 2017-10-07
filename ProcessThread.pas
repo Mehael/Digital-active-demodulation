@@ -345,7 +345,7 @@ implementation
     end;
     OptimalPoint[deviceNumber] := (valueMax+valueMin)/2;     //оптим положение раб точки
 
-    amplitude := (valueMax-valueMin)*WindowPercent*0.005;
+    amplitude := (valueMax-valueMin)*WindowPercent;
     YWindowMin:= OptimalPoint[deviceNumber] - amplitude;
     YWindowMax:= OptimalPoint[deviceNumber] + amplitude;
 

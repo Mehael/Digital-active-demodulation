@@ -155,7 +155,7 @@ object MainForm: TMainForm
       Top = 199
       Width = 417
       Height = 218
-      ActivePage = TabSheet5
+      ActivePage = TabSheet6
       TabOrder = 7
       object TabSheet6: TTabSheet
         Caption = #1056#1077#1078#1080#1084
