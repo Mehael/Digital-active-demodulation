@@ -11,13 +11,14 @@ var
   DACSection: TRTLCriticalSection;
   DAC_max_signal : Integer;
   DAC_min_signal : Integer;
-const
-  DevicesAmount     = 2;
-  DevicePeriod : array[0..1] of Double =
+  VoltResetByDevice : array[0..1] of Double =
   (
       0.60,
       0.62
   );
+
+const
+  DevicesAmount     = 2;
   ChannelsPerDevice = 1;
   ChannelsAmount    = DevicesAmount*ChannelsPerDevice;
 

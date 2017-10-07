@@ -8,6 +8,7 @@ type TProcessThread = class(TThread)
   public
     //элементы управления для отображения результатов обработки
     visChAvg : array [0..LTR24_CHANNEL_NUM-1] of TChart;
+    ShowSignal: TCheckBox;
     WriterThread : TWriter;
     debugFile:TextFile;
     MilisecsToWork:  Int64;
@@ -312,9 +313,9 @@ implementation
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
 
     if newCalibrateSignal > DAC_max_signal then
-     newCalibrateSignal := newCalibrateSignal - VoltToCode(DAC_max_VOLT_signal *DevicePeriod[deviceNumber]);
+     newCalibrateSignal := newCalibrateSignal - VoltToCode(VoltResetByDevice[deviceNumber]);
     if newCalibrateSignal < DAC_min_signal then
-      newCalibrateSignal := newCalibrateSignal + VoltToCode(DAC_max_VOLT_signal *DevicePeriod[deviceNumber]);
+      newCalibrateSignal := newCalibrateSignal + VoltToCode(VoltResetByDevice[deviceNumber]);
 
     SendDAC(deviceNumber, newCalibrateSignal);
 
@@ -392,13 +393,22 @@ implementation
     i: Integer;
     IndexShift: Integer;
   begin
+    if visChAvg[0].Series[0].Count = 0 then begin
+      for i := 0 to ChannelPackageSize-1 do begin
+        visChAvg[0].Series[0].Add(0);
+        visChAvg[1].Series[0].Add(0);
+      end;
+    end;
+
   EnterCriticalSection(HistorySection);
     for ch:=0 to LTR24_CHANNEL_NUM-1 do begin
       if ChValidData[ch] then begin
         for i := 0 to ChannelPackageSize-1 do begin
           IndexShift := DevicesAmount*i + ch;
           History[ch, HistoryIndex+i] := data[IndexShift];
-          //visChAvg[ch].Series[0].v
+
+          if ShowSignal.Checked then
+            visChAvg[ch].Series[0].YValue[i] := data[IndexShift];
         end;
       end;
     end;

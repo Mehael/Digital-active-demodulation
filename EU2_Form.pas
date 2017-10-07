@@ -332,6 +332,8 @@ var
   DATA:array[0..60000]of Double;
   WORD_DATA:array[0..60000]of Double;
 begin
+   VoltResetByDevice[0] := StrToFloat(Edit2.Text);
+   VoltResetByDevice[1] := StrToFloat(Edit3.Text);
    { Сохраняем значения из элементов управления в соответствующие
     поля описателя модуля. Для простоты здесь не делается доп. проверок, что
     введены верные значения... }
@@ -408,6 +410,7 @@ begin
       потоком в класс потока }
     thread.visChAvg[0]:= chGraph;
     thread.visChAvg[1]:= chGraph2;
+    thread.ShowSignal := CheckBox3;
 
     thread.doUseCalibration := CheckBox1.Checked;
     thread.skipAmount := StrToInt(SkipVal.Text);
