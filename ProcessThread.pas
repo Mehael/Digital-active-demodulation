@@ -306,11 +306,14 @@ implementation
 
     writeln(debugFile, FloatToStr(Shift));
 
-    if ((newCalibrateSignal > YWindowMin) and (newCalibrateSignal < YWindowMax)) then exit;
+    if ((newCalibrateSignal  > YWindowMin) and (newCalibrateSignal < YWindowMax)) then exit;
 
     Shift :=  Shift * AccelerationSign[deviceNumber]*0.01;
     Shift := VoltToCode(Shift);
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
+
+    if Abs(LastCalibrateSignal[deviceNumber]-newCalibrateSignal)
+      / amplitude > (BigSignalThreshold / 100) then exit; 
 
     if newCalibrateSignal > DAC_max_signal then
      newCalibrateSignal := newCalibrateSignal - VoltToCode(VoltResetByDevice[deviceNumber]);

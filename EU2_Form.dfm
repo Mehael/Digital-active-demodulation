@@ -155,7 +155,7 @@ object MainForm: TMainForm
       Top = 199
       Width = 417
       Height = 218
-      ActivePage = TabSheet3
+      ActivePage = TabSheet6
       TabOrder = 7
       object TabSheet6: TTabSheet
         Caption = #1056#1077#1078#1080#1084
@@ -441,39 +441,6 @@ object MainForm: TMainForm
           Height = 26
           TabOrder = 0
           Text = '10'
-        end
-      end
-      object TabSheet5: TTabSheet
-        Caption = #1053#1080#1079#1082#1086#1095#1072#1089#1090#1086#1090'.'
-        ImageIndex = 4
-        object Label19: TLabel
-          Left = 16
-          Top = 24
-          Width = 282
-          Height = 18
-          Caption = #1053#1080#1079#1082#1086#1095#1072#1089#1090#1086#1090#1085#1099#1081' '#1089#1080#1075#1085#1072#1083' '#1074#1099#1095#1080#1089#1083#1103#1077#1090#1089#1103' '#1087#1086' '
-        end
-        object Label20: TLabel
-          Left = 16
-          Top = 48
-          Width = 209
-          Height = 18
-          Caption = #1087#1086#1083#1091#1095#1077#1085#1085#1099#1084' '#1087#1072#1082#1077#1090#1072#1084' '#1089#1080#1075#1085#1072#1083#1072'.'
-        end
-        object Label21: TLabel
-          Left = 14
-          Top = 112
-          Width = 392
-          Height = 18
-          Caption = #1069#1090#1086#1090' '#1087#1072#1088#1072#1084#1077#1090#1088' '#1079#1072#1076#1072#1077#1090' "'#1095#1091#1074#1089#1090#1074#1080#1090#1077#1083#1100#1085#1086#1089#1090#1100'" '#1082#1072#1083#1080#1073#1088#1086#1074#1082#1080'. '
-        end
-        object Edit5: TEdit
-          Left = 304
-          Top = 24
-          Width = 49
-          Height = 26
-          TabOrder = 0
-          Text = '40'
         end
       end
     end

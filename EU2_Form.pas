@@ -54,7 +54,6 @@ type
     Label7: TLabel;
     TabSheet3: TTabSheet;
     TabSheet4: TTabSheet;
-    TabSheet5: TTabSheet;
     TabSheet6: TTabSheet;
     CheckBox2: TCheckBox;
     CheckBox3: TCheckBox;
@@ -72,10 +71,6 @@ type
     Label16: TLabel;
     Label17: TLabel;
     Label18: TLabel;
-    Label19: TLabel;
-    Edit5: TEdit;
-    Label20: TLabel;
-    Label21: TLabel;
     procedure FormDestroy(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
 
@@ -334,6 +329,8 @@ var
 begin
    VoltResetByDevice[0] := StrToFloat(Edit2.Text);
    VoltResetByDevice[1] := StrToFloat(Edit3.Text);
+
+   BigSignalThreshold := StrToInt(Edit4.Text);
    { Сохраняем значения из элементов управления в соответствующие
     поля описателя модуля. Для простоты здесь не делается доп. проверок, что
     введены верные значения... }
