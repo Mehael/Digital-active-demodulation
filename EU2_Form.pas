@@ -3,7 +3,8 @@ interface uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, FileCtrl, StdCtrls, Buttons, ExtCtrls,
   Math, TeeProcs, TeEngine, Chart, Series, ComCtrls,
-  ltrapi, ltrapitypes, ltrapidefine, ltr24api, ltr34api, ProcessThread, Config;
+  ltrapi, ltrapitypes, ltrapidefine, ltr24api, ltr34api, ProcessThread, Config,
+  Spin;
 
 { Информация, необходимая для установления соединения с модулем }
 type TLTR_MODULE_LOCATION = record
@@ -28,21 +29,55 @@ type
     Label2: TLabel;
     Edit1: TEdit;
     CheckBox1: TCheckBox;
-    grpConfig: TGroupBox;
-    lblRange1: TLabel;
-    lblChAc1: TLabel;
-    lblAdcFreq: TLabel;
-    lblDataFmt: TLabel;
-    lblChAc2: TLabel;
-    cbbAdcFreq: TComboBox;
-    cbbDataFmt: TComboBox;
-    cbbAC1: TComboBox;
-    cbbRange1: TComboBox;
     Panel1: TPanel;
     Panel2: TPanel;
     Label3: TLabel;
     skipVal: TEdit;
+    Label4: TLabel;
+    PercentEdit: TSpinEdit;
+    Label5: TLabel;
+    TimerText: TLabel;
+    Timer1: TTimer;
+    PageControl1: TPageControl;
+    TabSheet1: TTabSheet;
+    cbbAC1: TComboBox;
+    cbbAdcFreq: TComboBox;
+    cbbDataFmt: TComboBox;
+    cbbRange1: TComboBox;
+    lblAdcFreq: TLabel;
+    lblChAc1: TLabel;
+    lblChAc2: TLabel;
+    lblDataFmt: TLabel;
+    lblRange1: TLabel;
+    TabSheet2: TTabSheet;
+    Label6: TLabel;
+    Label7: TLabel;
+    TabSheet3: TTabSheet;
+    TabSheet4: TTabSheet;
+    TabSheet5: TTabSheet;
+    TabSheet6: TTabSheet;
+    CheckBox2: TCheckBox;
+    CheckBox3: TCheckBox;
+    Label8: TLabel;
+    Edit2: TEdit;
+    Label9: TLabel;
+    Edit3: TEdit;
+    Label10: TLabel;
+    Label11: TLabel;
+    Label12: TLabel;
+    Label13: TLabel;
+    Label14: TLabel;
+    Label15: TLabel;
+    Edit4: TEdit;
+    Label16: TLabel;
+    Label17: TLabel;
+    Label18: TLabel;
+    Label19: TLabel;
+    Edit5: TEdit;
+    Label20: TLabel;
+    Label21: TLabel;
     procedure FormDestroy(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
 
     private
       ltr_list: array[0..1] of TLTR_MODULE_LOCATION; //список найденных модулей 0-24, 1 - 34
@@ -50,6 +85,7 @@ type
       hltr_34 : TLTR34;
       threadRunning : Boolean; // Признак, запущен ли поток сбора данных
       thread : TProcessThread; //Объект потока для выполнения сбора данных
+      secondsToWork: integer;
 
       procedure refreshDeviceList();
       procedure closeDevice();
@@ -86,7 +122,8 @@ begin
 
   end else begin
     if threadRunning then
-
+      Timer1.Enabled := false;
+      TimerText.Caption:= '';
       thread.stop:=True;
 
   end;
@@ -374,6 +411,7 @@ begin
 
     thread.doUseCalibration := CheckBox1.Checked;
     thread.skipAmount := StrToInt(SkipVal.Text);
+    thread.WindowPercent:=PercentEdit.Value;
 
     MilisecsWork := StrToInt(txWorkTime.Text);  // время сбора данных в минутах, минимум 1 минута!!!
     if cbTimeMetric.Text = 'часов' then
@@ -381,7 +419,10 @@ begin
     if cbTimeMetric.Text = 'дней' then
       MilisecsWork := MilisecsWork*60*24;
 
-    thread.MilisecsToWork := MilisecsWork*60*1000;
+    secondsToWork:=MilisecsWork*60;
+    thread.MilisecsToWork := secondsToWork*1000;
+    Timer1.Enabled := true;
+
     thread.bnStart := bnStart;
     { устанавливаем функцию на событие завершения потока (в частности,
     чтобы отследить, если поток завершился сам из-за ошибки при сборе
@@ -390,6 +431,20 @@ begin
     thread.Resume; //для Delphi 2010 и выше рекомендуется использовать Start
     threadRunning := True;
   end;
+
+  end;
+
+  procedure TMainForm.Timer1Timer(Sender: TObject);
+  begin
+   secondsToWork:=secondsToWork-1;
+
+   if secondsToWork<0 then begin
+      TimerText.Caption:= '';
+      Timer1.Enabled := false;
+      if CheckBox2.Checked = true then
+        bnStartClick(Sender);
+   end else
+      TimerText.Caption:= IntToStr(secondsToWork div 60)+':'+IntToStr(secondsToWork mod 60);
 
   end;
 

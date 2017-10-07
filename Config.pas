@@ -12,17 +12,17 @@ var
   DAC_max_signal : Integer;
   DAC_min_signal : Integer;
 const
-  DevicesAmount     = 1;
-  DevicePeriod : array[0..1] of Integer =
+  DevicesAmount     = 2;
+  DevicePeriod : array[0..1] of Double =
   (
-      390,       //????????????
-      390
+      0.60,
+      0.62
   );
   ChannelsPerDevice = 1;
   ChannelsAmount    = DevicesAmount*ChannelsPerDevice;
 
 // Время, за которое будет отображаться блок (в мс)
-  ADC_reading_time   = 500;
+  ADC_reading_time   = 10;
 // Дополнительный  постоянный таймаут на прием данных (в мс)
   ADC_possible_delay = 1000;
 
@@ -36,12 +36,16 @@ const
   DAC_possible_delay    = 2000;
 
   DAC_packSize          = DevicesAmount*DAC_dataByChannel;
+
+  MedianDeep    = 40;
 type
   TFilePack = array[0..ChannelsAmount] of TextFile;
   THistory = array[0..ChannelsAmount-1] of array of Double;
 implementation
 
 function VoltToCode(Volt: Double): Integer;
+var
+  DAC_max_signal : Integer;
 begin
   Result :=  Trunc(Volt*65535/20);
 end;
