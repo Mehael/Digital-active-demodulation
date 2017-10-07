@@ -4,7 +4,7 @@ interface uses
   Dialogs, FileCtrl, StdCtrls, Buttons, ExtCtrls,
   Math, TeeProcs, TeEngine, Chart, Series, ComCtrls,
   ltrapi, ltrapitypes, ltrapidefine, ltr24api, ltr34api, ProcessThread, Config,
-  Spin;
+  Spin, Registry;
 
 { Информация, необходимая для установления соединения с модулем }
 type TLTR_MODULE_LOCATION = record
@@ -215,6 +215,7 @@ begin
 end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
+  Var Reestr: TRegistry;
 begin
   LTR24_Init(hltr_24);
   LTR34_Init(@hltr_34);
@@ -226,6 +227,36 @@ begin
 
   Open24Ltr();
   Open34Ltr();
+
+ Reestr:=TRegistry.Create;
+ Reestr.RootKey:=HKEY_CURRENT_USER;
+ If Reestr.OpenKey('\SoftWare\LTREU2\', False) Then
+   Begin
+     txWorkTime.Text := Reestr.ReadString('txWorkTime');
+     cbTimeMetric.ItemIndex := Reestr.ReadInteger('cbTimeMetric');
+     txPath.Text := Reestr.ReadString('txPath');
+     skipVal.Text := Reestr.ReadString('skipVal');
+
+     txPath.Text := Reestr.ReadString('txPath');
+     Edit1.Text := Reestr.ReadString('Edit1');
+     Edit2.Text := Reestr.ReadString('Edit2');
+     Edit3.Text := Reestr.ReadString('Edit3');
+     Edit4.Text := Reestr.ReadString('Edit4');
+
+     CheckBox1.Checked := Reestr.ReadBool('CheckBox1');
+     CheckBox2.Checked := Reestr.ReadBool('CheckBox2');
+     CheckBox3.Checked := Reestr.ReadBool('CheckBox3');
+
+     PercentEdit.Value := Reestr.ReadInteger('PercentEdit');
+
+     cbbAC1.ItemIndex := Reestr.ReadInteger('cbbAC1');
+     cbbAdcFreq.ItemIndex := Reestr.ReadInteger('cbbAdcFreq');
+     cbbDataFmt.ItemIndex := Reestr.ReadInteger('cbbDataFmt');
+     cbbRange1.ItemIndex := Reestr.ReadInteger('cbbRange1');
+
+     Reestr.CloseKey;
+   End;
+ Reestr.Free;
 end;
 
 procedure TMainForm.CheckError(err: Integer);
@@ -281,7 +312,38 @@ begin
   end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
+  Var Reestr: TRegistry;
 begin
+ Reestr:=TRegistry.Create;
+ Reestr.RootKey:=HKEY_CURRENT_USER;
+ If Reestr.OpenKey('\SoftWare\LTREU2\', True) Then
+   Begin
+     Reestr.WriteString('txWorkTime', txWorkTime.Text);
+     Reestr.WriteInteger('cbTimeMetric', cbTimeMetric.ItemIndex);
+     Reestr.WriteString('txPath', txPath.Text);
+     Reestr.WriteString('skipVal', skipVal.Text);
+
+     Reestr.WriteString('txPath', txPath.Text);
+     Reestr.WriteString('Edit1', Edit1.Text);
+     Reestr.WriteString('Edit2', Edit2.Text);
+     Reestr.WriteString('Edit3', Edit3.Text);
+     Reestr.WriteString('Edit4', Edit4.Text);
+
+     Reestr.WriteBool('CheckBox1', CheckBox1.Checked);
+     Reestr.WriteBool('CheckBox2', CheckBox2.Checked);
+     Reestr.WriteBool('CheckBox3', CheckBox3.Checked);
+
+     Reestr.WriteInteger('PercentEdit', PercentEdit.Value);
+
+     Reestr.WriteInteger('cbbAC1', cbbAC1.ItemIndex);
+     Reestr.WriteInteger('cbbAdcFreq', cbbAdcFreq.ItemIndex);
+     Reestr.WriteInteger('cbbDataFmt', cbbDataFmt.ItemIndex);
+     Reestr.WriteInteger('cbbRange1', cbbRange1.ItemIndex);
+
+     Reestr.CloseKey;
+   End;
+ Reestr.Free;
+
   closeDevice;
   if thread <> nil then
     FreeAndNil(thread);
