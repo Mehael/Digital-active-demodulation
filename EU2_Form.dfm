@@ -155,7 +155,7 @@ object MainForm: TMainForm
       Top = 199
       Width = 417
       Height = 218
-      ActivePage = TabSheet6
+      ActivePage = TabSheet5
       TabOrder = 7
       object TabSheet6: TTabSheet
         Caption = #1056#1077#1078#1080#1084
@@ -441,6 +441,54 @@ object MainForm: TMainForm
           Height = 26
           TabOrder = 0
           Text = '10'
+        end
+      end
+      object TabSheet5: TTabSheet
+        Caption = #1052#1085#1086#1078#1080#1090'.'
+        ImageIndex = 5
+        object Label19: TLabel
+          Left = 16
+          Top = 16
+          Width = 363
+          Height = 18
+          Caption = 'Spectro '#1085#1077' '#1087#1086#1085#1080#1084#1072#1077#1090' '#1095#1080#1089#1083#1072' < 1, '#1087#1086#1101#1090#1086#1084#1091' '#1091#1084#1085#1086#1078#1072#1077#1084' '
+        end
+        object Label20: TLabel
+          Left = 16
+          Top = 40
+          Width = 139
+          Height = 18
+          Caption = #1087#1086#1083#1091#1095#1072#1077#1084#1099#1081' '#1089#1080#1075#1085#1072#1083'.'
+        end
+        object Label21: TLabel
+          Left = 57
+          Top = 88
+          Width = 73
+          Height = 18
+          Caption = '1'#1081' '#1082#1072#1085#1072#1083' *'
+        end
+        object Label22: TLabel
+          Left = 57
+          Top = 120
+          Width = 73
+          Height = 18
+          Caption = '2'#1081' '#1082#1072#1085#1072#1083' *'
+        end
+        object Edit5: TEdit
+          Left = 136
+          Top = 88
+          Width = 121
+          Height = 26
+          TabOrder = 0
+          Text = '1'
+        end
+        object Edit6: TEdit
+          Left = 136
+          Top = 120
+          Width = 120
+          Height = 26
+          TabOrder = 1
+          Text = '100000'
         end
       end
     end

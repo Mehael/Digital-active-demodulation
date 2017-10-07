@@ -71,6 +71,13 @@ type
     Label18: TLabel;
     chGraph: TChart;
     FastLineSeries2: TFastLineSeries;
+    TabSheet5: TTabSheet;
+    Label19: TLabel;
+    Label20: TLabel;
+    Label21: TLabel;
+    Edit5: TEdit;
+    Label22: TLabel;
+    Edit6: TEdit;
     procedure FormDestroy(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
 
@@ -242,6 +249,8 @@ begin
      Edit2.Text := Reestr.ReadString('Edit2');
      Edit3.Text := Reestr.ReadString('Edit3');
      Edit4.Text := Reestr.ReadString('Edit4');
+     Edit5.Text := Reestr.ReadString('Edit5');
+     Edit6.Text := Reestr.ReadString('Edit6');
 
      CheckBox1.Checked := Reestr.ReadBool('CheckBox1');
      CheckBox2.Checked := Reestr.ReadBool('CheckBox2');
@@ -328,6 +337,8 @@ begin
      Reestr.WriteString('Edit2', Edit2.Text);
      Reestr.WriteString('Edit3', Edit3.Text);
      Reestr.WriteString('Edit4', Edit4.Text);
+     Reestr.WriteString('Edit5', Edit5.Text);
+     Reestr.WriteString('Edit6', Edit6.Text);
 
      Reestr.WriteBool('CheckBox1', CheckBox1.Checked);
      Reestr.WriteBool('CheckBox2', CheckBox2.Checked);
@@ -470,6 +481,9 @@ begin
     thread.visChAvg[0]:= chGraph;
     thread.visChAvg[1]:= chGraph2;
     thread.ShowSignal := CheckBox3;
+
+    outputMultiplicators[0]:= StrToInt(Edit5.Text);
+    outputMultiplicators[1]:= StrToInt(Edit5.Text);
 
     thread.doUseCalibration := CheckBox1.Checked;
     thread.skipAmount := StrToInt(SkipVal.Text);

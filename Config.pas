@@ -17,6 +17,8 @@ var
       0.62
   );
   BigSignalThreshold : Integer;
+  outputMultiplicators : array [0..1] of Integer;
+
 const
   MedianDeep        = 40;
   DevicesAmount     = 2;
