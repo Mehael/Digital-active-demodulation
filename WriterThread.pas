@@ -42,15 +42,9 @@ implementation
     sum:double;
   begin
     size:= Length(History[0])-1;
-
     skips:=Trunc(size/skipAmount);
 
     EnterCriticalSection(HistorySection);
-    {for ch:=0 to DevicesAmount-1 do begin
-      for i := 0 to size do begin
-        writeln(Files[ch], Format('%.5g', [History[ch, i]]));
-      end;
-    end;}
     for ch:=0 to DevicesAmount-1 do
     begin
       for i := 0 to skips-1 do begin
@@ -58,10 +52,8 @@ implementation
         for skipInd:= 0 to skipAmount-1 do begin
            sum := sum+History[ch, i*skipAmount + skipInd];
         end;
-        //writeln(Files[ch], Format('%.5g', [sum/skipAmount]));
-        writeln(Files[ch], IntToStr(Floor(10000*(sum/skipAmount))));
+        writeln(Files[ch], IntToStr(Floor(outputMultiplicators[ch]*(sum/skipAmount))));
       end;
-      //writeln(Files[ch], '0');
     end;
     LeaveCriticalSection(HistorySection);
   end;

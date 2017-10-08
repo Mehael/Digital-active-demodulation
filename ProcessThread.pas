@@ -334,9 +334,9 @@ implementation
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
 
     if newCalibrateSignal > DAC_max_signal then
-     newCalibrateSignal := newCalibrateSignal - VoltToCode(DAC_max_VOLT_signal *DevicePeriod[deviceNumber]);
+     newCalibrateSignal := newCalibrateSignal - VoltToCode(VoltResetByDevice[deviceNumber]);
     if newCalibrateSignal < DAC_min_signal then
-      newCalibrateSignal := newCalibrateSignal + VoltToCode(DAC_max_VOLT_signal *DevicePeriod[deviceNumber]);
+      newCalibrateSignal := newCalibrateSignal + VoltToCode(VoltResetByDevice[deviceNumber]);
 
     SendDAC(deviceNumber, newCalibrateSignal);
     LastLowFreq[deviceNumber]:=lowFreq;
