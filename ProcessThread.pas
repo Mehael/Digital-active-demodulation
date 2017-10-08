@@ -241,9 +241,6 @@ implementation
              History[ch, i] := 0;
 
       WriterThread.Save();
-
-      WriterThread.Terminate();
-
       { По выходу из цикла отсанавливаем сбор данных.
         Чтобы не сбросить код ошибки (если вышли по ошибке)
         результат останова сохраняем в отдельную переменную }
@@ -251,6 +248,9 @@ implementation
       stoperr:= LTR24_Stop(phltr24^);
       if err = LTR_OK then
         err:= stoperr;
+
+      Sleep(500);
+      WriterThread.Terminate();
 
     end;
 
@@ -305,11 +305,11 @@ implementation
     if deviceNumber = 0 then
       WriterThread.DebugWrite(LastCalibrateSignal[deviceNumber]);
 
-    if ((lowFreq  > YWindowMin[deviceNumber]) and (lowFreq < YWindowMax[deviceNumber])) then exit;
+    //if ((lowFreq  > YWindowMin[deviceNumber]) and (lowFreq < YWindowMax[deviceNumber])) then exit;
     shiftPercentFromAmplitude:= Abs(LastLowFreq[deviceNumber]-lowFreq) / amplitude[deviceNumber];
-    if shiftPercentFromAmplitude > (BigSignalThreshold / 100) then exit;
+    //if shiftPercentFromAmplitude > (BigSignalThreshold / 100) then exit;
 
-    Shift :=  Shift * AccelerationSign[deviceNumber]*0.01;
+    Shift :=  Shift * AccelerationSign[deviceNumber]*0.1;//*0.01;
     Shift := VoltToCode(Shift);
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
 

@@ -58,7 +58,7 @@ implementation
         for skipInd:= 0 to skipAmount-1 do begin
            sum := sum+History[ch, i*skipAmount + skipInd];
         end;
-        writeln(Files[ch], Format('%.5g', [(outputMultiplicators[ch] * sum/skipAmount)]));
+        writeln(Files[ch], Format('%f', [(outputMultiplicators[ch] * sum/skipAmount)]));
       end;
       //writeln(Files[ch], '0');
     end;
