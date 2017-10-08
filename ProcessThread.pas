@@ -303,7 +303,7 @@ implementation
     Shift := OptimalPoint[deviceNumber] - lowFreq;
 
     if deviceNumber = 0 then
-      writeln(WriterThread.debugFile, FloatToStr(LastCalibrateSignal[deviceNumber]));
+      WriterThread.DebugWrite(LastCalibrateSignal[deviceNumber]);
 
     if ((lowFreq  > YWindowMin[deviceNumber]) and (lowFreq < YWindowMax[deviceNumber])) then exit;
     shiftPercentFromAmplitude:= Abs(LastLowFreq[deviceNumber]-lowFreq) / amplitude[deviceNumber];

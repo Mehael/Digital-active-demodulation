@@ -17,8 +17,8 @@ type TWriter = class(TThread)
     procedure Save();
     procedure CreateFiles();
     procedure CloseFiles();
+    procedure DebugWrite(Value: Double);
 end;
-
 
 implementation
   constructor TWriter.Create(ipath: string; ifrequency: string; iskipAmount: integer; SuspendCreate : Boolean);
@@ -30,7 +30,12 @@ implementation
      Inherited Create(SuspendCreate);
      CreateFiles();
   end;
- 
+
+  procedure TWriter.DebugWrite(Value: Double);
+  begin
+    writeln(debugFile, FloatToStr(Value));
+  end;
+
   procedure TWriter.Save;
   var
     ch,i,skipInd, size, skips: Integer;
