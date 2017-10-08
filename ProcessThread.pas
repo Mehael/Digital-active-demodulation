@@ -1,4 +1,4 @@
-unit ProcessThread;
+п»їunit ProcessThread;
 
 interface
 uses Windows, Classes, Math, SyncObjs, Graphics, Chart, Series,
@@ -6,14 +6,14 @@ StdCtrls, SysUtils, ltr24api, ltr34api, ltrapi, WriterThread, Config;
 
 type TProcessThread = class(TThread)
   public
-    //элементы управления для отображения результатов обработки
+    //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     visChAvg : array [0..LTR24_CHANNEL_NUM-1] of TChart;
     ShowSignal: TCheckBox;
     WriterThread : TWriter;
     MilisecsToWork:  Int64;
     MilisecsProcessed:  Int64;
     phltr34: pTLTR34;
-    phltr24: pTLTR24; //указатель на описатель модуля
+    phltr24: pTLTR24; //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     bnStart:  TButton;
     skipAmount: integer;
     WindowPercent: integer;
@@ -23,26 +23,26 @@ type TProcessThread = class(TThread)
     frequency:string;
 
     doUseCalibration:boolean;
-    err : Integer; //код ошибки при выполнении потока сбора
-    stop : Boolean; //запрос на останов (устанавливается из основного потока)
+    err : Integer; //пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+    stop : Boolean; //пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ)
 
     constructor Create(SuspendCreate : Boolean);
     destructor Free();
 
   private
     { Private declarations }
-    // признак, что есть вычесленные данные по каналам в ChAvg
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ ChAvg
     ChValidData : array [0..LTR24_CHANNEL_NUM-1] of Boolean;
     AccelerationSign: array [0..LTR24_CHANNEL_NUM-1] of Integer;
-    OptimalDACSignal , LastCalibrateSignal, OptimalPoint: array [0..LTR24_CHANNEL_NUM-1] of DOUBLE;
-    data     : array of Double;    //обработанные данные
+    OptimalDACSignal , LastCalibrateSignal, OptimalPoint, Scale, DevicePeriod: array [0..LTR24_CHANNEL_NUM-1] of DOUBLE;
+    data     : array of Double;    //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     calibration_signal_step: double;
-    ActiveChannelsAmount   : Integer;  //количество разрешенных каналов
+    ActiveChannelsAmount   : Integer;  //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     ChannelPackageSize : Integer;
     History: THistory;
     HistoryIndex, HistoryPage : Integer;
     historyPagesAmount : Integer;
-    amplitude: array [0..DevicesAmount-1] of Double;
+    amplitude: Double;
 
     //YWindowVariables
     YWindowMax, YWindowMin, LastLowFreq: array [0..DevicesAmount-1] of Double;
@@ -91,12 +91,8 @@ implementation
   begin
     LastCalibrateSignal[channel]:= signal;
 
-    for i := 0 to DAC_packSize - 1 do
-      DATA[i]:= LastCalibrateSignal[i];
-
-    ph:= phltr34;
-    LTR34_ProcessData(ph,@DATA,@WORD_DATA, ph.ChannelQnt, 0); //1- указываем что значения в Вольтах
-    LTR34_Send(ph,@WORD_DATA, ph.ChannelQnt, DAC_possible_delay);
+    LTR34_ProcessData(phltr34,@LastCalibrateSignal,@WORD_DATA, phltr34.ChannelQnt, 0); //1- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    LTR34_Send(phltr34,@WORD_DATA, phltr34.ChannelQnt, DAC_possible_delay);
   end;
 
   procedure TProcessThread.DryData(wetData: array of LongWord; out dryData: array of Double);
@@ -129,24 +125,27 @@ implementation
   procedure TProcessThread.Execute;
   var
     stoperr,i : Integer;
-    rcv_buf  : array of LongWord;  //сырые принятые слова от модуля
+    rcv_buf  : array of LongWord;  //пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 
     ch, steps_amount       : Integer;
 
-    recv_wrd_cnt : Integer;  //количество принимаемых сырых слов за раз
-    recv_data_cnt : Integer; //количество обработанных слов, которые должны принять за раз
-    // номера разрешенных каналов
+    recv_wrd_cnt : Integer;  //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ
+    recv_data_cnt : Integer; //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ
+    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     ch_nums  : array [0..LTR24_CHANNEL_NUM-1] of Byte;
-    // временные переменные для вычисления. в конце обновляются уже поля
-    // класса - ChAvg и ChDataValid
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+    // пїЅпїЅпїЅпїЅпїЅпїЅ - ChAvg пїЅ ChDataValid
     ch_avg   : array [0..LTR24_CHANNEL_NUM-1] of Double;
     ch_valid : array [0..LTR24_CHANNEL_NUM-1] of Boolean;
   begin
-    //обнуляем переменные
+    //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     for ch:=0 to LTR24_CHANNEL_NUM-1 do
       ChValidData[ch]:=False;
 
-    //Проверяем, сколько и какие каналы разрешены
+    if doUseCalibration then
+     LTR34_DACStart(phltr34);
+
+    //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     ActiveChannelsAmount := 0;
     for ch:=0 to LTR24_CHANNEL_NUM-1 do
     begin
@@ -157,17 +156,17 @@ implementation
       end;
     end;
 
-    { Определяем, сколко преобразований будет выполненно за заданное время
-      => будем принимать данные блоками такого размера }
+    { пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+      => пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ }
     recv_data_cnt:=  Round(phltr24^.ADCFreq*ADC_reading_time/1000) * DevicesAmount;
-    { В 24-битном формате каждому отсчету соответствует два слова от модуля,
-                   а в 20-битном - одно }
+    { пїЅ 24-пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ,
+                   пїЅ пїЅ 20-пїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅ }
     if phltr24^.DataFmt = LTR24_FORMAT_24 then
       recv_wrd_cnt :=  2*recv_data_cnt
     else
       recv_wrd_cnt :=  recv_data_cnt;
 
-    { выделяем массивы для приема данных }
+    { пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ }
     SetLength(rcv_buf, recv_wrd_cnt);
     SetLength(data, recv_data_cnt);
 
@@ -186,20 +185,20 @@ implementation
     WriterThread := TWriter.Create(path, frequency, skipAmount, True);
     WriterThread.Priority := tpHighest;
     WriterThread.History := @History;
-    
+
     if err = LTR_OK then
     begin
       while not stop and (err = LTR_OK) do
       begin
-        { Принимаем данные (здесь используется вариант без синхрометок, но есть
-          и перегруженная функция с ними) }
+        { пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅ
+          пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ) }
         ChannelPackageSize := LTR24_Recv(phltr24^, rcv_buf, recv_wrd_cnt, ADC_possible_delay + ADC_reading_time);
         MilisecsProcessed := MilisecsProcessed +  ADC_reading_time;
 
         if MilisecsProcessed > MilisecsToWork then
           stop := true;
 
-        //Значение меньше нуля соответствуют коду ошибки
+        //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
         if ChannelPackageSize < 0 then
           err:=ChannelPackageSize
         else  if ChannelPackageSize < recv_wrd_cnt then
@@ -216,7 +215,7 @@ implementation
               ch_valid[ch] := False;
             end;
 
-            // получаем кол-во отсчетов на канал
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
             ChannelPackageSize := Trunc(ChannelPackageSize/DevicesAmount);
             for ch:=0 to DevicesAmount-1 do
             begin
@@ -231,6 +230,11 @@ implementation
 
       NextTick();
 
+      if doUseCalibration then begin
+        LTR34_Reset(phltr34);
+        LTR34_DACStop(phltr34);
+      end;
+
       visChAvg[0].Series[0].Clear();
       visChAvg[1].Series[0].Clear();
 
@@ -241,9 +245,9 @@ implementation
              History[ch, i] := 0;
 
       WriterThread.Save();
-      { По выходу из цикла отсанавливаем сбор данных.
-        Чтобы не сбросить код ошибки (если вышли по ошибке)
-        результат останова сохраняем в отдельную переменную }
+      { пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.
+        пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ)
+        пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ }
 
       stoperr:= LTR24_Stop(phltr24^);
       if err = LTR_OK then
@@ -253,14 +257,13 @@ implementation
       WriterThread.Terminate();
 
     end;
-
-    bnStart.Caption := 'Старт';
+    bnStart.Caption := 'РЎС‚Р°СЂС‚';
   end;
 
 
   function TProcessThread.GetLowFreq(deviceNumber: Integer) : Double;
-  var i: Integer;
-  aver,startValue, dif, memory : Double;
+  var i, fresh_moar, fresh_less: Integer;
+  aver,startValue, dif, memory, fresh : Double;
 
   begin
      startValue:=History[deviceNumber, HistoryIndex];
@@ -271,26 +274,44 @@ implementation
 
         Median[deviceNumber, CurrentMedianIndex[deviceNumber]]:=aver/ChannelPackageSize;
 
+        fresh:=0;
         memory:= 0;
-        for i := 0 to MedianDeep-1 do begin
-           if (i<>CurrentMedianIndex[deviceNumber]) then
-             memory:=memory+Median[deviceNumber, i];
+
+        fresh_moar:=CurrentMedianIndex[deviceNumber];
+        fresh_less:=fresh_moar+freshDeep;
+        if (fresh_less>MedianDeep) then begin
+          fresh_less:=fresh_less-MedianDeep;
+           for i := 0 to MedianDeep-1 do begin
+           if ((i>=fresh_moar) or (i<fresh_less)) then
+              fresh:=fresh+Median[deviceNumber, i]
+           else
+              memory:=memory+Median[deviceNumber, i];
+          end;
+        end else begin
+          for i := 0 to MedianDeep-1 do begin
+           if ((i>=fresh_moar) and (i<fresh_less)) then
+              fresh:=fresh+Median[deviceNumber, i]
+           else
+              memory:=memory+Median[deviceNumber, i];
+          end;
         end;
 
         if MedianDeep>1 then memory:=memory/(MedianDeep-1)
         else memory:= Median[deviceNumber, CurrentMedianIndex[deviceNumber]];
 
         //dif:= Median[deviceNumber, CurrentMedianIndex[deviceNumber]]-memory;
+        //dif:=fresh-memory;
         //if Abs(dif)> amplitude*0.4 then
         //    Median[deviceNumber, CurrentMedianIndex[deviceNumber]] :=
         //       memory+ Sign(dif)*amplitude*0.4;//;
 
         //GetLowFreq:= Median[deviceNumber, CurrentMedianIndex[deviceNumber]];
-
         GetLowFreq:=  memory;
+
 
      CurrentMedianIndex[deviceNumber]:=CurrentMedianIndex[deviceNumber]+1;
      if (CurrentMedianIndex[deviceNumber] = MedianDeep) then CurrentMedianIndex[deviceNumber]:=0;
+
 
   end;
 
@@ -298,25 +319,24 @@ implementation
   var
     Shift, newCalibrateSignal, lowFreq, shiftPercentFromAmplitude: Double;
   begin
-    lowFreq := GetLowFreq(deviceNumber);
+    newCalibrateSignal := GetLowFreq(deviceNumber);
     Shift := 0;
-    Shift := OptimalPoint[deviceNumber] - lowFreq;
+    Shift := OptimalPoint[deviceNumber] - newCalibrateSignal;
 
     if deviceNumber = 0 then
       WriterThread.DebugWrite(LastCalibrateSignal[deviceNumber]);
 
-    //if ((lowFreq  > YWindowMin[deviceNumber]) and (lowFreq < YWindowMax[deviceNumber])) then exit;
-    shiftPercentFromAmplitude:= Abs(LastLowFreq[deviceNumber]-lowFreq) / amplitude[deviceNumber];
-    //if shiftPercentFromAmplitude > (BigSignalThreshold / 100) then exit;
+    if ((newCalibrateSignal > YWindowMin[deviceNumber]) and
+    (newCalibrateSignal < YWindowMax[deviceNumber])) then exit;
 
-    Shift :=  Shift * AccelerationSign[deviceNumber]*0.1;//*0.01;
+    Shift :=  Shift * AccelerationSign[deviceNumber]*Scale[deviceNumber]*0.007;
     Shift := VoltToCode(Shift);
     newCalibrateSignal := LastCalibrateSignal[deviceNumber] + Shift;
 
     if newCalibrateSignal > DAC_max_signal then
-     newCalibrateSignal := newCalibrateSignal - VoltToCode(VoltResetByDevice[deviceNumber]);
+     newCalibrateSignal := newCalibrateSignal - VoltToCode(DAC_max_VOLT_signal *DevicePeriod[deviceNumber]);
     if newCalibrateSignal < DAC_min_signal then
-      newCalibrateSignal := newCalibrateSignal + VoltToCode(VoltResetByDevice[deviceNumber]);
+      newCalibrateSignal := newCalibrateSignal + VoltToCode(DAC_max_VOLT_signal *DevicePeriod[deviceNumber]);
 
     SendDAC(deviceNumber, newCalibrateSignal);
     LastLowFreq[deviceNumber]:=lowFreq;
@@ -334,7 +354,7 @@ implementation
 
     for i := 0 to Length(History[deviceNumber])-1 do begin
     if (History[deviceNumber,i] = 0) then break;
-
+      //visChAvg[deviceNumber].Series[0].Add(History[deviceNumber,i]);
       if valueMin >= History[deviceNumber,i] then begin
         valueMin := History[deviceNumber,i];
         indexMin := i;
@@ -344,14 +364,20 @@ implementation
         indexMax := i;
       end;
     end;
-    OptimalPoint[deviceNumber] := (valueMax+valueMin)/2;     //оптим положение раб точки
+    OptimalPoint[deviceNumber] := 0;//(valueMax+valueMin)/2;     //пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 
-    amplitude[deviceNumber] := (valueMax-valueMin)*WindowPercent;
-    toPersentMult := 0.01 / 2;
-    YWindowMin[deviceNumber]:= OptimalPoint[deviceNumber] - amplitude[deviceNumber]*toPersentMult;
-    YWindowMax[deviceNumber]:= OptimalPoint[deviceNumber] + amplitude[deviceNumber]*toPersentMult;
+    amplitude := (valueMax-valueMin)*WindowPercent*0.005;
+    YWindowMin[deviceNumber]:= OptimalPoint[deviceNumber] - amplitude;
+    YWindowMax[deviceNumber]:= OptimalPoint[deviceNumber] + amplitude;
+
+    Log('Ampl: ' + FloatToStr(valueMax-valueMin));
+
+     //amplitude 4.575, scale 0.087, period Scalex0.64
+     Scale[deviceNumber] :=  4/(valueMax-valueMin); // 4/
+     DevicePeriod[deviceNumber] := 0.64*Scale[deviceNumber];
 
 
+    Log('Scale: ' + FloatToStr(Scale[deviceNumber]));
     Log('OptVal: ' + FloatToStr(OptimalPoint[deviceNumber]));
 
     if indexMax > indexMin then
@@ -439,4 +465,4 @@ implementation
   end;
 
 end.
-
+                                                                     

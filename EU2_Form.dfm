@@ -30,7 +30,6 @@ object MainForm: TMainForm
         Text = #1042#1089#1077' '#1089#1080#1089#1090#1077#1084#1099' '#1088#1072#1073#1086#1090#1072#1102#1090' '#1085#1086#1088#1084#1072#1083#1100#1085#1086
         Width = 50
       end>
-    ExplicitWidth = 897
   end
   object Panel1: TPanel
     Left = 443
@@ -41,7 +40,6 @@ object MainForm: TMainForm
     Alignment = taLeftJustify
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitLeft = 435
     object Label1: TLabel
       Left = 6
       Top = 72
@@ -190,6 +188,10 @@ object MainForm: TMainForm
       end
       object TabSheet1: TTabSheet
         Caption = #1055#1083#1072#1090#1072
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object lblAdcFreq: TLabel
           Left = 38
           Top = 98
@@ -230,7 +232,7 @@ object MainForm: TMainForm
           Top = 57
           Width = 157
           Height = 26
-          ItemHeight = 18
+          ItemHeight = 0
           ItemIndex = 0
           TabOrder = 0
           Text = #1042#1099#1082#1083'. (AC+DC)'
@@ -243,7 +245,7 @@ object MainForm: TMainForm
           Top = 97
           Width = 106
           Height = 26
-          ItemHeight = 18
+          ItemHeight = 0
           ItemIndex = 6
           TabOrder = 1
           Text = '14648'
@@ -270,7 +272,7 @@ object MainForm: TMainForm
           Top = 137
           Width = 103
           Height = 26
-          ItemHeight = 18
+          ItemHeight = 0
           ItemIndex = 0
           TabOrder = 2
           Text = '20 '#1073#1080#1090
@@ -283,7 +285,7 @@ object MainForm: TMainForm
           Top = 14
           Width = 77
           Height = 26
-          ItemHeight = 18
+          ItemHeight = 0
           ItemIndex = 1
           TabOrder = 3
           Text = '10 '#1042
@@ -296,6 +298,10 @@ object MainForm: TMainForm
       object TabSheet2: TTabSheet
         Caption = #1054#1087#1090#1080#1084'.'
         ImageIndex = 1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object Label5: TLabel
           Left = 182
           Top = 23
@@ -338,6 +344,10 @@ object MainForm: TMainForm
       object TabSheet3: TTabSheet
         Caption = #1057#1073#1088#1086#1089#1099
         ImageIndex = 2
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object Label8: TLabel
           Left = 17
           Top = 32
@@ -400,6 +410,9 @@ object MainForm: TMainForm
       object TabSheet4: TTabSheet
         Caption = #1055#1086#1088#1086#1075
         ImageIndex = 3
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
         ExplicitHeight = 162
         object Label14: TLabel
           Left = 16
@@ -448,6 +461,9 @@ object MainForm: TMainForm
       object TabSheet5: TTabSheet
         Caption = #1052#1085#1086#1078#1080#1090'.'
         ImageIndex = 5
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
         ExplicitHeight = 162
         object Label19: TLabel
           Left = 16
@@ -497,6 +513,10 @@ object MainForm: TMainForm
       object TabSheet7: TTabSheet
         Caption = #1053#1080#1079#1082#1086#1095'.'
         ImageIndex = 6
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object Label23: TLabel
           Left = 3
           Top = 24
@@ -559,7 +579,6 @@ object MainForm: TMainForm
     Align = alClient
     AutoSize = True
     TabOrder = 2
-    ExplicitWidth = 442
     object chGraph2: TChart
       Left = 1
       Top = 281
@@ -583,8 +602,6 @@ object MainForm: TMainForm
       Align = alTop
       Color = clBlack
       TabOrder = 0
-      ExplicitLeft = 2
-      ExplicitTop = 37
       object Series1: TFastLineSeries
         Marks.Callout.Brush.Color = clBlack
         Marks.Visible = False
@@ -622,7 +639,6 @@ object MainForm: TMainForm
       Align = alTop
       Color = clBlack
       TabOrder = 1
-      ExplicitWidth = 440
       object FastLineSeries2: TFastLineSeries
         Marks.Callout.Brush.Color = clBlack
         Marks.Visible = False

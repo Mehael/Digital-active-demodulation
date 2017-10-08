@@ -8,7 +8,7 @@ type TDACThread = class(TThread)
     stop:boolean;
     DAC_level:array of DOUBLE;
     debugFile: TextFile;
-    
+
     destructor Free();
     procedure CheckError(err: Integer);
     constructor Create(ltr34: pTLTR34; SuspendCreate : Boolean);
@@ -21,32 +21,27 @@ type TDACThread = class(TThread)
     DATA:array[0..DAC_packSize-1] of Double;
     WORD_DATA:array[0..DAC_packSize-1] of Double;
 
-    procedure updateDAC();
+    procedure updateDAC(channel: integer);
 end;
 implementation
 
-  procedure TDACThread.updateDAC();
+  procedure TDACThread.updateDAC(channel: integer);
   var
-    i, ch, ulimit: Integer;
+    i, ulimit: Integer;
     ch_code: Double;
     summator, step: single;
   begin
 
-    if DATA[0]=DAC_level[0] then exit;
-    //Log(FloatToStr(DAC_level[0]));
+    if DATA[channel]=DAC_level[channel] then exit;
 
     EnterCriticalSection(DACSection);
-    for ch:=0 to phltr34.ChannelQnt-1 do begin
-      DATA[ch]:= DAC_level[ch];
-    end;
+    DATA[channel]:= DAC_level[channel];
     LeaveCriticalSection(DACSection);
 
     CheckError(LTR34_ProcessData(phltr34,@DATA,@WORD_DATA, phltr34.ChannelQnt, 0)); //1- указываем что значения в Вольтах
     CheckError(LTR34_Send(phltr34,@WORD_DATA, phltr34.ChannelQnt, DAC_possible_delay));
 
-    if DAC_level[0] > 0 then
-      writeln(debugFile, FloatToStr((DAC_level[0])));
-
+    //writeln(debugFile, FloatToStr((DAC_level[channel])));
   end;
 
   procedure TDACThread.stopThread();
@@ -54,8 +49,9 @@ implementation
   begin
       for ch:=0 to phltr34.ChannelQnt-1 do begin
           DAC_level[ch]:= 0;
+          updateDAC(ch);
       end;
-      updateDAC();
+
       stop:=true;
   end;
 
@@ -86,15 +82,16 @@ implementation
   end;
 
   procedure TDACThread.Execute;
+  var i: integer;
   begin
     System.Assign(debugFile, 'D:\Dac.txt');
     ReWrite(debugFile);
-    
+
     CheckError(LTR34_DACStart(phltr34));
     while not stop do
-      updateDAC();
+      for i:=0 to ChannelsAmount-1 do updateDAC(i);
 
     LTR34_Reset(phltr34);
     CheckError(LTR34_DACStop(phltr34));
   end;
-end.
+end.  
