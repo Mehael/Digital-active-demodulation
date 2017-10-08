@@ -6,10 +6,9 @@ interface uses
   ltrapi, ltrapitypes, ltrapidefine, ltr24api, ltr34api, ProcessThread, Config,
   Spin, Registry;
 
-{ ����������, ����������� ��� ������������ ���������� � ������� }
 type TLTR_MODULE_LOCATION = record
-  csn : string; //�������� ����� ������
-  slot : Word; //����� �����
+  csn : string;
+  slot : Word;
 end;
 
 type
@@ -154,8 +153,11 @@ begin
     ���� ��� �� ������ ������ }
   LTR_FillSerial(srv, CSN_SERVER_CONTROL);
   res:=LTR_Open(srv);
-  if res <> LTR_OK then
-    MessageDlg('�� ������� ���������� ����� � ��������: ' + LTR_GetErrorString(res), mtError, [mbOK], 0)
+  if res <> LTR_OK then begin
+      MessageDlg('Датчики не подключены!', mtError, [mbOK], 0);
+      Application.Terminate();
+  end
+
   else
   begin
     //�������� ������ �������� ������� ���� ������������ �������
@@ -163,8 +165,10 @@ begin
     //��������� ���������� ������ �� ����� - ����� �������
     LTR_Close(srv);
 
-    if (res <> LTR_OK) then
-      MessageDlg('�� ������� �������� ������ �������: ' + LTR_GetErrorString(res), mtError, [mbOK], 0)
+    if (res <> LTR_OK) then begin
+      MessageDlg('Датчики не подключены! ' + LTR_GetErrorString(res), mtError, [mbOK], 0);
+      Application.Terminate();
+    end
     else
     begin
       for crate_ind:=0 to crates_cnt-1 do
@@ -385,9 +389,10 @@ begin
     location := ltr_list[ 0 ];
     LTR24_Init(hltr_24);
     res:=LTR24_Open(hltr_24, SADDR_DEFAULT, SPORT_DEFAULT, location.csn, location.slot);
-    if res<>LTR_OK then
-      MessageDlg('�� ������� ���������� ����� � �������: ' + LTR24_GetErrorString(res), mtError, [mbOK], 0);
-
+    if res<>LTR_OK then begin
+      MessageDlg('Плата не подключена!', mtError, [mbOK], 0);
+      Application.Terminate();
+    end;
     if res=LTR_OK then
     begin
       // ������ ���������� �� Flash-������ (������� ������������� ������������)
