@@ -51,6 +51,7 @@ implementation
 
     writeln(configFile, path);
     writeln(configFile, 'Продолжительность записи: ' + Config.ProcessTime);
+    writeln(configFile, 'Пишется каждое ' + Config.SkippedNumbers + '-е число.');
     writeln(configFile, '');
     writeln(configFile, '[Режим]');
     writeln(configFile, 'Калибровка: ' + Config.Calibration);
@@ -71,7 +72,7 @@ implementation
     writeln(configFile, '2-й датчик: ' + Config.ResetVt2 + 'Вольт');
     writeln(configFile, '');
     writeln(configFile, '[Порог]');
-    writeln(configFile, 'Рабочая точка медленнее: ' + Config.WorkpointSpeedLimit + '% амплитуды за блок');
+    writeln(configFile, 'Рабочая точка движется медленнее, чем ' + Config.WorkpointSpeedLimit + '% амплитуды за блок');
     writeln(configFile, '');
     writeln(configFile, '[Множитель]');
     writeln(configFile, '1-й датчик х ' + Config.Mult1);

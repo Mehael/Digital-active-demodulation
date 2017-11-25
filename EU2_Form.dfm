@@ -135,7 +135,6 @@ object MainForm: TMainForm
       Top = 105
       Width = 33
       Height = 21
-      Enabled = False
       TabOrder = 5
       Text = '10'
     end

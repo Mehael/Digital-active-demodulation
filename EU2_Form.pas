@@ -435,6 +435,7 @@ begin
     lConfig.Mult2 := Edit6.Text;
     lConfig.BlocksForLowfreqCalculation := Edit7.Text;
     lConfig.TimeToWriteBlock := Edit8.Text;
+    lConfig.SkippedNumbers := SkipVal.Text;
    //-----------------------------------
    DevicesAmount := StrToInt(ComboBox1.Text);
    ChannelsAmount := DevicesAmount*ChannelsPerDevice;

@@ -44,6 +44,7 @@ type
   THistory = array of array of Double;
   TConfig = class(TObject)
     ProcessTime : string;
+    SkippedNumbers : string;
     Calibration : string;
     UnlimWriting : string;
     ShowSignal : string;
