@@ -555,7 +555,7 @@ begin
   begin
    secondsToWork:=secondsToWork-1;
 
-   if secondsToWork<0 then begin
+   if (secondsToWork < 0) and (threadRunning = false) then begin
       TimerText.Caption:= '';
       Timer1.Enabled := false;
       if CheckBox2.Checked = true then
