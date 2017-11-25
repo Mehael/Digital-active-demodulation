@@ -3,7 +3,10 @@ interface
 uses Windows, Classes, Math, SysUtils, ltr34api, Dialogs, ltrapi, Config;
 
 type TWriter = class(TThread)
-   public
+  private
+    procedure WriteConfigInfo(path : string);
+
+    public
     path:string;
     frequency:string;
     Files : TFilePack;
@@ -11,8 +14,9 @@ type TWriter = class(TThread)
     History: ^THistory;
     stop:boolean;
     debugFile:TextFile;
+    Config:TConfig;
 
-    constructor Create(ipath: string; ifrequency: string; iskipAmount: integer; SuspendCreate : Boolean);
+    constructor Create(ipath: string; ifrequency: string; iskipAmount: integer; SuspendCreate : Boolean; ConfigRef : TConfig);
     destructor Free();
     procedure Save();
     procedure CreateFiles();
@@ -21,12 +25,13 @@ type TWriter = class(TThread)
 end;
 
 implementation
-  constructor TWriter.Create(ipath: string; ifrequency: string; iskipAmount: integer; SuspendCreate : Boolean);
+  constructor TWriter.Create(ipath: string; ifrequency: string; iskipAmount: integer; SuspendCreate : Boolean; ConfigRef : TConfig);
   begin
      path:=ipath;
      frequency:=ifrequency;
      skipAmount:=iskipAmount;
-
+     Config := ConfigRef;
+     
      Inherited Create(SuspendCreate);
      CreateFiles();
   end;
@@ -34,6 +39,47 @@ implementation
   procedure TWriter.DebugWrite(Value: Double);
   begin
     writeln(debugFile, FloatToStr(Value));
+  end;
+
+  procedure TWriter.WriteConfigInfo(path : string);
+  var
+    configFile:TextFile;
+  begin
+    System.Assign(configFile, path);
+    ReWrite(configFile);
+
+    writeln(configFile, path);
+    writeln(configFile, 'Продолжительность записи: ' + Config.ProcessTime);
+    writeln(configFile, '');
+    writeln(configFile, '[Режим]');
+    writeln(configFile, 'Калибровка: ' + Config.Calibration);
+    writeln(configFile, 'Бесконечная запись: ' + Config.UnlimWriting);
+    writeln(configFile, 'Показывать сигнал: ' + Config.ShowSignal);
+    writeln(configFile, '');
+    writeln(configFile, '[АЦП]');
+    writeln(configFile, 'Диапазон: ' + Config.ACPrange);
+    writeln(configFile, 'Режим отсечки постоянной: ' + Config.ACPmode);
+    writeln(configFile, 'Частота работы АЦП: ' + Config.ACPfreq);
+    writeln(configFile, 'Разрядность данных: ' + Config.ACPbits);
+    writeln(configFile, '');
+    writeln(configFile, '[Оптим.]');
+    writeln(configFile, 'Ширина оптимального положения: ' + Config.OptWide + '% амплитуды');
+    writeln(configFile, '');
+    writeln(configFile, '[Сбросы]');
+    writeln(configFile, '1-й датчик: ' + Config.ResetVt1 + 'Вольт');
+    writeln(configFile, '2-й датчик: ' + Config.ResetVt2 + 'Вольт');
+    writeln(configFile, '');
+    writeln(configFile, '[Порог]');
+    writeln(configFile, 'Рабочая точка медленнее: ' + Config.WorkpointSpeedLimit + '% амплитуды за блок');
+    writeln(configFile, '');
+    writeln(configFile, '[Множитель]');
+    writeln(configFile, '1-й датчик х ' + Config.Mult1);
+    writeln(configFile, '2-й датчик х ' + Config.Mult2);
+    writeln(configFile, '');
+    writeln(configFile, '[Низкочастот.]');
+    writeln(configFile, 'Считается средним по ' + Config.BlocksForLowfreqCalculation + ' блокам данных.');
+    writeln(configFile, 'Время записи 1 блока: ' + Config.TimeToWriteBlock + ' мс.');
+    CloseFile(configFile);
   end;
 
   procedure TWriter.Save;
@@ -69,7 +115,7 @@ implementation
   TimeMark, P: string;
   i,deviceN,fileIndex: integer;
  begin
- 
+
   TimeSeparator := '-';
   TimeMark := DateToStr(Now) + TimeSeparator + TimeToStr(Now);
   TimeMark := StringReplace(TimeMark, '/', TimeSeparator, [rfReplaceAll]);
@@ -88,6 +134,8 @@ implementation
 
   System.Assign(debugFile, P + '\Device0-DAC.txt');
   ReWrite(debugFile);
+
+  WriteConfigInfo(P + '\Config.txt');
  end;
 
  procedure TWriter.CloseFiles;

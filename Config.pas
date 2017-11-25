@@ -2,6 +2,7 @@
 interface
 uses Windows;
 
+function BooleanToString(Value: Boolean): string;
 function VoltToCode(Volt: Double): Integer;
 function CodeToVolt(Code: Integer): Double;
 procedure Log(OutputDbgString: String);
@@ -44,6 +45,25 @@ const
 type
   TFilePack = array[0..ChannelsAmount] of TextFile;
   THistory = array[0..ChannelsAmount-1] of array of Double;
+  TConfig = class(TObject)
+    ProcessTime : string;
+    Calibration : string;
+    UnlimWriting : string;
+    ShowSignal : string;
+    ACPrange : string;
+    ACPmode : string;
+    ACPfreq : string;
+    ACPbits : string;
+    OptWide : string;
+    ResetVt1 : string;
+    ResetVt2 : string;
+    WorkpointSpeedLimit : string;
+    Mult1 : string;
+    Mult2 : string;
+    BlocksForLowfreqCalculation : string;
+    TimeToWriteBlock : string;
+  end;
+
 implementation
 
 function VoltToCode(Volt: Double): Integer;
@@ -56,6 +76,12 @@ end;
 function CodeToVolt(Code: Integer): Double;
 begin
   Result := Code*20/65535;
+end;
+
+function BooleanToString(Value: Boolean): string;
+begin
+  if (Value) then Result := 'Да'
+  else Result := 'Нет';
 end;
 
 procedure Log(OutputDbgString: String);

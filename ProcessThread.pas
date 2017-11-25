@@ -3,7 +3,7 @@
 interface
 uses Windows, Classes, Math, SyncObjs, Graphics, Chart, Series,
 StdCtrls, SysUtils, ltr24api, ltr34api, ltrapi, WriterThread, Config;
-
+                                                           
 type TProcessThread = class(TThread)
   public
     //�������� ���������� ��� ����������� ����������� ���������
@@ -18,6 +18,7 @@ type TProcessThread = class(TThread)
     skipAmount: integer;
     WindowPercent: integer;
     PrevHistoryIndex: Integer;
+    Config:TConfig;
 
     path:string;
     frequency:string;
@@ -34,7 +35,7 @@ type TProcessThread = class(TThread)
     // �������, ��� ���� ����������� ������ �� ������� � ChAvg
     ChValidData : array [0..LTR24_CHANNEL_NUM-1] of Boolean;
     AccelerationSign: array [0..LTR24_CHANNEL_NUM-1] of Integer;
-    OptimalDACSignal , LastCalibrateSignal, OptimalPoint, Scale, DevicePeriod: array [0..LTR24_CHANNEL_NUM-1] of DOUBLE;
+    OptimalDACSignal , LastCalibrateSignal, OptimalPoint, Scale: array [0..LTR24_CHANNEL_NUM-1] of DOUBLE;
     data     : array of Double;    //������������ ������
     calibration_signal_step: double;
     ActiveChannelsAmount   : Integer;  //���������� ����������� �������
@@ -58,6 +59,8 @@ type TProcessThread = class(TThread)
     procedure RecalculateOptimumPoint(deviceNumber: Integer);
     procedure doBigSignal(deviceNumber: Integer);
     procedure DryData(wetData: array of LongWord; out dryData: array of Double);
+    procedure SafeSaveData;
+    procedure CreateFilesForWriting;
    protected
     procedure Execute; override;
   end;
@@ -182,10 +185,7 @@ implementation
     end;
     err:= LTR24_Start(phltr24^);
 
-    WriterThread := TWriter.Create(path, frequency, skipAmount, True);
-    WriterThread.Priority := tpHighest;
-    WriterThread.History := @History;
-
+    CreateFilesForWriting;
     if err = LTR_OK then
     begin
       while not stop and (err = LTR_OK) do
@@ -244,10 +244,7 @@ implementation
           for i := HistoryIndex to Length(History[0])-1 do
              History[ch, i] := 0;
 
-      WriterThread.Save();
-      { �� ������ �� ����� ������������� ���� ������.
-        ����� �� �������� ��� ������ (���� ����� �� ������)
-        ��������� �������� ��������� � ��������� ���������� }
+      SafeSaveData;
 
       stoperr:= LTR24_Stop(phltr24^);
       if err = LTR_OK then
@@ -260,6 +257,18 @@ implementation
     bnStart.Caption := 'Старт';
   end;
 
+  procedure TProcessThread.CreateFilesForWriting;
+  begin
+    WriterThread := TWriter.Create(path, frequency, skipAmount, True, Config);
+    WriterThread.Priority := tpHighest;
+    WriterThread.History := @History;
+  end;
+
+  procedure TProcessThread.SafeSaveData;
+  begin
+    if (WriterThread <> nil) then
+      WriterThread.Save();
+  end;
 
   function TProcessThread.GetLowFreq(deviceNumber: Integer) : Double;
   var i, fresh_moar, fresh_less: Integer;
@@ -374,8 +383,6 @@ implementation
 
      //amplitude 4.575, scale 0.087, period Scalex0.64
      Scale[deviceNumber] :=  4/(valueMax-valueMin); // 4/
-     DevicePeriod[deviceNumber] := 0.64*Scale[deviceNumber];
-
 
     Log('Scale: ' + FloatToStr(Scale[deviceNumber]));
     Log('OptVal: ' + FloatToStr(OptimalPoint[deviceNumber]));
@@ -408,7 +415,6 @@ implementation
   begin
     if MilisecsProcessed = CalibrateMiliSecondsCut then begin
       RecalculateOptimumPoint(deviceNumber);
-
       Log(IntToStr(HistoryIndex));
     end else
     if MilisecsProcessed > CalibrateMiliSecondsCut then begin
@@ -448,21 +454,19 @@ implementation
   var i:Integer;
   begin
     if HistoryPage >= InnerBufferPagesAmount then begin
-      WriterThread.Save();
+      SafeSaveData;
       HistoryPage := 0;
     end;
 
     HistoryIndex:= HistoryPage*ChannelPackageSize;
-
     ParseChannelsData;
 
-    if doUseCalibration then  begin
+    if doUseCalibration then
       for i := 0 to DevicesAmount - 1 do
         CalibrateData(i);
-    end;
 
     HistoryPage:= HistoryPage+1;
   end;
 
 end.
-                                                                     
+

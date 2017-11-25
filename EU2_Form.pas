@@ -416,7 +416,26 @@ var
   MilisecsWork:  Int64;
   DATA:array[0..60000]of Double;
   WORD_DATA:array[0..60000]of Double;
+  lConfig : TConfig;
 begin
+    lConfig := TConfig.Create();
+    lConfig.ProcessTime := txWorkTime.Text + ' ' + cbTimeMetric.Text;
+    lConfig.Calibration := BooleanToString(CheckBox1.Checked);
+    lConfig.UnlimWriting := BooleanToString(CheckBox2.Checked);
+    lConfig.ShowSignal := BooleanToString(CheckBox3.Checked);
+    lConfig.ACPrange := cbbRange1.Text;
+    lConfig.ACPmode := cbbAC1.Text;
+    lConfig.ACPfreq := cbbAdcFreq.Text;
+    lConfig.ACPbits := cbbDataFmt.Text;
+    lConfig.OptWide := PercentEdit.Text;
+    lConfig.ResetVt1 := Edit2.Text;
+    lConfig.ResetVt2 := Edit3.Text;
+    lConfig.WorkpointSpeedLimit := Edit4.Text;
+    lConfig.Mult1 := Edit5.Text;
+    lConfig.Mult2 := Edit6.Text;
+    lConfig.BlocksForLowfreqCalculation := Edit7.Text;
+    lConfig.TimeToWriteBlock := Edit8.Text;
+   //-----------------------------------
    ADC_reading_time := StrToInt(Edit8.Text);
    InnerBufferPagesAmount := 8*Round(CalibrateMiliSecondsCut/ADC_reading_time);
    MedianDeep := StrToInt(Edit7.Text);
@@ -489,6 +508,7 @@ begin
     thread := TProcessThread.Create(True);
     { ��� ��� ��������� ������ ���� ���� � �� ��, ��� ������������ �������,
      ��� � ������ ��������� ����, �� ��������� �������� �� ��� pointer }
+    thread.Config := lConfig;
     thread.phltr24 := @hltr_24;
     thread.phltr34 := @hltr_34;
     thread.Priority := tpHigher;
