@@ -114,21 +114,12 @@ object MainForm: TMainForm
         #1095#1072#1089#1086#1074
         #1076#1085#1077#1081)
     end
-    object Edit1: TEdit
-      Left = 108
-      Top = 78
-      Width = 33
-      Height = 21
-      Enabled = False
-      TabOrder = 3
-      Text = '2'
-    end
     object txPath: TEdit
       Left = 108
       Top = 51
       Width = 121
       Height = 21
-      TabOrder = 4
+      TabOrder = 3
       Text = 'D:\DataACP'
     end
     object txWorkTime: TEdit
@@ -136,7 +127,7 @@ object MainForm: TMainForm
       Top = 24
       Width = 33
       Height = 21
-      TabOrder = 5
+      TabOrder = 4
       Text = '1'
     end
     object skipVal: TEdit
@@ -145,7 +136,7 @@ object MainForm: TMainForm
       Width = 33
       Height = 21
       Enabled = False
-      TabOrder = 6
+      TabOrder = 5
       Text = '10'
     end
     object PageControl1: TPageControl
@@ -155,7 +146,7 @@ object MainForm: TMainForm
       Height = 174
       ActivePage = TabSheet6
       MultiLine = True
-      TabOrder = 7
+      TabOrder = 6
       object TabSheet6: TTabSheet
         Caption = #1056#1077#1078#1080#1084
         ImageIndex = 5
@@ -545,6 +536,19 @@ object MainForm: TMainForm
           Text = '10'
         end
       end
+    end
+    object ComboBox1: TComboBox
+      Left = 108
+      Top = 78
+      Width = 41
+      Height = 21
+      ItemHeight = 13
+      ItemIndex = 0
+      TabOrder = 7
+      Text = '1'
+      Items.Strings = (
+        '1'
+        '2')
     end
   end
   object Panel2: TPanel

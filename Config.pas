@@ -20,15 +20,15 @@ var
   BigSignalThreshold : Integer;
   outputMultiplicators : array [0..1] of Integer;
   MedianDeep : Integer;
-  
+
   ADC_reading_time : Integer;
-  InnerBufferPagesAmount : Integer; 
+  InnerBufferPagesAmount : Integer;
+  DevicesAmount : Integer;
+  ChannelsAmount  : Integer;
+  DAC_packSize : Integer; 
 
 const
-  DevicesAmount     = 2;
   ChannelsPerDevice = 1;
-  ChannelsAmount    = DevicesAmount*ChannelsPerDevice;
-
   ADC_possible_delay = 100;
 
   CalibrateMiliSecondsCut = 2000;
@@ -39,12 +39,9 @@ const
   DAC_dataByChannel     = 1;
   DAC_possible_delay    = 2000;
 
-  DAC_packSize          = DevicesAmount*DAC_dataByChannel;
-
   FreshDeep    = 1;
 type
-  TFilePack = array[0..ChannelsAmount] of TextFile;
-  THistory = array[0..ChannelsAmount-1] of array of Double;
+  THistory = array of array of Double;
   TConfig = class(TObject)
     ProcessTime : string;
     Calibration : string;

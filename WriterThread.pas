@@ -9,9 +9,9 @@ type TWriter = class(TThread)
     public
     path:string;
     frequency:string;
-    Files : TFilePack;
+    Files : array of TextFile;
     skipAmount: integer;
-    History: ^THistory;
+    History: THistory;
     stop:boolean;
     debugFile:TextFile;
     Config:TConfig;
@@ -31,7 +31,8 @@ implementation
      frequency:=ifrequency;
      skipAmount:=iskipAmount;
      Config := ConfigRef;
-     
+     SetLength(Files, ChannelsAmount);
+
      Inherited Create(SuspendCreate);
      CreateFiles();
   end;
@@ -87,8 +88,8 @@ implementation
     ch,i,skipInd, size, skips: Integer;
     sum:double;
   begin
-    size:= Length(History[0])-1;
-    skips:=Trunc(size/skipAmount);
+    size := Length(History[0])-1;
+    skips :=Trunc(size/skipAmount);
 
     EnterCriticalSection(HistorySection);
     for ch:=0 to DevicesAmount-1 do
@@ -98,7 +99,8 @@ implementation
         for skipInd:= 0 to skipAmount-1 do begin
            sum := sum+History[ch, i*skipAmount + skipInd];
         end;
-        writeln(Files[ch], IntToStr(Floor(outputMultiplicators[ch]*(sum/skipAmount))));
+        sum:= Floor(outputMultiplicators[ch]*(sum/skipAmount));
+        writeln(Files[ch], FloatToStr(sum));
       end;
     end;
     LeaveCriticalSection(HistorySection);

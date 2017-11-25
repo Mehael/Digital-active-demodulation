@@ -24,7 +24,6 @@ type
     cbTimeMetric: TComboBox;
     Button1: TButton;
     Label2: TLabel;
-    Edit1: TEdit;
     CheckBox1: TCheckBox;
     Panel1: TPanel;
     Panel2: TPanel;
@@ -85,6 +84,7 @@ type
     Label26: TLabel;
     Edit8: TEdit;
     Label27: TLabel;
+    ComboBox1: TComboBox;
     procedure FormDestroy(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
 
@@ -257,7 +257,6 @@ begin
      skipVal.Text := Reestr.ReadString('skipVal');
 
      txPath.Text := Reestr.ReadString('txPath');
-     Edit1.Text := Reestr.ReadString('Edit1');
      Edit2.Text := Reestr.ReadString('Edit2');
      Edit3.Text := Reestr.ReadString('Edit3');
      Edit4.Text := Reestr.ReadString('Edit4');
@@ -272,6 +271,7 @@ begin
 
      PercentEdit.Value := Reestr.ReadInteger('PercentEdit');
 
+     ComboBox1.ItemIndex := Reestr.ReadInteger('ComboBox1');
      cbbAC1.ItemIndex := Reestr.ReadInteger('cbbAC1');
      cbbAdcFreq.ItemIndex := Reestr.ReadInteger('cbbAdcFreq');
      cbbDataFmt.ItemIndex := Reestr.ReadInteger('cbbDataFmt');
@@ -347,7 +347,6 @@ begin
      Reestr.WriteString('skipVal', skipVal.Text);
 
      Reestr.WriteString('txPath', txPath.Text);
-     Reestr.WriteString('Edit1', Edit1.Text);
      Reestr.WriteString('Edit2', Edit2.Text);
      Reestr.WriteString('Edit3', Edit3.Text);
      Reestr.WriteString('Edit4', Edit4.Text);
@@ -362,6 +361,7 @@ begin
 
      Reestr.WriteInteger('PercentEdit', PercentEdit.Value);
 
+     Reestr.WriteInteger('ComboBox1', ComboBox1.ItemIndex);
      Reestr.WriteInteger('cbbAC1', cbbAC1.ItemIndex);
      Reestr.WriteInteger('cbbAdcFreq', cbbAdcFreq.ItemIndex);
      Reestr.WriteInteger('cbbDataFmt', cbbDataFmt.ItemIndex);
@@ -436,6 +436,10 @@ begin
     lConfig.BlocksForLowfreqCalculation := Edit7.Text;
     lConfig.TimeToWriteBlock := Edit8.Text;
    //-----------------------------------
+   DevicesAmount := StrToInt(ComboBox1.Text);
+   ChannelsAmount := DevicesAmount*ChannelsPerDevice;
+   DAC_packSize := DevicesAmount*DAC_dataByChannel;
+
    ADC_reading_time := StrToInt(Edit8.Text);
    InnerBufferPagesAmount := 8*Round(CalibrateMiliSecondsCut/ADC_reading_time);
    MedianDeep := StrToInt(Edit7.Text);

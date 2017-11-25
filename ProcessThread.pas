@@ -35,7 +35,8 @@ type TProcessThread = class(TThread)
     // �������, ��� ���� ����������� ������ �� ������� � ChAvg
     ChValidData : array [0..LTR24_CHANNEL_NUM-1] of Boolean;
     AccelerationSign: array [0..LTR24_CHANNEL_NUM-1] of Integer;
-    OptimalDACSignal , LastCalibrateSignal, OptimalPoint, Scale: array [0..LTR24_CHANNEL_NUM-1] of DOUBLE;
+    OptimalDACSignal , OptimalPoint, Scale: array [0..LTR24_CHANNEL_NUM-1] of DOUBLE;
+    LastCalibrateSignal: array of DOUBLE;
     data     : array of Double;    //������������ ������
     calibration_signal_step: double;
     ActiveChannelsAmount   : Integer;  //���������� ����������� �������
@@ -44,11 +45,12 @@ type TProcessThread = class(TThread)
     HistoryIndex, HistoryPage : Integer;
     historyPagesAmount : Integer;
     amplitude: Double;
+    WORD_DATA : array of Double;
 
     //YWindowVariables
-    YWindowMax, YWindowMin, LastLowFreq: array [0..DevicesAmount-1] of Double;
+    YWindowMax, YWindowMin, LastLowFreq: array of Double;
     Median: array of array of Double;
-    CurrentMedianIndex : array [0..DevicesAmount-1] of Integer;
+    CurrentMedianIndex : array of Integer;
 
     procedure NextTick();
     procedure ParseChannelsData;
@@ -73,11 +75,17 @@ implementation
      stop:=False;
      err:=LTR_OK;
 
+     SetLength(Median, DevicesAmount, MedianDeep);
+     SetLength(LastCalibrateSignal,DAC_packSize);
+     SetLength(WORD_DATA, DAC_packSize);
+
+     SetLength(YWindowMax, DevicesAmount);
+     SetLength(YWindowMin, DevicesAmount);
+     SetLength(LastLowFreq, DevicesAmount);
+     SetLength(CurrentMedianIndex, DevicesAmount);
+
      for i := 0 to DAC_packSize - 1 do
       LastCalibrateSignal[i]:=0;
-
-     SetLength(Median, DevicesAmount, MedianDeep);
-
   end;
 
   destructor TProcessThread.Free();
@@ -88,13 +96,11 @@ implementation
   procedure TProcessThread.sendDAC(channel: Integer; signal: Double);
   var
     i: integer;
-    DATA:array[0..DAC_packSize-1] of Double;
-    WORD_DATA:array[0..DAC_packSize-1] of Double;
     ph: pTLTR34;
   begin
     LastCalibrateSignal[channel]:= signal;
 
-    LTR34_ProcessData(phltr34,@LastCalibrateSignal,@WORD_DATA, phltr34.ChannelQnt, 0); //1- ��������� ��� �������� � �������
+    LTR34_ProcessData(phltr34,@LastCalibrateSignal, WORD_DATA, phltr34.ChannelQnt, 0); //1- ��������� ��� �������� � �������
     LTR34_Send(phltr34,@WORD_DATA, phltr34.ChannelQnt, DAC_possible_delay);
   end;
 
@@ -180,9 +186,7 @@ implementation
 
     steps_amount :=  Trunc(CalibrateMiliSecondsCut/ADC_reading_time);
     calibration_signal_step := (DAC_max_signal-DAC_min_signal)/steps_amount;
-    for i := 0 to ChannelsAmount - 1 do begin
-       SetLength(History[i], historyPagesAmount);
-    end;
+    SetLength(History, ChannelsAmount, historyPagesAmount);
     err:= LTR24_Start(phltr24^);
 
     CreateFilesForWriting;
@@ -261,7 +265,7 @@ implementation
   begin
     WriterThread := TWriter.Create(path, frequency, skipAmount, True, Config);
     WriterThread.Priority := tpHighest;
-    WriterThread.History := @History;
+    WriterThread.History := History;
   end;
 
   procedure TProcessThread.SafeSaveData;
@@ -376,13 +380,13 @@ implementation
     OptimalPoint[deviceNumber] := 0;//(valueMax+valueMin)/2;     //����� ��������� ��� �����
 
     amplitude := (valueMax-valueMin)*WindowPercent*0.005;
-    YWindowMin[deviceNumber]:= OptimalPoint[deviceNumber] - amplitude;
     YWindowMax[deviceNumber]:= OptimalPoint[deviceNumber] + amplitude;
-
+    YWindowMin[deviceNumber]:= OptimalPoint[deviceNumber] - amplitude;
+                                                                      
     Log('Ampl: ' + FloatToStr(valueMax-valueMin));
 
-     //amplitude 4.575, scale 0.087, period Scalex0.64
-     Scale[deviceNumber] :=  4/(valueMax-valueMin); // 4/
+    //amplitude 4.575, scale 0.087, period Scalex0.64
+    Scale[deviceNumber] :=  4/(valueMax-valueMin); // 4/
 
     Log('Scale: ' + FloatToStr(Scale[deviceNumber]));
     Log('OptVal: ' + FloatToStr(OptimalPoint[deviceNumber]));
