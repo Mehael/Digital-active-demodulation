@@ -87,6 +87,7 @@ implementation
   procedure TWriter.Save;
   var
     ch,i,skipInd, size, skips: Integer;
+    buffer: string;
     sum:double;
   begin
     size := Length(History[0])-1;
@@ -100,9 +101,15 @@ implementation
         for skipInd:= 0 to skipAmount-1 do begin
            sum := sum+History[ch, i*skipAmount + skipInd];
         end;
-        sum:= Floor(outputMultiplicators[ch]*(sum/skipAmount));
-        writeln(Files[ch], FloatToStr(sum));
+        
+        if (skipAmount>1)then
+          sum:=Floor(outputMultiplicators[ch]*(sum/skipAmount))
+        else
+          sum:=outputMultiplicators[ch]*sum;
+
+        buffer:=buffer + FloatToStr(sum) + '\n';
       end;
+      writeln(Files[ch], buffer);
     end;
     LeaveCriticalSection(HistorySection);
   end;
