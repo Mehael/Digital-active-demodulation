@@ -68,8 +68,8 @@ implementation
     writeln(configFile, 'Ширина оптимального положения: ' + Config.OptWide + '% амплитуды');
     writeln(configFile, '');
     writeln(configFile, '[Сбросы]');
-    writeln(configFile, '1-й датчик: ' + Config.ResetVt1 + 'Вольт');
-    writeln(configFile, '2-й датчик: ' + Config.ResetVt2 + 'Вольт');
+    writeln(configFile, '1-й датчик: ' + Config.ResetVt1 + ' Вольт');
+    writeln(configFile, '2-й датчик: ' + Config.ResetVt2 + ' Вольт');
     writeln(configFile, '');
     writeln(configFile, '[Порог]');
     writeln(configFile, 'Рабочая точка движется медленнее, чем ' + Config.WorkpointSpeedLimit + '% амплитуды за блок');
@@ -105,9 +105,9 @@ implementation
         if (skipAmount>1)then
           sum:=Floor(outputMultiplicators[ch]*(sum/skipAmount))
         else
-          sum:=outputMultiplicators[ch]*sum;
+          sum:=Floor(outputMultiplicators[ch]*sum);
 
-        buffer:=buffer + FloatToStr(sum) + '\n';
+        buffer:=buffer + FloatToStr(sum) + LineBreak;
       end;
       writeln(Files[ch], buffer);
     end;

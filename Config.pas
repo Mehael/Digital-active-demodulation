@@ -40,6 +40,7 @@ const
   DAC_possible_delay    = 2000;
 
   FreshDeep    = 1;
+  LineBreak    = #13#10;
 type
   THistory = array of array of Double;
   TConfig = class(TObject)
@@ -65,8 +66,6 @@ type
 implementation
 
 function VoltToCode(Volt: Double): Integer;
-var
-  DAC_max_signal : Integer;
 begin
   Result :=  Trunc(Volt*65535/20);
 end;
