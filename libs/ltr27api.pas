@@ -25,7 +25,7 @@ const
 
     LTR27_DATA_CORRECTION           =1 shl 0;
     LTR27_DATA_VALUE                =1 shl 1;
-    // макросы для функций
+    // РјР°РєСЂРѕСЃС‹ РґР»СЏ С„СѓРЅРєС†РёР№
     LTR27_MODULE_DESCRIPTION        =1 shl 0;
     LTR27_MEZZANINE1_DESCRIPTION    =1 shl 1;
     LTR27_MEZZANINE2_DESCRIPTION    =1 shl 2;
@@ -36,13 +36,13 @@ const
     LTR27_MEZZANINE7_DESCRIPTION    =1 shl 7;
     LTR27_MEZZANINE8_DESCRIPTION    =1 shl 8;
 
-    LTR27_ALL_MEZZANINE_DESCRIPTION =510; //(все биты кроме LTR27_MODULE_DESCRIPTION)
-    LTR27_ALL_DESCRIPTION           =511;//все биты
+    LTR27_ALL_MEZZANINE_DESCRIPTION =510; //(РІСЃРµ Р±РёС‚С‹ РєСЂРѕРјРµ LTR27_MODULE_DESCRIPTION)
+    LTR27_ALL_DESCRIPTION           =511;//РІСЃРµ Р±РёС‚С‹
 
 
 type
 {$A4}
-// Структура описания модуля
+// РЎС‚СЂСѓРєС‚СѓСЂР° РѕРїРёСЃР°РЅРёСЏ РјРѕРґСѓР»СЏ
 TINFO_LTR27=record
     Module:TDESCRIPTION_MODULE;
     Cpu:TDESCRIPTION_CPU;
@@ -50,28 +50,28 @@ TINFO_LTR27=record
 end;
 
 TLTR27_Mezzanine=record
-    Name :array[0..15]of AnsiChar;              // название субмодуля
-    MUnit:array[0..15]of AnsiChar;              // измеряемая субмодулем физ.величина   в С это UNIT но в PASCAL это зарезервировано
-    ConvCoeff:array[0..1]of double;          // масштаб и смещение для пересчета кода в физ.величину
-    CalibrCoeff:array[0..3]of double;        // калибровочные коэффициенты
+    Name :array[0..15]of AnsiChar;              // РЅР°Р·РІР°РЅРёРµ СЃСѓР±РјРѕРґСѓР»СЏ
+    MUnit:array[0..15]of AnsiChar;              // РёР·РјРµСЂСЏРµРјР°СЏ СЃСѓР±РјРѕРґСѓР»РµРј С„РёР·.РІРµР»РёС‡РёРЅР°   РІ РЎ СЌС‚Рѕ UNIT РЅРѕ РІ PASCAL СЌС‚Рѕ Р·Р°СЂРµР·РµСЂРІРёСЂРѕРІР°РЅРѕ
+    ConvCoeff:array[0..1]of double;          // РјР°СЃС€С‚Р°Р± Рё СЃРјРµС‰РµРЅРёРµ РґР»СЏ РїРµСЂРµСЃС‡РµС‚Р° РєРѕРґР° РІ С„РёР·.РІРµР»РёС‡РёРЅСѓ
+    CalibrCoeff:array[0..3]of double;        // РєР°Р»РёР±СЂРѕРІРѕС‡РЅС‹Рµ РєРѕСЌС„С„РёС†РёРµРЅС‚С‹
 end;
 
 TLTR27=record
-  //**** служебная информация       //
+  //**** СЃР»СѓР¶РµР±РЅР°СЏ РёРЅС„РѕСЂРјР°С†РёСЏ       //
   size:integer;
   Channel:TLTR;                     //
   subchannel:BYTE ;                 //
-  //**** настройки модуля           //
-  FrequencyDivisor:byte;            // делитель частоты дискретизации 0..255 (1000..4 Гц)
-  Mezzanine:array[0..LTR27_MEZZANINE_NUMBER-1]of TLTR27_Mezzanine;// установленные мезонины
+  //**** РЅР°СЃС‚СЂРѕР№РєРё РјРѕРґСѓР»СЏ           //
+  FrequencyDivisor:byte;            // РґРµР»РёС‚РµР»СЊ С‡Р°СЃС‚РѕС‚С‹ РґРёСЃРєСЂРµС‚РёР·Р°С†РёРё 0..255 (1000..4 Р“С†)
+  Mezzanine:array[0..LTR27_MEZZANINE_NUMBER-1]of TLTR27_Mezzanine;// СѓСЃС‚Р°РЅРѕРІР»РµРЅРЅС‹Рµ РјРµР·РѕРЅРёРЅС‹
   ModuleInfo:TINFO_LTR27;
 end;                           //
-pTLTR27=^TLTR27;// Структура описания модуля
+pTLTR27=^TLTR27;// РЎС‚СЂСѓРєС‚СѓСЂР° РѕРїРёСЃР°РЅРёСЏ РјРѕРґСѓР»СЏ
 
 {$A+}
 
 
-  // основные функции
+  // РѕСЃРЅРѕРІРЅС‹Рµ С„СѓРЅРєС†РёРё
   Function  LTR27_Init                (module:pTLTR27):Integer; {$I ltrapi_callconvention};
   Function  LTR27_Open                (module:pTLTR27; saddrDWORD:LongWord; sport:WORD; csnCHAR:Pointer; cc:WORD):Integer; {$I ltrapi_callconvention};
   Function  LTR27_Close               (module:pTLTR27):Integer; {$I ltrapi_callconvention};
@@ -85,10 +85,10 @@ pTLTR27=^TLTR27;// Структура описания модуля
   Function  LTR27_ProcessData         (module:pTLTR27; src_dataDWORD:Pointer; dst_dataDouble:Pointer; sizeDWORD:Pointer; calibr:BOOLEAN; value:BOOLEAN):Integer; {$I ltrapi_callconvention};
   Function  LTR27_GetDescription      (module:pTLTR27; flags:WORD):Integer; {$I ltrapi_callconvention};
   Function  LTR27_WriteMezzanineDescr (module:pTLTR27; mn:BYTE):Integer; {$I ltrapi_callconvention};
-  // функции вспомагательного характера
+  // С„СѓРЅРєС†РёРё РІСЃРїРѕРјР°РіР°С‚РµР»СЊРЅРѕРіРѕ С…Р°СЂР°РєС‚РµСЂР°
   Function  LTR27_GetErrorString(err:integer):string; {$I ltrapi_callconvention};
 implementation
-  // основные функции
+  // РѕСЃРЅРѕРІРЅС‹Рµ С„СѓРЅРєС†РёРё
   Function  LTR27_Init                (module:pTLTR27):Integer; {$I ltrapi_callconvention}; external 'ltr27api';
   Function  LTR27_Open                (module:pTLTR27; saddrDWORD:LongWord; sport:WORD; csnCHAR:Pointer; cc:WORD):Integer; {$I ltrapi_callconvention}; external 'ltr27api';
   Function  LTR27_Close               (module:pTLTR27):Integer; {$I ltrapi_callconvention}; external 'ltr27api';
@@ -102,7 +102,7 @@ implementation
   Function  LTR27_ProcessData         (module:pTLTR27; src_dataDWORD:Pointer; dst_dataDouble:Pointer; sizeDWORD:Pointer; calibr:BOOLEAN; value:BOOLEAN):Integer; {$I ltrapi_callconvention}; external 'ltr27api';
   Function  LTR27_GetDescription      (module:pTLTR27; flags:WORD):Integer; {$I ltrapi_callconvention}; external 'ltr27api';
   Function  LTR27_WriteMezzanineDescr (module:pTLTR27; mn:BYTE):Integer; {$I ltrapi_callconvention}; external 'ltr27api';
-  // функции вспомагательного характера
+  // С„СѓРЅРєС†РёРё РІСЃРїРѕРјР°РіР°С‚РµР»СЊРЅРѕРіРѕ С…Р°СЂР°РєС‚РµСЂР°
 
   Function _get_err_str(err : integer) : PAnsiChar; {$I ltrapi_callconvention}; external 'ltr27api' name 'LTR27_GetErrorString';
 

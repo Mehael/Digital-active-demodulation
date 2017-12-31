@@ -2,7 +2,7 @@ unit ltr41api;
 interface
 uses SysUtils, ltrapitypes, ltrapidefine, ltrapi;
 const
-// Коды ошибок
+// РљРѕРґС‹ РѕС€РёР±РѕРє
     LTR41_NO_ERR                                =0;
     LTR41_ERR_WRONG_MODULE_DESCR                =-7001;
     LTR41_ERR_CANT_OPEN                         =-7002;
@@ -40,30 +40,30 @@ const
 
 type
 {$A4}
-// Структура описания модуля
+// РЎС‚СЂСѓРєС‚СѓСЂР° РѕРїРёСЃР°РЅРёСЏ РјРѕРґСѓР»СЏ
 TINFO_LTR41 = record
     Name  :array[0..15]of AnsiChar;
     Serial:array[0..23]of AnsiChar;
-    FirmwareVersion:array[0..7]of AnsiChar;// Версия БИОСа
-    FirmwareDate   :array[0..15]of AnsiChar;  // Дата создания данной версии БИОСа
+    FirmwareVersion:array[0..7]of AnsiChar;// Р’РµСЂСЃРёСЏ Р‘РРћРЎР°
+    FirmwareDate   :array[0..15]of AnsiChar;  // Р”Р°С‚Р° СЃРѕР·РґР°РЅРёСЏ РґР°РЅРЅРѕР№ РІРµСЂСЃРёРё Р‘РРћРЎР°
 end;
 
 pTINFO_LTR41 = ^TINFO_LTR41;
 
 TLTR41_Marks = record
-    SecondMark_Mode:integer; // Режим меток. 0 - внутр., 1-внутр.+выход, 2-внешн
+    SecondMark_Mode:integer; // Р РµР¶РёРј РјРµС‚РѕРє. 0 - РІРЅСѓС‚СЂ., 1-РІРЅСѓС‚СЂ.+РІС‹С…РѕРґ, 2-РІРЅРµС€РЅ
     StartMark_Mode:integer; //
 end;
 
 TLTR41 = record
-    size:integer;   // размер структуры
+    size:integer;   // СЂР°Р·РјРµСЂ СЃС‚СЂСѓРєС‚СѓСЂС‹
     Channel:TLTR;
     StreamReadRate:double;
-    Marks:TLTR41_Marks;  // Структура для работы с временными метками
+    Marks:TLTR41_Marks;  // РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ РІСЂРµРјРµРЅРЅС‹РјРё РјРµС‚РєР°РјРё
     ModuleInfo:TINFO_LTR41;
 end;
 
-pTLTR41=^TLTR41;// Структура описания модуля
+pTLTR41=^TLTR41;// РЎС‚СЂСѓРєС‚СѓСЂР° РѕРїРёСЃР°РЅРёСЏ РјРѕРґСѓР»СЏ
 
 {$A+}
 

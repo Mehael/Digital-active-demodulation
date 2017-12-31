@@ -38,7 +38,7 @@ implementation
     DATA[channel]:= DAC_level[channel];
     LeaveCriticalSection(DACSection);
 
-    CheckError(LTR34_ProcessData(phltr34,@DATA,@WORD_DATA, phltr34.ChannelQnt, 0)); //1- указываем что значения в Вольтах
+    CheckError(LTR34_ProcessData(phltr34,@DATA,@WORD_DATA, phltr34.ChannelQnt, 0)); //1- СѓРєР°Р·С‹РІР°РµРј С‡С‚Рѕ Р·РЅР°С‡РµРЅРёСЏ РІ Р’РѕР»СЊС‚Р°С…
     CheckError(LTR34_Send(phltr34,@WORD_DATA, phltr34.ChannelQnt, DAC_possible_delay));
 
     //writeln(debugFile, FloatToStr((DAC_level[channel])));

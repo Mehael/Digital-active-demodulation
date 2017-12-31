@@ -2,7 +2,7 @@ unit ltr212api;
 interface
 uses SysUtils, ltrapi, ltrapitypes;
 const
-    // Коды ошибок. Описание см. ф-ю LRT212_GetErrorString()
+    // РљРѕРґС‹ РѕС€РёР±РѕРє. РћРїРёСЃР°РЅРёРµ СЃРј. С„-СЋ LRT212_GetErrorString()
     LTR212_NO_ERR=0;
     LTR212_ERR_INVALID_DESCR=               -2001;
     LTR212_ERR_INVALID_CRATE_SN=            -2002;
@@ -65,19 +65,19 @@ const
 
 
 
-    LTR212_LCH_CNT_MAX      = 8;  // Макс. число логических. каналов
+    LTR212_LCH_CNT_MAX      = 8;  // РњР°РєСЃ. С‡РёСЃР»Рѕ Р»РѕРіРёС‡РµСЃРєРёС…. РєР°РЅР°Р»РѕРІ
 
 
-    LTR212_FIR_ORDER_MAX    = 255; // Максимальное значение порядка КИХ-фильтра
-    LTR212_FIR_ORDER_MIN    = 3;   // Минимальное значение порядка КИХ-фильтра
+    LTR212_FIR_ORDER_MAX    = 255; // РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕСЂСЏРґРєР° РљРРҐ-С„РёР»СЊС‚СЂР°
+    LTR212_FIR_ORDER_MIN    = 3;   // РњРёРЅРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕСЂСЏРґРєР° РљРРҐ-С„РёР»СЊС‚СЂР°
 
 
-    // модификации модуля
-    LTR212_OLD = 0;   // старый модуль с поддержкой полно- и полу-мостовых подключений
-    LTR212_M_1 = 1;   // новый модуль с поддержкой полно-,  полу- и четверть-мостовых подключений
-    LTR212_M_2 = 2;   // новый модуль с поддержкой полно- и полу-мостовых подключений
+    // РјРѕРґРёС„РёРєР°С†РёРё РјРѕРґСѓР»СЏ
+    LTR212_OLD = 0;   // СЃС‚Р°СЂС‹Р№ РјРѕРґСѓР»СЊ СЃ РїРѕРґРґРµСЂР¶РєРѕР№ РїРѕР»РЅРѕ- Рё РїРѕР»Сѓ-РјРѕСЃС‚РѕРІС‹С… РїРѕРґРєР»СЋС‡РµРЅРёР№
+    LTR212_M_1 = 1;   // РЅРѕРІС‹Р№ РјРѕРґСѓР»СЊ СЃ РїРѕРґРґРµСЂР¶РєРѕР№ РїРѕР»РЅРѕ-,  РїРѕР»Сѓ- Рё С‡РµС‚РІРµСЂС‚СЊ-РјРѕСЃС‚РѕРІС‹С… РїРѕРґРєР»СЋС‡РµРЅРёР№
+    LTR212_M_2 = 2;   // РЅРѕРІС‹Р№ РјРѕРґСѓР»СЊ СЃ РїРѕРґРґРµСЂР¶РєРѕР№ РїРѕР»РЅРѕ- Рё РїРѕР»Сѓ-РјРѕСЃС‚РѕРІС‹С… РїРѕРґРєР»СЋС‡РµРЅРёР№
 
-    // типы возможных мостов
+    // С‚РёРїС‹ РІРѕР·РјРѕР¶РЅС‹С… РјРѕСЃС‚РѕРІ
     LTR212_FULL_OR_HALF_BRIDGE                          = 0;
     LTR212_QUARTER_BRIDGE_WITH_200_Ohm                  = 1;
     LTR212_QUARTER_BRIDGE_WITH_350_Ohm                  = 2;
@@ -86,40 +86,40 @@ const
     LTR212_UNBALANCED_QUARTER_BRIDGE_WITH_350_Ohm       = 5;
     LTR212_UNBALANCED_QUARTER_BRIDGE_WITH_CUSTOM_Ohm    = 6;
 
-    // режимы сбора данных (AcqMode)
+    // СЂРµР¶РёРјС‹ СЃР±РѕСЂР° РґР°РЅРЅС‹С… (AcqMode)
     LTR212_ACQ_MODE_MEDIUM_PRECISION    = 0;
     LTR212_ACQ_MODE_HIGH_PRECISION      = 1;
     LTR212_ACQ_MODE_8CH_HIGH_PRECISION  = 2;
 
 
 
-    // значения опорного напряжения
-    LTR212_REF_2_5V = 0;  //2.5 В
-    LTR212_REF_5V   = 1;   //5   В
+    // Р·РЅР°С‡РµРЅРёСЏ РѕРїРѕСЂРЅРѕРіРѕ РЅР°РїСЂСЏР¶РµРЅРёСЏ
+    LTR212_REF_2_5V = 0;  //2.5 Р’
+    LTR212_REF_5V   = 1;   //5   Р’
 
-    // диапазоны каналов
-    LTR212_SCALE_B_10 = 0; // диапазон -10мВ/+10мВ
-    LTR212_SCALE_B_20 = 1; // диапазон -20мВ/+20мВ
-    LTR212_SCALE_B_40 = 2; // диапазон -40мВ/+40мВ
-    LTR212_SCALE_B_80 = 3; // диапазон -80мВ/+80мВ
-    LTR212_SCALE_U_10 = 4; // диапазон -10мВ/+10мВ
-    LTR212_SCALE_U_20 = 5; // диапазон -20мВ/+20мВ
-    LTR212_SCALE_U_40 = 6; // диапазон -40мВ/+40мВ
-    LTR212_SCALE_U_80 = 7; // диапазон -80мВ/+80мВ
+    // РґРёР°РїР°Р·РѕРЅС‹ РєР°РЅР°Р»РѕРІ
+    LTR212_SCALE_B_10 = 0; // РґРёР°РїР°Р·РѕРЅ -10РјР’/+10РјР’
+    LTR212_SCALE_B_20 = 1; // РґРёР°РїР°Р·РѕРЅ -20РјР’/+20РјР’
+    LTR212_SCALE_B_40 = 2; // РґРёР°РїР°Р·РѕРЅ -40РјР’/+40РјР’
+    LTR212_SCALE_B_80 = 3; // РґРёР°РїР°Р·РѕРЅ -80РјР’/+80РјР’
+    LTR212_SCALE_U_10 = 4; // РґРёР°РїР°Р·РѕРЅ -10РјР’/+10РјР’
+    LTR212_SCALE_U_20 = 5; // РґРёР°РїР°Р·РѕРЅ -20РјР’/+20РјР’
+    LTR212_SCALE_U_40 = 6; // РґРёР°РїР°Р·РѕРЅ -40РјР’/+40РјР’
+    LTR212_SCALE_U_80 = 7; // РґРёР°РїР°Р·РѕРЅ -80РјР’/+80РјР’
 
-    // режимы калибровки
+    // СЂРµР¶РёРјС‹ РєР°Р»РёР±СЂРѕРІРєРё
     LTR212_CALIBR_MODE_INT_ZERO             = 0;
     LTR212_CALIBR_MODE_INT_SCALE            = 1;
     LTR212_CALIBR_MODE_INT_FULL             = 2;
     LTR212_CALIBR_MODE_EXT_ZERO             = 3;
     LTR212_CALIBR_MODE_EXT_SCALE            = 4;
     LTR212_CALIBR_MODE_EXT_ZERO_INT_SCALE   = 5;
-    LTR212_CALIBR_MODE_EXT_FULL_2ND_STAGE   = 6; // вторая стадия внешней калибровки
-    LTR212_CALIBR_MODE_EXT_ZERO_SAVE_SCALE  = 7; // внешний ноль с сохранением до этого полученных коэф. масштаба
+    LTR212_CALIBR_MODE_EXT_FULL_2ND_STAGE   = 6; // РІС‚РѕСЂР°СЏ СЃС‚Р°РґРёСЏ РІРЅРµС€РЅРµР№ РєР°Р»РёР±СЂРѕРІРєРё
+    LTR212_CALIBR_MODE_EXT_ZERO_SAVE_SCALE  = 7; // РІРЅРµС€РЅРёР№ РЅРѕР»СЊ СЃ СЃРѕС…СЂР°РЅРµРЅРёРµРј РґРѕ СЌС‚РѕРіРѕ РїРѕР»СѓС‡РµРЅРЅС‹С… РєРѕСЌС„. РјР°СЃС€С‚Р°Р±Р°
 
 
 
- //******** Определение структуры описания модуля *************/
+ //******** РћРїСЂРµРґРµР»РµРЅРёРµ СЃС‚СЂСѓРєС‚СѓСЂС‹ РѕРїРёСЃР°РЅРёСЏ РјРѕРґСѓР»СЏ *************/
 type
 
 {$A4}
@@ -127,17 +127,17 @@ type
         Name:       array[0..14] of AnsiChar;
         ModuleType: byte;
         Serial:     array[0..23] of AnsiChar;
-        BiosVersion:array[0..7]  of AnsiChar; // Версия БИОСа
-        BiosDate:   array[0..15] of AnsiChar;// Дата создания данной версии БИОСа
+        BiosVersion:array[0..7]  of AnsiChar; // Р’РµСЂСЃРёСЏ Р‘РРћРЎР°
+        BiosDate:   array[0..15] of AnsiChar;// Р”Р°С‚Р° СЃРѕР·РґР°РЅРёСЏ РґР°РЅРЅРѕР№ РІРµСЂСЃРёРё Р‘РРћРЎР°
     end;
 
     TLTR212_Filter = record
-        IIR:integer;         // Флаг использования БИХ-фильтра
-        FIR:integer;         // Флаг использования КИХ-фильтра
-        Decimation:integer;  // Значение коэффициента децимации для КИХ-фильтра
-        TAP:integer;         // Порядок КИХ-фильтра
-        IIR_Name:array[0..512] of AnsiChar; // Полный путь к файлу с коэфф-ми программного БИХ-фильтра
-        FIR_Name:array[0..512] of AnsiChar; // Полный путь к файлу с коэфф-ми программного КИХ-фильтра
+        IIR:integer;         // Р¤Р»Р°Рі РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ Р‘РРҐ-С„РёР»СЊС‚СЂР°
+        FIR:integer;         // Р¤Р»Р°Рі РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ РљРРҐ-С„РёР»СЊС‚СЂР°
+        Decimation:integer;  // Р—РЅР°С‡РµРЅРёРµ РєРѕСЌС„С„РёС†РёРµРЅС‚Р° РґРµС†РёРјР°С†РёРё РґР»СЏ РљРРҐ-С„РёР»СЊС‚СЂР°
+        TAP:integer;         // РџРѕСЂСЏРґРѕРє РљРРҐ-С„РёР»СЊС‚СЂР°
+        IIR_Name:array[0..512] of AnsiChar; // РџРѕР»РЅС‹Р№ РїСѓС‚СЊ Рє С„Р°Р№Р»Сѓ СЃ РєРѕСЌС„С„-РјРё РїСЂРѕРіСЂР°РјРјРЅРѕРіРѕ Р‘РРҐ-С„РёР»СЊС‚СЂР°
+        FIR_Name:array[0..512] of AnsiChar; // РџРѕР»РЅС‹Р№ РїСѓС‚СЊ Рє С„Р°Р№Р»Сѓ СЃ РєРѕСЌС„С„-РјРё РїСЂРѕРіСЂР°РјРјРЅРѕРіРѕ РљРРҐ-С„РёР»СЊС‚СЂР°
     end;
 
     TLTR212_Usr_Clb = record
@@ -149,21 +149,21 @@ type
     TLTR212 = record
         size:integer;
         Channel:TLTR;
-        AcqMode:integer;     // Режим сбора данных
-        UseClb:integer;      // Флаг использования калибровочных коэфф-тов
-        UseFabricClb:integer;// Флаг использования заводских калибровочных коэфф-тов
-        LChQnt:integer;      // Кол-во используемых виртуальных каналов
-        LChTbl:array[0..LTR212_LCH_CNT_MAX-1]of integer;  //Таблица виртуальных каналов
-        REF:integer;         // Флаг высокого опорного напряжения
-        AC:integer;          // Флаг знакопеременного опорного напряжения
-        Fs:double;           // Частота дискретизации АЦП
+        AcqMode:integer;     // Р РµР¶РёРј СЃР±РѕСЂР° РґР°РЅРЅС‹С…
+        UseClb:integer;      // Р¤Р»Р°Рі РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ РєР°Р»РёР±СЂРѕРІРѕС‡РЅС‹С… РєРѕСЌС„С„-С‚РѕРІ
+        UseFabricClb:integer;// Р¤Р»Р°Рі РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ Р·Р°РІРѕРґСЃРєРёС… РєР°Р»РёР±СЂРѕРІРѕС‡РЅС‹С… РєРѕСЌС„С„-С‚РѕРІ
+        LChQnt:integer;      // РљРѕР»-РІРѕ РёСЃРїРѕР»СЊР·СѓРµРјС‹С… РІРёСЂС‚СѓР°Р»СЊРЅС‹С… РєР°РЅР°Р»РѕРІ
+        LChTbl:array[0..LTR212_LCH_CNT_MAX-1]of integer;  //РўР°Р±Р»РёС†Р° РІРёСЂС‚СѓР°Р»СЊРЅС‹С… РєР°РЅР°Р»РѕРІ
+        REF:integer;         // Р¤Р»Р°Рі РІС‹СЃРѕРєРѕРіРѕ РѕРїРѕСЂРЅРѕРіРѕ РЅР°РїСЂСЏР¶РµРЅРёСЏ
+        AC:integer;          // Р¤Р»Р°Рі Р·РЅР°РєРѕРїРµСЂРµРјРµРЅРЅРѕРіРѕ РѕРїРѕСЂРЅРѕРіРѕ РЅР°РїСЂСЏР¶РµРЅРёСЏ
+        Fs:double;           // Р§Р°СЃС‚РѕС‚Р° РґРёСЃРєСЂРµС‚РёР·Р°С†РёРё РђР¦Рџ
 
         filter:TLTR212_Filter;
 
         ModuleInfo:TINFO_LTR212;
-        CRC_PM:Word; // для служебного пользования
-        CRC_Flash_Eval:Word; // для служебного пользования
-        CRC_Flash_Read:Word;   // для служебного пользования
+        CRC_PM:Word; // РґР»СЏ СЃР»СѓР¶РµР±РЅРѕРіРѕ РїРѕР»СЊР·РѕРІР°РЅРёСЏ
+        CRC_Flash_Eval:Word; // РґР»СЏ СЃР»СѓР¶РµР±РЅРѕРіРѕ РїРѕР»СЊР·РѕРІР°РЅРёСЏ
+        CRC_Flash_Read:Word;   // РґР»СЏ СЃР»СѓР¶РµР±РЅРѕРіРѕ РїРѕР»СЊР·РѕРІР°РЅРёСЏ
     end;
 
     pTLTR212 = ^TLTR212;
@@ -176,7 +176,7 @@ type
     end;
 {$A+}
 
-// Доступные пользователю
+// Р”РѕСЃС‚СѓРїРЅС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЋ
 Function LTR212_Init(module:pTLTR212):Integer; {$I ltrapi_callconvention};
 Function LTR212_IsOpened(module:pTLTR212):Integer;{$I ltrapi_callconvention};
 Function LTR212_Open(module:pTLTR212; net_addr:LongWord; net_port:WORD; crate_snCHAR:Pointer; slot_num:integer; biosnameCHAR:Pointer):Integer;{$I ltrapi_callconvention};
@@ -192,7 +192,7 @@ Function LTR212_ProcessData(module:pTLTR212; srcDWORD:Pointer;  destDOUBLE:Point
 Function LTR212_Calibrate(module:pTLTR212; LChannel_MaskBYTE:pointer; mode:integer; reset:integer):Integer;{$I ltrapi_callconvention};
 Function LTR212_CalcFS(module:pTLTR212; fsBaseDOUBLE:pointer; fs:pointer):Integer;{$I ltrapi_callconvention};
 Function LTR212_TestEEPROM(module:pTLTR212):Integer;{$I ltrapi_callconvention};
-// Вспомогательные функции
+// Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ С„СѓРЅРєС†РёРё
 Function LTR212_ProcessDataTest(module:pTLTR212; srcDWORD:pointer;  destDOUBLE:Pointer; sizeDWORD:pointer; volt:boolean; bad_numDWORD:pointer):Integer;{$I ltrapi_callconvention};
 Function LTR212_ReadFilter(fnameCHAR:Pointer; filter_ltr212filter:Pointer):Integer;{$I ltrapi_callconvention};
 Function LTR212_WriteSerialNumber(module:pTLTR212; snCHAR:pointer; Code:WORD):Integer;{$I ltrapi_callconvention};
@@ -220,7 +220,7 @@ implementation
   Function LTR212_Calibrate(module:pTLTR212; LChannel_MaskBYTE:pointer; mode:integer; reset:integer):Integer; {$I ltrapi_callconvention}; external 'ltr212api';
   Function LTR212_CalcFS(module:pTLTR212; fsBaseDOUBLE:pointer; fs:pointer):Integer; {$I ltrapi_callconvention}; external 'ltr212api';
   Function LTR212_TestEEPROM(module:pTLTR212):Integer; {$I ltrapi_callconvention}; external 'ltr212api';
-  // Вспомогательные функции
+  // Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ С„СѓРЅРєС†РёРё
   Function LTR212_ProcessDataTest(module:pTLTR212; srcDWORD:pointer;  destDOUBLE:Pointer; sizeDWORD:pointer; volt:boolean; bad_numDWORD:pointer):Integer; {$I ltrapi_callconvention}; external 'ltr212api';
   Function LTR212_ReadFilter(fnameCHAR:Pointer; filter_ltr212filter:Pointer):Integer; {$I ltrapi_callconvention}; external 'ltr212api';
   Function LTR212_WriteSerialNumber(module:pTLTR212; snCHAR:pointer; Code:WORD):Integer; {$I ltrapi_callconvention}; external 'ltr212api';

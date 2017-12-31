@@ -7,10 +7,10 @@ uses
   Dialogs, StdCtrls,
   ltrapi, ltrapitypes, ltrapidefine, ltr24api, LTR24_ProcessThread;
 
-{ Информация, необходимая для установления соединения с модулем }
+{ РРЅС„РѕСЂРјР°С†РёСЏ, РЅРµРѕР±С…РѕРґРёРјР°СЏ РґР»СЏ СѓСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ СЃРѕРµРґРёРЅРµРЅРёСЏ СЃ РјРѕРґСѓР»РµРј }
 type TLTR_MODULE_LOCATION = record
-  csn : string; //серийный номер крейта
-  slot : Word; //номер слота
+  csn : string; //СЃРµСЂРёР№РЅС‹Р№ РЅРѕРјРµСЂ РєСЂРµР№С‚Р°
+  slot : Word; //РЅРѕРјРµСЂ СЃР»РѕС‚Р°
 end;
 
 const
@@ -45,10 +45,10 @@ type
 
   private
     { Private declarations }
-    ltr24_list: array of TLTR_MODULE_LOCATION; //список найденных модулей
-    hltr24 : TLTR24; // Описатель модуля, с которым идет работа
-    threadRunning : Boolean; // Признак, запущен ли поток сбора данных
-    thread : TLTR24_ProcessThread; //Объект потока для выполнения сбора данных
+    ltr24_list: array of TLTR_MODULE_LOCATION; //СЃРїРёСЃРѕРє РЅР°Р№РґРµРЅРЅС‹С… РјРѕРґСѓР»РµР№
+    hltr24 : TLTR24; // РћРїРёСЃР°С‚РµР»СЊ РјРѕРґСѓР»СЏ, СЃ РєРѕС‚РѕСЂС‹Рј РёРґРµС‚ СЂР°Р±РѕС‚Р°
+    threadRunning : Boolean; // РџСЂРёР·РЅР°Рє, Р·Р°РїСѓС‰РµРЅ Р»Рё РїРѕС‚РѕРє СЃР±РѕСЂР° РґР°РЅРЅС‹С…
+    thread : TLTR24_ProcessThread; //РћР±СЉРµРєС‚ РїРѕС‚РѕРєР° РґР»СЏ РІС‹РїРѕР»РЅРµРЅРёСЏ СЃР±РѕСЂР° РґР°РЅРЅС‹С…
 
     procedure updateControls();
     procedure refreshDeviceList();
@@ -73,56 +73,56 @@ implementation
 
 procedure TMainForm.refreshDeviceList();
 var
-  srv : TLTR; //Описатель для управляющего соединения с LTR-сервером
-  crate: TLTR; //Описатель для соединения с крейтом
+  srv : TLTR; //РћРїРёСЃР°С‚РµР»СЊ РґР»СЏ СѓРїСЂР°РІР»СЏСЋС‰РµРіРѕ СЃРѕРµРґРёРЅРµРЅРёСЏ СЃ LTR-СЃРµСЂРІРµСЂРѕРј
+  crate: TLTR; //РћРїРёСЃР°С‚РµР»СЊ РґР»СЏ СЃРѕРµРґРёРЅРµРЅРёСЏ СЃ РєСЂРµР№С‚РѕРј
   res, crates_cnt, crate_ind, module_ind, modules_cnt : integer;
-  serial_list : array [0..CRATE_MAX-1] of string; //список номеров керйтов
-  mids : array [0..MODULE_MAX-1] of Word; //список идентификаторов модулей для текущего крейта
+  serial_list : array [0..CRATE_MAX-1] of string; //СЃРїРёСЃРѕРє РЅРѕРјРµСЂРѕРІ РєРµСЂР№С‚РѕРІ
+  mids : array [0..MODULE_MAX-1] of Word; //СЃРїРёСЃРѕРє РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂРѕРІ РјРѕРґСѓР»РµР№ РґР»СЏ С‚РµРєСѓС‰РµРіРѕ РєСЂРµР№С‚Р°
 begin
-  //обнуляем список ранее найденных модулей
+  //РѕР±РЅСѓР»СЏРµРј СЃРїРёСЃРѕРє СЂР°РЅРµРµ РЅР°Р№РґРµРЅРЅС‹С… РјРѕРґСѓР»РµР№
   modules_cnt:=0;
   SetLength(ltr24_list, 0);
 
-  // устанавливаем связь с управляющим каналом сервера, чтобы получить список крейтов
+  // СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРІСЏР·СЊ СЃ СѓРїСЂР°РІР»СЏСЋС‰РёРј РєР°РЅР°Р»РѕРј СЃРµСЂРІРµСЂР°, С‡С‚РѕР±С‹ РїРѕР»СѓС‡РёС‚СЊ СЃРїРёСЃРѕРє РєСЂРµР№С‚РѕРІ
   LTR_Init(srv);
-  srv.cc := CC_CONTROL;    //используем управляющий канал
-  { серийный номер CSN_SERVER_CONTROL позволяет установить связь с сервером, даже
-    если нет ни одного крейта }
+  srv.cc := CC_CONTROL;    //РёСЃРїРѕР»СЊР·СѓРµРј СѓРїСЂР°РІР»СЏСЋС‰РёР№ РєР°РЅР°Р»
+  { СЃРµСЂРёР№РЅС‹Р№ РЅРѕРјРµСЂ CSN_SERVER_CONTROL РїРѕР·РІРѕР»СЏРµС‚ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ СЃРІСЏР·СЊ СЃ СЃРµСЂРІРµСЂРѕРј, РґР°Р¶Рµ
+    РµСЃР»Рё РЅРµС‚ РЅРё РѕРґРЅРѕРіРѕ РєСЂРµР№С‚Р° }
   LTR_FillSerial(srv, CSN_SERVER_CONTROL);
   res:=LTR_Open(srv);
   if res <> LTR_OK then
-    MessageDlg('Не удалось установить связь с сервером: ' + LTR_GetErrorString(res), mtError, [mbOK], 0)
+    MessageDlg('РќРµ СѓРґР°Р»РѕСЃСЊ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ СЃРІСЏР·СЊ СЃ СЃРµСЂРІРµСЂРѕРј: ' + LTR_GetErrorString(res), mtError, [mbOK], 0)
   else
   begin
-    //получаем список серийных номеров всех подключенных крейтов
+    //РїРѕР»СѓС‡Р°РµРј СЃРїРёСЃРѕРє СЃРµСЂРёР№РЅС‹С… РЅРѕРјРµСЂРѕРІ РІСЃРµС… РїРѕРґРєР»СЋС‡РµРЅРЅС‹С… РєСЂРµР№С‚РѕРІ
     res:=LTR_GetCrates(srv, serial_list, crates_cnt);
-    //серверное соединение больше не нужно - можно закрыть
+    //СЃРµСЂРІРµСЂРЅРѕРµ СЃРѕРµРґРёРЅРµРЅРёРµ Р±РѕР»СЊС€Рµ РЅРµ РЅСѓР¶РЅРѕ - РјРѕР¶РЅРѕ Р·Р°РєСЂС‹С‚СЊ
     LTR_Close(srv);
 
     if (res <> LTR_OK) then
-      MessageDlg('Не удалось получить список крейтов: ' + LTR_GetErrorString(res), mtError, [mbOK], 0)
+      MessageDlg('РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ СЃРїРёСЃРѕРє РєСЂРµР№С‚РѕРІ: ' + LTR_GetErrorString(res), mtError, [mbOK], 0)
     else
     begin
       for crate_ind:=0 to crates_cnt-1 do
       begin
-        //устанавливаем связь с каждым крейтом, чтобы получить список модулей
+        //СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРІСЏР·СЊ СЃ РєР°Р¶РґС‹Рј РєСЂРµР№С‚РѕРј, С‡С‚РѕР±С‹ РїРѕР»СѓС‡РёС‚СЊ СЃРїРёСЃРѕРє РјРѕРґСѓР»РµР№
         LTR_Init(crate);
         crate.cc := CC_CONTROL;
         LTR_FillSerial(crate, serial_list[crate_ind]);
         res:=LTR_Open(crate);
         if res=LTR_OK then
         begin
-          //получаем список модулей
+          //РїРѕР»СѓС‡Р°РµРј СЃРїРёСЃРѕРє РјРѕРґСѓР»РµР№
           res:=LTR_GetCrateModules(crate, mids);
           if res = LTR_OK then
           begin
               for module_ind:=0 to MODULE_MAX-1 do
               begin
-                //ищем модули LTR210
+                //РёС‰РµРј РјРѕРґСѓР»Рё LTR210
                 if mids[module_ind]=MID_LTR24 then
                 begin
-                    // сохраняем информацию о найденном модуле, необходимую для
-                    // последующего установления соединения с ним, в список
+                    // СЃРѕС…СЂР°РЅСЏРµРј РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ РЅР°Р№РґРµРЅРЅРѕРј РјРѕРґСѓР»Рµ, РЅРµРѕР±С…РѕРґРёРјСѓСЋ РґР»СЏ
+                    // РїРѕСЃР»РµРґСѓСЋС‰РµРіРѕ СѓСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ СЃРѕРµРґРёРЅРµРЅРёСЏ СЃ РЅРёРј, РІ СЃРїРёСЃРѕРє
                     modules_cnt:=modules_cnt+1;
                     SetLength(ltr24_list, modules_cnt);
                     ltr24_list[modules_cnt-1].csn := serial_list[crate_ind];
@@ -130,7 +130,7 @@ begin
                 end;
               end;
           end;
-          //закрываем соединение с крейтом
+          //Р·Р°РєСЂС‹РІР°РµРј СЃРѕРµРґРёРЅРµРЅРёРµ СЃ РєСЂРµР№С‚РѕРј
           LTR_Close(crate);
         end;
       end;
@@ -141,7 +141,7 @@ begin
   end;
 end;
 
-// назначение элементов ComboBox'у с сохранением выбранного индекса
+// РЅР°Р·РЅР°С‡РµРЅРёРµ СЌР»РµРјРµРЅС‚РѕРІ ComboBox'Сѓ СЃ СЃРѕС…СЂР°РЅРµРЅРёРµРј РІС‹Р±СЂР°РЅРЅРѕРіРѕ РёРЅРґРµРєСЃР°
 procedure TMainForm.assignComboList(comboBox: TComboBox; list : TStrings);
 var
   index : Integer;
@@ -152,7 +152,7 @@ begin
 end;
 
 
-// установка нужного текста в поле выбора диапазона в зависимости от того, включен ли ICP-режим
+// СѓСЃС‚Р°РЅРѕРІРєР° РЅСѓР¶РЅРѕРіРѕ С‚РµРєСЃС‚Р° РІ РїРѕР»Рµ РІС‹Р±РѕСЂР° РґРёР°РїР°Р·РѕРЅР° РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ С‚РѕРіРѕ, РІРєР»СЋС‡РµРЅ Р»Рё ICP-СЂРµР¶РёРј
 procedure TMainForm.setRangeComboList(rangeBox: TComboBox; icpBox : TComboBox);
 var
   rangeStrings : TStrings;
@@ -160,13 +160,13 @@ begin
   rangeStrings := TStringList.Create;
   if icpBox.ItemIndex = 0 then
   begin
-    rangeStrings.Add(String('+/- 2В'));
-    rangeStrings.Add(String('+/- 10В'));
+    rangeStrings.Add(String('+/- 2Р’'));
+    rangeStrings.Add(String('+/- 10Р’'));
   end
   else
   begin
-    rangeStrings.Add(String('~ 1В'));
-    rangeStrings.Add(String('~ 5В'));
+    rangeStrings.Add(String('~ 1Р’'));
+    rangeStrings.Add(String('~ 5Р’'));
   end;
   assignComboList(rangeBox, rangeStrings);
   rangeStrings.Destroy;
@@ -187,7 +187,7 @@ begin
   btnStart.Enabled := module_opened and not threadRunning;
   btnStop.Enabled := module_opened and threadRunning;
 
-  //изменение настроек возможно только при открытом устройстве и не запущенном сборе
+  //РёР·РјРµРЅРµРЅРёРµ РЅР°СЃС‚СЂРѕРµРє РІРѕР·РјРѕР¶РЅРѕ С‚РѕР»СЊРєРѕ РїСЂРё РѕС‚РєСЂС‹С‚РѕРј СѓСЃС‚СЂРѕР№СЃС‚РІРµ Рё РЅРµ Р·Р°РїСѓС‰РµРЅРЅРѕРј СЃР±РѕСЂРµ
   cfg_en:= module_opened and not threadRunning;
 
 
@@ -195,20 +195,20 @@ begin
   cbbDataFmt.Enabled := cfg_en;
   cbbRange1.Enabled := cfg_en;
 
-  { В зависимости от того, выбран ли тестовый режим или
-    обычный, устанавливаем соответствующие названия элементов ComboBox'а.
-    При этом сохраняем индекс выбранного элемента неизменным }
+  { Р’ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ С‚РѕРіРѕ, РІС‹Р±СЂР°РЅ Р»Рё С‚РµСЃС‚РѕРІС‹Р№ СЂРµР¶РёРј РёР»Рё
+    РѕР±С‹С‡РЅС‹Р№, СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёРµ РЅР°Р·РІР°РЅРёСЏ СЌР»РµРјРµРЅС‚РѕРІ ComboBox'Р°.
+    РџСЂРё СЌС‚РѕРј СЃРѕС…СЂР°РЅСЏРµРј РёРЅРґРµРєСЃ РІС‹Р±СЂР°РЅРЅРѕРіРѕ СЌР»РµРјРµРЅС‚Р° РЅРµРёР·РјРµРЅРЅС‹Рј }
   modeStrings := TStringList.Create;
 
-    modeStrings.Add(String('Диф. вход'));
-    modeStrings.Add(String('ICP вход'));
+    modeStrings.Add(String('Р”РёС„. РІС…РѕРґ'));
+    modeStrings.Add(String('ICP РІС…РѕРґ'));
 
   modeStrings.Destroy;
 end;
 
 procedure TMainForm.closeDevice();
 begin
-  // остановка сбора и ожидание завершения потока
+  // РѕСЃС‚Р°РЅРѕРІРєР° СЃР±РѕСЂР° Рё РѕР¶РёРґР°РЅРёРµ Р·Р°РІРµСЂС€РµРЅРёСЏ РїРѕС‚РѕРєР°
   if threadRunning then
   begin
     thread.stop:=True;
@@ -223,13 +223,13 @@ begin
 
 end;
 
-//функция, вызываемая по завершению потока сбора данных
-//разрешает старт нового, устанавливает threadRunning
+//С„СѓРЅРєС†РёСЏ, РІС‹Р·С‹РІР°РµРјР°СЏ РїРѕ Р·Р°РІРµСЂС€РµРЅРёСЋ РїРѕС‚РѕРєР° СЃР±РѕСЂР° РґР°РЅРЅС‹С…
+//СЂР°Р·СЂРµС€Р°РµС‚ СЃС‚Р°СЂС‚ РЅРѕРІРѕРіРѕ, СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ threadRunning
 procedure TMainForm.OnThreadTerminate(par : TObject);
 begin
     if thread.err <> LTR_OK then
     begin
-        MessageDlg('Сбор данных завершен с ошибкой: ' + LTR24_GetErrorString(thread.err),
+        MessageDlg('РЎР±РѕСЂ РґР°РЅРЅС‹С… Р·Р°РІРµСЂС€РµРЅ СЃ РѕС€РёР±РєРѕР№: ' + LTR24_GetErrorString(thread.err),
                   mtError, [mbOK], 0);
     end;
 
@@ -255,23 +255,23 @@ var
   location :  TLTR_MODULE_LOCATION;
   res : Integer;
 begin
-  // если соединение с модулем закрыто - то открываем новое
+  // РµСЃР»Рё СЃРѕРµРґРёРЅРµРЅРёРµ СЃ РјРѕРґСѓР»РµРј Р·Р°РєСЂС‹С‚Рѕ - С‚Рѕ РѕС‚РєСЂС‹РІР°РµРј РЅРѕРІРѕРµ
   if LTR24_IsOpened(hltr24)<>LTR_OK then
   begin
-    // информацию о крейте и слоте берем из сохраненного списка по индексу
-    // текущей выбранной записи
+    // РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ РєСЂРµР№С‚Рµ Рё СЃР»РѕС‚Рµ Р±РµСЂРµРј РёР· СЃРѕС…СЂР°РЅРµРЅРЅРѕРіРѕ СЃРїРёСЃРєР° РїРѕ РёРЅРґРµРєСЃСѓ
+    // С‚РµРєСѓС‰РµР№ РІС‹Р±СЂР°РЅРЅРѕР№ Р·Р°РїРёСЃРё
     location := ltr24_list[ 0 ];
     LTR24_Init(hltr24);
     res:=LTR24_Open(hltr24, SADDR_DEFAULT, SPORT_DEFAULT, location.csn, location.slot);
     if res<>LTR_OK then
-      MessageDlg('Не удалось установить связь с модулем: ' + LTR24_GetErrorString(res), mtError, [mbOK], 0);
+      MessageDlg('РќРµ СѓРґР°Р»РѕСЃСЊ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ СЃРІСЏР·СЊ СЃ РјРѕРґСѓР»РµРј: ' + LTR24_GetErrorString(res), mtError, [mbOK], 0);
 
     if res=LTR_OK then
     begin
-      // чтение информации из Flash-памяти (включая калибровочные коэффициенты) 
+      // С‡С‚РµРЅРёРµ РёРЅС„РѕСЂРјР°С†РёРё РёР· Flash-РїР°РјСЏС‚Рё (РІРєР»СЋС‡Р°СЏ РєР°Р»РёР±СЂРѕРІРѕС‡РЅС‹Рµ РєРѕСЌС„С„РёС†РёРµРЅС‚С‹) 
       res:=LTR24_GetConfig(hltr24);
       if res <> LTR_OK then
-        MessageDlg('Не удалось прочитать конфигурацию из модуля: ' + LTR24_GetErrorString(res), mtError, [mbOK], 0);
+        MessageDlg('РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ РёР· РјРѕРґСѓР»СЏ: ' + LTR24_GetErrorString(res), mtError, [mbOK], 0);
     end;
 
     if res<>LTR_OK then
@@ -287,13 +287,13 @@ procedure TMainForm.btnStartClick(Sender: TObject);
 var
   i, res : Integer;
 begin
-   { Сохраняем значения из элементов управления в соответствующие
-    поля описателя модуля. Для простоты здесь не делается доп. проверок, что
-    введены верные значения... }
+   { РЎРѕС…СЂР°РЅСЏРµРј Р·РЅР°С‡РµРЅРёСЏ РёР· СЌР»РµРјРµРЅС‚РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ РІ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёРµ
+    РїРѕР»СЏ РѕРїРёСЃР°С‚РµР»СЏ РјРѕРґСѓР»СЏ. Р”Р»СЏ РїСЂРѕСЃС‚РѕС‚С‹ Р·РґРµСЃСЊ РЅРµ РґРµР»Р°РµС‚СЃСЏ РґРѕРї. РїСЂРѕРІРµСЂРѕРє, С‡С‚Рѕ
+    РІРІРµРґРµРЅС‹ РІРµСЂРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ... }
    hltr24.ADCFreqCode := cbbAdcFreq.ItemIndex;
    hltr24.DataFmt     := cbbDataFmt.ItemIndex;
    hltr24.ISrcValue   := 0;
-   hltr24.TestMode    := false; //Измерение себя
+   hltr24.TestMode    := false; //РР·РјРµСЂРµРЅРёРµ СЃРµР±СЏ
 
    for i := 0 to ChanelsAmount - 1 do
    begin
@@ -308,7 +308,7 @@ begin
 
    res:= LTR24_SetADC(hltr24);
    if res <> LTR_OK then
-      MessageDlg('Не удалось установить настройки: ' + LTR24_GetErrorString(res), mtError, [mbOK], 0);
+      MessageDlg('РќРµ СѓРґР°Р»РѕСЃСЊ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РЅР°СЃС‚СЂРѕР№РєРё: ' + LTR24_GetErrorString(res), mtError, [mbOK], 0);
 
   if res = LTR_OK then
   begin
@@ -318,22 +318,22 @@ begin
     end;
 
     thread := TLTR24_ProcessThread.Create(True);
-    { Так как структура должна быть одна и та же, что используемая потоком,
-     что в классе основного окна, то вынуждены передать ее как pointer }
+    { РўР°Рє РєР°Рє СЃС‚СЂСѓРєС‚СѓСЂР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РѕРґРЅР° Рё С‚Р° Р¶Рµ, С‡С‚Рѕ РёСЃРїРѕР»СЊР·СѓРµРјР°СЏ РїРѕС‚РѕРєРѕРј,
+     С‡С‚Рѕ РІ РєР»Р°СЃСЃРµ РѕСЃРЅРѕРІРЅРѕРіРѕ РѕРєРЅР°, С‚Рѕ РІС‹РЅСѓР¶РґРµРЅС‹ РїРµСЂРµРґР°С‚СЊ РµРµ РєР°Рє pointer }
     thread.phltr24 := @hltr24;
-    { Сохраняем элементы интерфейса, которые должны изменяться обрабатывающим
-      потоком в класс потока }
+    { РЎРѕС…СЂР°РЅСЏРµРј СЌР»РµРјРµРЅС‚С‹ РёРЅС‚РµСЂС„РµР№СЃР°, РєРѕС‚РѕСЂС‹Рµ РґРѕР»Р¶РЅС‹ РёР·РјРµРЅСЏС‚СЊСЃСЏ РѕР±СЂР°Р±Р°С‚С‹РІР°СЋС‰РёРј
+      РїРѕС‚РѕРєРѕРј РІ РєР»Р°СЃСЃ РїРѕС‚РѕРєР° }
     thread.edtChAvg[0]:=edtCh1Avg;
     thread.edtChAvg[1]:=edtCh2Avg;
     thread.edtChAvg[2]:=edtCh3Avg;
     thread.edtChAvg[3]:=edtCh4Avg;
 
 
-    { устанавливаем функцию на событие завершения потока (в частности,
-    чтобы отследить, если поток завершился сам из-за ошибки при сборе
-    данных) }
+    { СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј С„СѓРЅРєС†РёСЋ РЅР° СЃРѕР±С‹С‚РёРµ Р·Р°РІРµСЂС€РµРЅРёСЏ РїРѕС‚РѕРєР° (РІ С‡Р°СЃС‚РЅРѕСЃС‚Рё,
+    С‡С‚РѕР±С‹ РѕС‚СЃР»РµРґРёС‚СЊ, РµСЃР»Рё РїРѕС‚РѕРє Р·Р°РІРµСЂС€РёР»СЃСЏ СЃР°Рј РёР·-Р·Р° РѕС€РёР±РєРё РїСЂРё СЃР±РѕСЂРµ
+    РґР°РЅРЅС‹С…) }
     thread.OnTerminate := OnThreadTerminate;
-    thread.Resume; //для Delphi 2010 и выше рекомендуется использовать Start
+    thread.Resume; //РґР»СЏ Delphi 2010 Рё РІС‹С€Рµ СЂРµРєРѕРјРµРЅРґСѓРµС‚СЃСЏ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Start
     threadRunning := True;
 
     updateControls;
@@ -351,7 +351,7 @@ end;
 
 procedure TMainForm.btnStopClick(Sender: TObject);
 begin
-   // устанавливаем запрос на завершение потока
+   // СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р·Р°РїСЂРѕСЃ РЅР° Р·Р°РІРµСЂС€РµРЅРёРµ РїРѕС‚РѕРєР°
     if threadRunning then
         thread.stop:=True;
     btnStop.Enabled:= False;

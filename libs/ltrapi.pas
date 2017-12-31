@@ -3,121 +3,121 @@ interface
 uses SysUtils, ltrapitypes, ltrapidefine;
 
 const
-    LTR_OK                              =  0;  // Выполнено без ошибок.
-    LTR_ERROR_UNKNOWN                   = -1;  // Неизвестная ошибка.
-    LTR_ERROR_PARAMETERS                = -2;  // Ошибка входных параметров.
+    LTR_OK                              =  0;  // Р’С‹РїРѕР»РЅРµРЅРѕ Р±РµР· РѕС€РёР±РѕРє.
+    LTR_ERROR_UNKNOWN                   = -1;  // РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°.
+    LTR_ERROR_PARAMETERS                = -2;  // РћС€РёР±РєР° РІС…РѕРґРЅС‹С… РїР°СЂР°РјРµС‚СЂРѕРІ.
     LTR_ERROR_PARAMETRS                 =  LTR_ERROR_PARAMETERS;
-    LTR_ERROR_MEMORY_ALLOC              = -3;  // Ошибка динамического выделения памяти.
-    LTR_ERROR_OPEN_CHANNEL              = -4;  // Ошибка открытия канала обмена с сервером.
-    LTR_ERROR_OPEN_SOCKET               = -5;  // Ошибка открытия сокета.
-    LTR_ERROR_CHANNEL_CLOSED            = -6;  // Ошибка. Канал обмена с сервером не создан.
-    LTR_ERROR_SEND                      = -7;  // Ошибка отправления данных.
-    LTR_ERROR_RECV                      = -8;  // Ошибка приема данных.
-    LTR_ERROR_EXECUTE                   = -9;  // Ошибка обмена с крейт-контроллером.
-    LTR_WARNING_MODULE_IN_USE           = -10; // Канал обмена с сервером создан в текущей программе
-                                               // и в какой-то еще
-    LTR_ERROR_NOT_CTRL_CHANNEL          = -11; // Номер канала для этой операции должен быть CC_CONTROL
-    LTR_ERROR_SRV_INVALID_CMD           = -12; // Команда не поддерживается сервером
-    LTR_ERROR_SRV_INVALID_CMD_PARAMS    = -13; // Сервер не поддерживает указанные параметры команды
-    LTR_ERROR_INVALID_CRATE             = -14; // Указанный крейт не найден
-    LTR_ERROR_EMPTY_SLOT                = -15; // В указанном слоте отсутствует модуль
-    LTR_ERROR_UNSUP_CMD_FOR_SRV_CTL     = -16; // Команда не поддерживается управляющим каналом сервера
-    LTR_ERROR_INVALID_IP_ENTRY          = -17; // Неверная запись сетевого адреса крейта
-    LTR_ERROR_NOT_IMPLEMENTED           = -18; // Данная возможность не реализована
+    LTR_ERROR_MEMORY_ALLOC              = -3;  // РћС€РёР±РєР° РґРёРЅР°РјРёС‡РµСЃРєРѕРіРѕ РІС‹РґРµР»РµРЅРёСЏ РїР°РјСЏС‚Рё.
+    LTR_ERROR_OPEN_CHANNEL              = -4;  // РћС€РёР±РєР° РѕС‚РєСЂС‹С‚РёСЏ РєР°РЅР°Р»Р° РѕР±РјРµРЅР° СЃ СЃРµСЂРІРµСЂРѕРј.
+    LTR_ERROR_OPEN_SOCKET               = -5;  // РћС€РёР±РєР° РѕС‚РєСЂС‹С‚РёСЏ СЃРѕРєРµС‚Р°.
+    LTR_ERROR_CHANNEL_CLOSED            = -6;  // РћС€РёР±РєР°. РљР°РЅР°Р» РѕР±РјРµРЅР° СЃ СЃРµСЂРІРµСЂРѕРј РЅРµ СЃРѕР·РґР°РЅ.
+    LTR_ERROR_SEND                      = -7;  // РћС€РёР±РєР° РѕС‚РїСЂР°РІР»РµРЅРёСЏ РґР°РЅРЅС‹С….
+    LTR_ERROR_RECV                      = -8;  // РћС€РёР±РєР° РїСЂРёРµРјР° РґР°РЅРЅС‹С….
+    LTR_ERROR_EXECUTE                   = -9;  // РћС€РёР±РєР° РѕР±РјРµРЅР° СЃ РєСЂРµР№С‚-РєРѕРЅС‚СЂРѕР»Р»РµСЂРѕРј.
+    LTR_WARNING_MODULE_IN_USE           = -10; // РљР°РЅР°Р» РѕР±РјРµРЅР° СЃ СЃРµСЂРІРµСЂРѕРј СЃРѕР·РґР°РЅ РІ С‚РµРєСѓС‰РµР№ РїСЂРѕРіСЂР°РјРјРµ
+                                               // Рё РІ РєР°РєРѕР№-С‚Рѕ РµС‰Рµ
+    LTR_ERROR_NOT_CTRL_CHANNEL          = -11; // РќРѕРјРµСЂ РєР°РЅР°Р»Р° РґР»СЏ СЌС‚РѕР№ РѕРїРµСЂР°С†РёРё РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ CC_CONTROL
+    LTR_ERROR_SRV_INVALID_CMD           = -12; // РљРѕРјР°РЅРґР° РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ СЃРµСЂРІРµСЂРѕРј
+    LTR_ERROR_SRV_INVALID_CMD_PARAMS    = -13; // РЎРµСЂРІРµСЂ РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚ СѓРєР°Р·Р°РЅРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹ РєРѕРјР°РЅРґС‹
+    LTR_ERROR_INVALID_CRATE             = -14; // РЈРєР°Р·Р°РЅРЅС‹Р№ РєСЂРµР№С‚ РЅРµ РЅР°Р№РґРµРЅ
+    LTR_ERROR_EMPTY_SLOT                = -15; // Р’ СѓРєР°Р·Р°РЅРЅРѕРј СЃР»РѕС‚Рµ РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РјРѕРґСѓР»СЊ
+    LTR_ERROR_UNSUP_CMD_FOR_SRV_CTL     = -16; // РљРѕРјР°РЅРґР° РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ СѓРїСЂР°РІР»СЏСЋС‰РёРј РєР°РЅР°Р»РѕРј СЃРµСЂРІРµСЂР°
+    LTR_ERROR_INVALID_IP_ENTRY          = -17; // РќРµРІРµСЂРЅР°СЏ Р·Р°РїРёСЃСЊ СЃРµС‚РµРІРѕРіРѕ Р°РґСЂРµСЃР° РєСЂРµР№С‚Р°
+    LTR_ERROR_NOT_IMPLEMENTED           = -18; // Р”Р°РЅРЅР°СЏ РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊ РЅРµ СЂРµР°Р»РёР·РѕРІР°РЅР°
 
-    LTR_ERROR_INVALID_MODULE_DESCR      = -40; // Неверный описатель модуля
-    LTR_ERROR_INVALID_MODULE_SLOT       = -41; // Указан неверный слот для модуля
-    LTR_ERROR_INVALID_MODULE_ID         = -42; // Неверный ID-модуля в ответе на сброс
-    LTR_ERROR_NO_RESET_RESPONSE         = -43; // Нет ответа на команду сброс
-    LTR_ERROR_SEND_INSUFFICIENT_DATA    = -44; // Передано данных меньше, чем запрашивалось
+    LTR_ERROR_INVALID_MODULE_DESCR      = -40; // РќРµРІРµСЂРЅС‹Р№ РѕРїРёСЃР°С‚РµР»СЊ РјРѕРґСѓР»СЏ
+    LTR_ERROR_INVALID_MODULE_SLOT       = -41; // РЈРєР°Р·Р°РЅ РЅРµРІРµСЂРЅС‹Р№ СЃР»РѕС‚ РґР»СЏ РјРѕРґСѓР»СЏ
+    LTR_ERROR_INVALID_MODULE_ID         = -42; // РќРµРІРµСЂРЅС‹Р№ ID-РјРѕРґСѓР»СЏ РІ РѕС‚РІРµС‚Рµ РЅР° СЃР±СЂРѕСЃ
+    LTR_ERROR_NO_RESET_RESPONSE         = -43; // РќРµС‚ РѕС‚РІРµС‚Р° РЅР° РєРѕРјР°РЅРґСѓ СЃР±СЂРѕСЃ
+    LTR_ERROR_SEND_INSUFFICIENT_DATA    = -44; // РџРµСЂРµРґР°РЅРѕ РґР°РЅРЅС‹С… РјРµРЅСЊС€Рµ, С‡РµРј Р·Р°РїСЂР°С€РёРІР°Р»РѕСЃСЊ
     LTR_ERROR_RECV_INSUFFICIENT_DATA    = -45;
-    LTR_ERROR_NO_CMD_RESPONSE           = -46; // Нет ответа на команду сброс
-    LTR_ERROR_INVALID_CMD_RESPONSE      = -47; // Пришел неверный ответ на команду
-    LTR_ERROR_INVALID_RESP_PARITY       = -48; // Неверный бит четности в пришедшем ответе
-    LTR_ERROR_INVALID_CMD_PARITY        = -49; // Ошибка четности переданной команды
-    LTR_ERROR_UNSUP_BY_FIRM_VER         = -50; // Возможность не поддерживается данной версией прошивки
-    LTR_ERROR_MODULE_STARTED            = -51; // Модуль уже запущен
-    LTR_ERROR_MODULE_STOPPED            = -52; // Модуль остановлен
-    LTR_ERROR_RECV_OVERFLOW             = -53; // Произошло переполнение буфера
-    LTR_ERROR_FIRM_FILE_OPEN            = -54; // Ошибка открытия файла прошивки
-    LTR_ERROR_FIRM_FILE_READ            = -55; // Ошибка чтения файла прошивки
-    LTR_ERROR_FIRM_FILE_FORMAT          = -56; // Ошибка формата файла прошивки
-    LTR_ERROR_FPGA_LOAD_READY_TOUT      = -57; // Превышен таймаут ожидания готовности ПЛИС к загрузке
-    LTR_ERROR_FPGA_LOAD_DONE_TOUT       = -58; // Превышен таймаут ожидания перехода ПЛИС в рабочий режим
-    LTR_ERROR_FPGA_IS_NOT_LOADED        = -59; // Прошивка ПЛИС не загружена
-    LTR_ERROR_FLASH_INVALID_ADDR        = -60; // Неверный адрес Flash-памяти
-    LTR_ERROR_FLASH_WAIT_RDY_TOUT       = -61; // Превышен таймаут ожидания завершения записи/стирания Flash-памяти
+    LTR_ERROR_NO_CMD_RESPONSE           = -46; // РќРµС‚ РѕС‚РІРµС‚Р° РЅР° РєРѕРјР°РЅРґСѓ СЃР±СЂРѕСЃ
+    LTR_ERROR_INVALID_CMD_RESPONSE      = -47; // РџСЂРёС€РµР» РЅРµРІРµСЂРЅС‹Р№ РѕС‚РІРµС‚ РЅР° РєРѕРјР°РЅРґСѓ
+    LTR_ERROR_INVALID_RESP_PARITY       = -48; // РќРµРІРµСЂРЅС‹Р№ Р±РёС‚ С‡РµС‚РЅРѕСЃС‚Рё РІ РїСЂРёС€РµРґС€РµРј РѕС‚РІРµС‚Рµ
+    LTR_ERROR_INVALID_CMD_PARITY        = -49; // РћС€РёР±РєР° С‡РµС‚РЅРѕСЃС‚Рё РїРµСЂРµРґР°РЅРЅРѕР№ РєРѕРјР°РЅРґС‹
+    LTR_ERROR_UNSUP_BY_FIRM_VER         = -50; // Р’РѕР·РјРѕР¶РЅРѕСЃС‚СЊ РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ РґР°РЅРЅРѕР№ РІРµСЂСЃРёРµР№ РїСЂРѕС€РёРІРєРё
+    LTR_ERROR_MODULE_STARTED            = -51; // РњРѕРґСѓР»СЊ СѓР¶Рµ Р·Р°РїСѓС‰РµРЅ
+    LTR_ERROR_MODULE_STOPPED            = -52; // РњРѕРґСѓР»СЊ РѕСЃС‚Р°РЅРѕРІР»РµРЅ
+    LTR_ERROR_RECV_OVERFLOW             = -53; // РџСЂРѕРёР·РѕС€Р»Рѕ РїРµСЂРµРїРѕР»РЅРµРЅРёРµ Р±СѓС„РµСЂР°
+    LTR_ERROR_FIRM_FILE_OPEN            = -54; // РћС€РёР±РєР° РѕС‚РєСЂС‹С‚РёСЏ С„Р°Р№Р»Р° РїСЂРѕС€РёРІРєРё
+    LTR_ERROR_FIRM_FILE_READ            = -55; // РћС€РёР±РєР° С‡С‚РµРЅРёСЏ С„Р°Р№Р»Р° РїСЂРѕС€РёРІРєРё
+    LTR_ERROR_FIRM_FILE_FORMAT          = -56; // РћС€РёР±РєР° С„РѕСЂРјР°С‚Р° С„Р°Р№Р»Р° РїСЂРѕС€РёРІРєРё
+    LTR_ERROR_FPGA_LOAD_READY_TOUT      = -57; // РџСЂРµРІС‹С€РµРЅ С‚Р°Р№РјР°СѓС‚ РѕР¶РёРґР°РЅРёСЏ РіРѕС‚РѕРІРЅРѕСЃС‚Рё РџР›РРЎ Рє Р·Р°РіСЂСѓР·РєРµ
+    LTR_ERROR_FPGA_LOAD_DONE_TOUT       = -58; // РџСЂРµРІС‹С€РµРЅ С‚Р°Р№РјР°СѓС‚ РѕР¶РёРґР°РЅРёСЏ РїРµСЂРµС…РѕРґР° РџР›РРЎ РІ СЂР°Р±РѕС‡РёР№ СЂРµР¶РёРј
+    LTR_ERROR_FPGA_IS_NOT_LOADED        = -59; // РџСЂРѕС€РёРІРєР° РџР›РРЎ РЅРµ Р·Р°РіСЂСѓР¶РµРЅР°
+    LTR_ERROR_FLASH_INVALID_ADDR        = -60; // РќРµРІРµСЂРЅС‹Р№ Р°РґСЂРµСЃ Flash-РїР°РјСЏС‚Рё
+    LTR_ERROR_FLASH_WAIT_RDY_TOUT       = -61; // РџСЂРµРІС‹С€РµРЅ С‚Р°Р№РјР°СѓС‚ РѕР¶РёРґР°РЅРёСЏ Р·Р°РІРµСЂС€РµРЅРёСЏ Р·Р°РїРёСЃРё/СЃС‚РёСЂР°РЅРёСЏ Flash-РїР°РјСЏС‚Рё
     LTR_ERROR_FIRSTFRAME_NOTFOUND       = -62; // First frame in card data stream not found
     LTR_ERROR_CARDSCONFIG_UNSUPPORTED   = -63;
-    LTR_ERROR_FLASH_OP_FAILED           = -64; // Ошибка выполненя операции flash-памятью
-    LTR_ERROR_FLASH_NOT_PRESENT         = -65; // Flash-память не обнаружена
-    LTR_ERROR_FLASH_UNSUPPORTED_ID      = -66; // Обнаружен неподдерживаемый тип flash-памяти
-    LTR_ERROR_FLASH_UNALIGNED_ADDR      = -67; // Невыровненный адрес flash-памяти
-    LTR_ERROR_FLASH_VERIFY              = -68; // Ошибка при проверки записанных данных во flash-память
-    LTR_ERROR_FLASH_UNSUP_PAGE_SIZE     = -69; // Установлен неподдерживаемый размер страницы flash-памяти
-    LTR_ERROR_FLASH_INFO_NOT_PRESENT    = -70; // Отсутствует информация о модуле во Flash-памяти
-    LTR_ERROR_FLASH_INFO_UNSUP_FORMAT   = -71; // Неподдерживаемый формат информации о модуле во Flash-памяти
-    LTR_ERROR_FLASH_SET_PROTECTION      = -72; // Не удалось установить защиту Flash-памяти
-    LTR_ERROR_FPGA_NO_POWER             = -73; // Нет питания микросхемы ПЛИС
-    LTR_ERROR_FPGA_INVALID_STATE        = -74; // Не действительное состояние загрузки ПЛИС
-    LTR_ERROR_FPGA_ENABLE               = -75; // Не удалось перевести ПЛИС в разрешенное состояние
-    LTR_ERROR_FPGA_AUTOLOAD_TOUT        = -76; // Истекло время ожидания автоматической загрузки ПЛИС
-    LTR_ERROR_PROCDATA_UNALIGNED        = -77; // Обрабатываемые данные не выравнены на границу кадра
-    LTR_ERROR_PROCDATA_CNTR             = -78; // Ошибка счетчика в обрабатываемых данных
-    LTR_ERROR_PROCDATA_CHNUM            = -79; // Неверный номер канала в обрабатываемых данных
-    LTR_ERROR_PROCDATA_WORD_SEQ         = -80; // Неверная последовательность слов в обрабатываемых данных
+    LTR_ERROR_FLASH_OP_FAILED           = -64; // РћС€РёР±РєР° РІС‹РїРѕР»РЅРµРЅСЏ РѕРїРµСЂР°С†РёРё flash-РїР°РјСЏС‚СЊСЋ
+    LTR_ERROR_FLASH_NOT_PRESENT         = -65; // Flash-РїР°РјСЏС‚СЊ РЅРµ РѕР±РЅР°СЂСѓР¶РµРЅР°
+    LTR_ERROR_FLASH_UNSUPPORTED_ID      = -66; // РћР±РЅР°СЂСѓР¶РµРЅ РЅРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ С‚РёРї flash-РїР°РјСЏС‚Рё
+    LTR_ERROR_FLASH_UNALIGNED_ADDR      = -67; // РќРµРІС‹СЂРѕРІРЅРµРЅРЅС‹Р№ Р°РґСЂРµСЃ flash-РїР°РјСЏС‚Рё
+    LTR_ERROR_FLASH_VERIFY              = -68; // РћС€РёР±РєР° РїСЂРё РїСЂРѕРІРµСЂРєРё Р·Р°РїРёСЃР°РЅРЅС‹С… РґР°РЅРЅС‹С… РІРѕ flash-РїР°РјСЏС‚СЊ
+    LTR_ERROR_FLASH_UNSUP_PAGE_SIZE     = -69; // РЈСЃС‚Р°РЅРѕРІР»РµРЅ РЅРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ СЂР°Р·РјРµСЂ СЃС‚СЂР°РЅРёС†С‹ flash-РїР°РјСЏС‚Рё
+    LTR_ERROR_FLASH_INFO_NOT_PRESENT    = -70; // РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РёРЅС„РѕСЂРјР°С†РёСЏ Рѕ РјРѕРґСѓР»Рµ РІРѕ Flash-РїР°РјСЏС‚Рё
+    LTR_ERROR_FLASH_INFO_UNSUP_FORMAT   = -71; // РќРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ С„РѕСЂРјР°С‚ РёРЅС„РѕСЂРјР°С†РёРё Рѕ РјРѕРґСѓР»Рµ РІРѕ Flash-РїР°РјСЏС‚Рё
+    LTR_ERROR_FLASH_SET_PROTECTION      = -72; // РќРµ СѓРґР°Р»РѕСЃСЊ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ Р·Р°С‰РёС‚Сѓ Flash-РїР°РјСЏС‚Рё
+    LTR_ERROR_FPGA_NO_POWER             = -73; // РќРµС‚ РїРёС‚Р°РЅРёСЏ РјРёРєСЂРѕСЃС…РµРјС‹ РџР›РРЎ
+    LTR_ERROR_FPGA_INVALID_STATE        = -74; // РќРµ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ Р·Р°РіСЂСѓР·РєРё РџР›РРЎ
+    LTR_ERROR_FPGA_ENABLE               = -75; // РќРµ СѓРґР°Р»РѕСЃСЊ РїРµСЂРµРІРµСЃС‚Рё РџР›РРЎ РІ СЂР°Р·СЂРµС€РµРЅРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ
+    LTR_ERROR_FPGA_AUTOLOAD_TOUT        = -76; // РСЃС‚РµРєР»Рѕ РІСЂРµРјСЏ РѕР¶РёРґР°РЅРёСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРѕР№ Р·Р°РіСЂСѓР·РєРё РџР›РРЎ
+    LTR_ERROR_PROCDATA_UNALIGNED        = -77; // РћР±СЂР°Р±Р°С‚С‹РІР°РµРјС‹Рµ РґР°РЅРЅС‹Рµ РЅРµ РІС‹СЂР°РІРЅРµРЅС‹ РЅР° РіСЂР°РЅРёС†Сѓ РєР°РґСЂР°
+    LTR_ERROR_PROCDATA_CNTR             = -78; // РћС€РёР±РєР° СЃС‡РµС‚С‡РёРєР° РІ РѕР±СЂР°Р±Р°С‚С‹РІР°РµРјС‹С… РґР°РЅРЅС‹С…
+    LTR_ERROR_PROCDATA_CHNUM            = -79; // РќРµРІРµСЂРЅС‹Р№ РЅРѕРјРµСЂ РєР°РЅР°Р»Р° РІ РѕР±СЂР°Р±Р°С‚С‹РІР°РµРјС‹С… РґР°РЅРЅС‹С…
+    LTR_ERROR_PROCDATA_WORD_SEQ         = -80; // РќРµРІРµСЂРЅР°СЏ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚СЊ СЃР»РѕРІ РІ РѕР±СЂР°Р±Р°С‚С‹РІР°РµРјС‹С… РґР°РЅРЅС‹С…
 
 
 type
-// Значения для управления ножками процессора, доступными для пользовательского программирования
-en_LTR_UserIoCfg=(LTR_USERIO_DIGIN1    =1,// ножка является входом и подключена к DIGIN1
-                  LTR_USERIO_DIGIN2   = 2,    // ножка является входом и подключена к DIGIN2
-                  LTR_USERIO_DIGOUT   = 0,    // ножка является выходом (подключение см. en_LTR_DigOutCfg)
+// Р—РЅР°С‡РµРЅРёСЏ РґР»СЏ СѓРїСЂР°РІР»РµРЅРёСЏ РЅРѕР¶РєР°РјРё РїСЂРѕС†РµСЃСЃРѕСЂР°, РґРѕСЃС‚СѓРїРЅС‹РјРё РґР»СЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ
+en_LTR_UserIoCfg=(LTR_USERIO_DIGIN1    =1,// РЅРѕР¶РєР° СЏРІР»СЏРµС‚СЃСЏ РІС…РѕРґРѕРј Рё РїРѕРґРєР»СЋС‡РµРЅР° Рє DIGIN1
+                  LTR_USERIO_DIGIN2   = 2,    // РЅРѕР¶РєР° СЏРІР»СЏРµС‚СЃСЏ РІС…РѕРґРѕРј Рё РїРѕРґРєР»СЋС‡РµРЅР° Рє DIGIN2
+                  LTR_USERIO_DIGOUT   = 0,    // РЅРѕР¶РєР° СЏРІР»СЏРµС‚СЃСЏ РІС‹С…РѕРґРѕРј (РїРѕРґРєР»СЋС‡РµРЅРёРµ СЃРј. en_LTR_DigOutCfg)
                   LTR_USERIO_DEFAULT  = LTR_USERIO_DIGOUT);
-// Значения для управления выходами DIGOUTx
+// Р—РЅР°С‡РµРЅРёСЏ РґР»СЏ СѓРїСЂР°РІР»РµРЅРёСЏ РІС‹С…РѕРґР°РјРё DIGOUTx
 en_LTR_DigOutCfg=(
-    LTR_DIGOUT_CONST0   = $00, // постоянный уровень логического "0"
-    LTR_DIGOUT_CONST1   = $01, // постоянный уровень логической "1"
-    LTR_DIGOUT_USERIO0  = $02, // выход подключен к ножке userio0 (PF1 в рев. 0, PF1 в рев. 1)
-    LTR_DIGOUT_USERIO1  = $03, // выход подключен к ножке userio1 (PG13)
-    LTR_DIGOUT_DIGIN1   = $04, // выход подключен ко входу DIGIN1
-    LTR_DIGOUT_DIGIN2   = $05, // выход подключен ко входу DIGIN2
-    LTR_DIGOUT_START    = $06, // на выход подаются метки "СТАРТ"
-    LTR_DIGOUT_SECOND   = $07, // на выход подаются метки "СЕКУНДА"
-    LTR_DIGOUT_IRIG     = $08, // контроль сигналов точного времени IRIG (digout1: готовность, digout2: секунда)
+    LTR_DIGOUT_CONST0   = $00, // РїРѕСЃС‚РѕСЏРЅРЅС‹Р№ СѓСЂРѕРІРµРЅСЊ Р»РѕРіРёС‡РµСЃРєРѕРіРѕ "0"
+    LTR_DIGOUT_CONST1   = $01, // РїРѕСЃС‚РѕСЏРЅРЅС‹Р№ СѓСЂРѕРІРµРЅСЊ Р»РѕРіРёС‡РµСЃРєРѕР№ "1"
+    LTR_DIGOUT_USERIO0  = $02, // РІС‹С…РѕРґ РїРѕРґРєР»СЋС‡РµРЅ Рє РЅРѕР¶РєРµ userio0 (PF1 РІ СЂРµРІ. 0, PF1 РІ СЂРµРІ. 1)
+    LTR_DIGOUT_USERIO1  = $03, // РІС‹С…РѕРґ РїРѕРґРєР»СЋС‡РµРЅ Рє РЅРѕР¶РєРµ userio1 (PG13)
+    LTR_DIGOUT_DIGIN1   = $04, // РІС‹С…РѕРґ РїРѕРґРєР»СЋС‡РµРЅ РєРѕ РІС…РѕРґСѓ DIGIN1
+    LTR_DIGOUT_DIGIN2   = $05, // РІС‹С…РѕРґ РїРѕРґРєР»СЋС‡РµРЅ РєРѕ РІС…РѕРґСѓ DIGIN2
+    LTR_DIGOUT_START    = $06, // РЅР° РІС‹С…РѕРґ РїРѕРґР°СЋС‚СЃСЏ РјРµС‚РєРё "РЎРўРђР Рў"
+    LTR_DIGOUT_SECOND   = $07, // РЅР° РІС‹С…РѕРґ РїРѕРґР°СЋС‚СЃСЏ РјРµС‚РєРё "РЎР•РљРЈРќР”Рђ"
+    LTR_DIGOUT_IRIG     = $08, // РєРѕРЅС‚СЂРѕР»СЊ СЃРёРіРЅР°Р»РѕРІ С‚РѕС‡РЅРѕРіРѕ РІСЂРµРјРµРЅРё IRIG (digout1: РіРѕС‚РѕРІРЅРѕСЃС‚СЊ, digout2: СЃРµРєСѓРЅРґР°)
     LTR_DIGOUT_DEFAULT  = LTR_DIGOUT_CONST0
     );
-// Значения для управления метками "СТАРТ" и "СЕКУНДА"
+// Р—РЅР°С‡РµРЅРёСЏ РґР»СЏ СѓРїСЂР°РІР»РµРЅРёСЏ РјРµС‚РєР°РјРё "РЎРўРђР Рў" Рё "РЎР•РљРЈРќР”Рђ"
 en_LTR_MarkMode=(
-    LTR_MARK_OFF                = $00, // метка отключена
-    LTR_MARK_EXT_DIGIN1_RISE    = $01, // метка по фронту DIGIN1
-    LTR_MARK_EXT_DIGIN1_FALL    = $02, // метка по спаду DIGIN1
-    LTR_MARK_EXT_DIGIN2_RISE    = $03, // метка по фронту DIGIN2
-    LTR_MARK_EXT_DIGIN2_FALL    = $04, // метка по спаду DIGIN2
-    LTR_MARK_INTERNAL           = $05, // внутренняя генерация метки
+    LTR_MARK_OFF                = $00, // РјРµС‚РєР° РѕС‚РєР»СЋС‡РµРЅР°
+    LTR_MARK_EXT_DIGIN1_RISE    = $01, // РјРµС‚РєР° РїРѕ С„СЂРѕРЅС‚Сѓ DIGIN1
+    LTR_MARK_EXT_DIGIN1_FALL    = $02, // РјРµС‚РєР° РїРѕ СЃРїР°РґСѓ DIGIN1
+    LTR_MARK_EXT_DIGIN2_RISE    = $03, // РјРµС‚РєР° РїРѕ С„СЂРѕРЅС‚Сѓ DIGIN2
+    LTR_MARK_EXT_DIGIN2_FALL    = $04, // РјРµС‚РєР° РїРѕ СЃРїР°РґСѓ DIGIN2
+    LTR_MARK_INTERNAL           = $05, // РІРЅСѓС‚СЂРµРЅРЅСЏСЏ РіРµРЅРµСЂР°С†РёСЏ РјРµС‚РєРё
 
-    LTR_MARK_NAMUR1_LO2HI       = 8,   // по сигналу NAMUR1 (START_IN), возрастание тока
-    LTR_MARK_NAMUR1_HI2LO       = 9,   // по сигналу NAMUR1 (START_IN), спад тока
-    LTR_MARK_NAMUR2_LO2HI       = 10,  // по сигналу NAMUR2 (M1S_IN), возрастание тока
-    LTR_MARK_NAMUR2_HI2LO       = 11,  // по сигналу NAMUR2 (M1S_IN), спад тока
+    LTR_MARK_NAMUR1_LO2HI       = 8,   // РїРѕ СЃРёРіРЅР°Р»Сѓ NAMUR1 (START_IN), РІРѕР·СЂР°СЃС‚Р°РЅРёРµ С‚РѕРєР°
+    LTR_MARK_NAMUR1_HI2LO       = 9,   // РїРѕ СЃРёРіРЅР°Р»Сѓ NAMUR1 (START_IN), СЃРїР°Рґ С‚РѕРєР°
+    LTR_MARK_NAMUR2_LO2HI       = 10,  // РїРѕ СЃРёРіРЅР°Р»Сѓ NAMUR2 (M1S_IN), РІРѕР·СЂР°СЃС‚Р°РЅРёРµ С‚РѕРєР°
+    LTR_MARK_NAMUR2_HI2LO       = 11,  // РїРѕ СЃРёРіРЅР°Р»Сѓ NAMUR2 (M1S_IN), СЃРїР°Рґ С‚РѕРєР°
 
-    { Источник метки - декодер сигналов точного времени IRIG-B006
-       IRIG может использоваться только для меток "СЕКУНДА", для "СТАРТ" игнорируется }
-    LTR_MARK_SEC_IRIGB_DIGIN1   = 16,   // со входа DIGIN1, прямой сигнал
-    LTR_MARK_SEC_IRIGB_nDIGIN1  = 17,   // со входа DIGIN1, инвертированный сигнал
-    LTR_MARK_SEC_IRIGB_DIGIN2   = 18,   // со входа DIGIN2, прямой сигнал
-    LTR_MARK_SEC_IRIGB_nDIGIN2  = 19    // со входа DIGIN2, инвертированный сигнал
+    { РСЃС‚РѕС‡РЅРёРє РјРµС‚РєРё - РґРµРєРѕРґРµСЂ СЃРёРіРЅР°Р»РѕРІ С‚РѕС‡РЅРѕРіРѕ РІСЂРµРјРµРЅРё IRIG-B006
+       IRIG РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊСЃСЏ С‚РѕР»СЊРєРѕ РґР»СЏ РјРµС‚РѕРє "РЎР•РљРЈРќР”Рђ", РґР»СЏ "РЎРўРђР Рў" РёРіРЅРѕСЂРёСЂСѓРµС‚СЃСЏ }
+    LTR_MARK_SEC_IRIGB_DIGIN1   = 16,   // СЃРѕ РІС…РѕРґР° DIGIN1, РїСЂСЏРјРѕР№ СЃРёРіРЅР°Р»
+    LTR_MARK_SEC_IRIGB_nDIGIN1  = 17,   // СЃРѕ РІС…РѕРґР° DIGIN1, РёРЅРІРµСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№ СЃРёРіРЅР°Р»
+    LTR_MARK_SEC_IRIGB_DIGIN2   = 18,   // СЃРѕ РІС…РѕРґР° DIGIN2, РїСЂСЏРјРѕР№ СЃРёРіРЅР°Р»
+    LTR_MARK_SEC_IRIGB_nDIGIN2  = 19    // СЃРѕ РІС…РѕРґР° DIGIN2, РёРЅРІРµСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№ СЃРёРіРЅР°Р»
     );
 
 {$A4}
 TLTR=record
-    saddr:LongWord;                     // сетевой адрес сервера
-    sport:word;                         // сетевой порт сервера
-    csn:SERNUMtext;                     // серийный номер крейта
-    cc:WORD;                            // номер канала крейта
-    flags:LongWord;                     // флаги состояния канала
-    tmark:LongWord;                     // последняя принятая метка времени
-    internal:Pointer;                   // указатель на канал
+    saddr:LongWord;                     // СЃРµС‚РµРІРѕР№ Р°РґСЂРµСЃ СЃРµСЂРІРµСЂР°
+    sport:word;                         // СЃРµС‚РµРІРѕР№ РїРѕСЂС‚ СЃРµСЂРІРµСЂР°
+    csn:SERNUMtext;                     // СЃРµСЂРёР№РЅС‹Р№ РЅРѕРјРµСЂ РєСЂРµР№С‚Р°
+    cc:WORD;                            // РЅРѕРјРµСЂ РєР°РЅР°Р»Р° РєСЂРµР№С‚Р°
+    flags:LongWord;                     // С„Р»Р°РіРё СЃРѕСЃС‚РѕСЏРЅРёСЏ РєР°РЅР°Р»Р°
+    tmark:LongWord;                     // РїРѕСЃР»РµРґРЅСЏСЏ РїСЂРёРЅСЏС‚Р°СЏ РјРµС‚РєР° РІСЂРµРјРµРЅРё
+    internal:Pointer;                   // СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РєР°РЅР°Р»
 end;
 pTLTR = ^TLTR;
 TLTR_CONFIG=record
@@ -137,7 +137,7 @@ Function LTR_Init(out ltr: TLTR):integer; overload;
 Function LTR_Open(var ltr: TLTR):integer; overload;
 Function LTR_Close(var ltr: TLTR):integer; overload;
 Function LTR_IsOpened(var ltr: TLTR):integer; overload;
-//заполнения поля с серийным номером в структуре TLTR (используется перед открытием)
+//Р·Р°РїРѕР»РЅРµРЅРёСЏ РїРѕР»СЏ СЃ СЃРµСЂРёР№РЅС‹Рј РЅРѕРјРµСЂРѕРј РІ СЃС‚СЂСѓРєС‚СѓСЂРµ TLTR (РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РїРµСЂРµРґ РѕС‚РєСЂС‹С‚РёРµРј)
 Procedure LTR_FillSerial(var ltr: TLTR; csn : string);
 
 Function LTR_GetCrates(var ltr: TLTR; var csn: array of string; out crates_cnt: Integer):integer;  overload;
@@ -185,18 +185,18 @@ Function LTR_CratePutArray(var ltr: TLTR; address : LongWord; const buf: array o
 
 
 {$IFNDEF LTRAPI_DISABLE_COMPAT_DEFS}
-// Функции для внутреннего применения
+// Р¤СѓРЅРєС†РёРё РґР»СЏ РІРЅСѓС‚СЂРµРЅРЅРµРіРѕ РїСЂРёРјРµРЅРµРЅРёСЏ
 Function LTR__GenericCtlFunc(
-        TLTR:Pointer;                       // дескриптор LTR
-        request_buf:Pointer;                // буфер с запросом
-        request_size:LongWord;              // длина запроса (в байтах)
-        reply_buf:Pointer;                  // буфер для ответа (или NULL)
-        reply_size:LongWord;                // длина ответа (в байтах)
-        ack_error_code:integer;             // какая ошибка, если ack не GOOD (0 = не использовать ack)
-        timeout:LongWord                   // таймаут, мс
+        TLTR:Pointer;                       // РґРµСЃРєСЂРёРїС‚РѕСЂ LTR
+        request_buf:Pointer;                // Р±СѓС„РµСЂ СЃ Р·Р°РїСЂРѕСЃРѕРј
+        request_size:LongWord;              // РґР»РёРЅР° Р·Р°РїСЂРѕСЃР° (РІ Р±Р°Р№С‚Р°С…)
+        reply_buf:Pointer;                  // Р±СѓС„РµСЂ РґР»СЏ РѕС‚РІРµС‚Р° (РёР»Рё NULL)
+        reply_size:LongWord;                // РґР»РёРЅР° РѕС‚РІРµС‚Р° (РІ Р±Р°Р№С‚Р°С…)
+        ack_error_code:integer;             // РєР°РєР°СЏ РѕС€РёР±РєР°, РµСЃР»Рё ack РЅРµ GOOD (0 = РЅРµ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ ack)
+        timeout:LongWord                   // С‚Р°Р№РјР°СѓС‚, РјСЃ
     ):integer; {$I ltrapi_callconvention};
 
-// Функции общего назначения
+// Р¤СѓРЅРєС†РёРё РѕР±С‰РµРіРѕ РЅР°Р·РЅР°С‡РµРЅРёСЏ
 
 
 
@@ -331,7 +331,7 @@ Implementation
   var
     i: Integer;
   begin
-     for i:=0 to SERIAL_NUMBER_SIZE-1 do     //устанавливаем серийный номер крейта
+     for i:=0 to SERIAL_NUMBER_SIZE-1 do     //СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРµСЂРёР№РЅС‹Р№ РЅРѕРјРµСЂ РєСЂРµР№С‚Р°
      begin
        if i < Length(csn) then
        begin
@@ -378,7 +378,7 @@ Implementation
     begin
         for i:=0 to CRATE_MAX-1 do
         begin
-            if (serial_array[SERIAL_NUMBER_SIZE*i]<> AnsiChar(0)) then   //добавляем в список все непустые серийники
+            if (serial_array[SERIAL_NUMBER_SIZE*i]<> AnsiChar(0)) then   //РґРѕР±Р°РІР»СЏРµРј РІ СЃРїРёСЃРѕРє РІСЃРµ РЅРµРїСѓСЃС‚С‹Рµ СЃРµСЂРёР№РЅРёРєРё
             begin
                 if Length(csn) > crates_cnt then
                 begin
@@ -403,7 +403,7 @@ Implementation
     begin
         for i:=0 to Length(mids)-1 do
         begin
-            if (i < MODULE_MAX) then   //добавляем в список все непустые серийники
+            if (i < MODULE_MAX) then   //РґРѕР±Р°РІР»СЏРµРј РІ СЃРїРёСЃРѕРє РІСЃРµ РЅРµРїСѓСЃС‚С‹Рµ СЃРµСЂРёР№РЅРёРєРё
             begin
                 mids[i]:=mid_array^[i];
             end
