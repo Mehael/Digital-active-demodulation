@@ -13,7 +13,7 @@ uses
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.Title := 'СборДанных';
+  Application.Title := 'РЎР±РѕСЂР”Р°РЅРЅС‹С…';
   Application.CreateForm(TMainForm, MainForm);
   Application.Run;
 end.

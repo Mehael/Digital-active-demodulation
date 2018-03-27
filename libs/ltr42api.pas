@@ -2,7 +2,7 @@ unit ltr42api;
 interface
 uses SysUtils, ltrapitypes, ltrapidefine, ltrapi;
 const
-// Коды ошибок
+// РљРѕРґС‹ РѕС€РёР±РѕРє
     LTR42_NO_ERR                          =0;
     LTR42_ERR_WRONG_MODULE_DESCR          =-8001;
     LTR42_ERR_CANT_OPEN                   =-8002;
@@ -40,28 +40,28 @@ const
 
 type
 {$A4}
-// Структура описания модуля
+// РЎС‚СЂСѓРєС‚СѓСЂР° РѕРїРёСЃР°РЅРёСЏ РјРѕРґСѓР»СЏ
 TINFO_LTR42 = record
     Name  :array[0..15]of AnsiChar;
     Serial:array[0..23]of AnsiChar;
-    FirmwareVersion:array[0..7]of AnsiChar;// Версия БИОСа
-    FirmwareDate   :array[0..15]of AnsiChar;  // Дата создания данной версии БИОСа
+    FirmwareVersion:array[0..7]of AnsiChar;// Р’РµСЂСЃРёСЏ Р‘РРћРЎР°
+    FirmwareDate   :array[0..15]of AnsiChar;  // Р”Р°С‚Р° СЃРѕР·РґР°РЅРёСЏ РґР°РЅРЅРѕР№ РІРµСЂСЃРёРё Р‘РРћРЎР°
 end;
 pTINFO_LTR42 = ^TINFO_LTR42;
 
 TLTR42_Marks = record
-    SecondMark_Mode:integer; // Режим меток. 0 - внутр., 1-внутр.+выход, 2-внешн
+    SecondMark_Mode:integer; // Р РµР¶РёРј РјРµС‚РѕРє. 0 - РІРЅСѓС‚СЂ., 1-РІРЅСѓС‚СЂ.+РІС‹С…РѕРґ, 2-РІРЅРµС€РЅ
     StartMark_Mode:integer; //
 end;
 
 TLTR42 = record
     Channel:TLTR;
-    size:integer;   // размер структуры
+    size:integer;   // СЂР°Р·РјРµСЂ СЃС‚СЂСѓРєС‚СѓСЂС‹
     AckEna:boolean;
-    Marks:TLTR42_Marks;  // Структура для работы с временными метками
+    Marks:TLTR42_Marks;  // РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ РІСЂРµРјРµРЅРЅС‹РјРё РјРµС‚РєР°РјРё
     ModuleInfo:TINFO_LTR42;
 end;
-pTLTR42=^TLTR42;// Структура описания модуля
+pTLTR42=^TLTR42;// РЎС‚СЂСѓРєС‚СѓСЂР° РѕРїРёСЃР°РЅРёСЏ РјРѕРґСѓР»СЏ
 
 {$A+}
 

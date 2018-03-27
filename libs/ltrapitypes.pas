@@ -19,72 +19,72 @@ type
 
      TLTR_DESCRIPTION_MODULE=record
       CompanyName:array[0..16-1]of AnsiChar;                     //
-      DeviceName:array[0..16-1]of AnsiChar;                      // название изделия
-      SerialNumber:array[0..16-1]of AnsiChar;                    // серийный номер изделия
-      Revision:byte;                                       // ревизия изделия
+      DeviceName:array[0..16-1]of AnsiChar;                      // РЅР°Р·РІР°РЅРёРµ РёР·РґРµР»РёСЏ
+      SerialNumber:array[0..16-1]of AnsiChar;                    // СЃРµСЂРёР№РЅС‹Р№ РЅРѕРјРµСЂ РёР·РґРµР»РёСЏ
+      Revision:byte;                                       // СЂРµРІРёР·РёСЏ РёР·РґРµР»РёСЏ
       Comment:array[0..256-1]of AnsiChar;           //
     end;
 
-    // описание процессора и програмного обеспечения
+    // РѕРїРёСЃР°РЅРёРµ РїСЂРѕС†РµСЃСЃРѕСЂР° Рё РїСЂРѕРіСЂР°РјРЅРѕРіРѕ РѕР±РµСЃРїРµС‡РµРЅРёСЏ
     TLTR_DESCRIPTION_CPU=record
-      Active:byte;                                         // флаг достоверности остальных полей структуры
-      Name:array[0..15]of AnsiChar;                            // название
+      Active:byte;                                         // С„Р»Р°Рі РґРѕСЃС‚РѕРІРµСЂРЅРѕСЃС‚Рё РѕСЃС‚Р°Р»СЊРЅС‹С… РїРѕР»РµР№ СЃС‚СЂСѓРєС‚СѓСЂС‹
+      Name:array[0..15]of AnsiChar;                            // РЅР°Р·РІР°РЅРёРµ
       ClockRate:double;                                    //
       FirmwareVersion:LongWord;                            //
       Comment:array[0..COMMENT_LENGTH-1]of AnsiChar;           //
     end;
-    // описание плис
+    // РѕРїРёСЃР°РЅРёРµ РїР»РёСЃ
     TLTR_DESCRIPTION_FPGA=record
-      Active:byte;                                         // флаг достоверности остальных полей структуры
-      Name:array[0..15]of AnsiChar;                            // название
+      Active:byte;                                         // С„Р»Р°Рі РґРѕСЃС‚РѕРІРµСЂРЅРѕСЃС‚Рё РѕСЃС‚Р°Р»СЊРЅС‹С… РїРѕР»РµР№ СЃС‚СЂСѓРєС‚СѓСЂС‹
+      Name:array[0..15]of AnsiChar;                            // РЅР°Р·РІР°РЅРёРµ
       ClockRate:double;                                    //
       FirmwareVersion:LongWord;                            //
       Comment:array[0..COMMENT_LENGTH-1]of AnsiChar;           //
     end;
-    // описание ацп
+    // РѕРїРёСЃР°РЅРёРµ Р°С†Рї
     TLTR_DESCRIPTION_ADC=record
-      Active:byte;                                         // флаг достоверности остальных полей структуры
-      Name:array[0..15]of AnsiChar;                            // название
-      Calibration:array[0..ADC_CALIBRATION_NUMBER-1]of double;// корректировочные коэффициенты
+      Active:byte;                                         // С„Р»Р°Рі РґРѕСЃС‚РѕРІРµСЂРЅРѕСЃС‚Рё РѕСЃС‚Р°Р»СЊРЅС‹С… РїРѕР»РµР№ СЃС‚СЂСѓРєС‚СѓСЂС‹
+      Name:array[0..15]of AnsiChar;                            // РЅР°Р·РІР°РЅРёРµ
+      Calibration:array[0..ADC_CALIBRATION_NUMBER-1]of double;// РєРѕСЂСЂРµРєС‚РёСЂРѕРІРѕС‡РЅС‹Рµ РєРѕСЌС„С„РёС†РёРµРЅС‚С‹
       Comment:array[0..COMMENT_LENGTH-1]of AnsiChar;           //
     end;
 
     TLTR_DESCRIPTION_DAC=record
-      Active:byte;                                         // флаг достоверности остальных полей структуры
-      Name:array[0..15]of AnsiChar;                            // название
-      Calibration:array[0..ADC_CALIBRATION_NUMBER-1]of double;// корректировочные коэффициенты
+      Active:byte;                                         // С„Р»Р°Рі РґРѕСЃС‚РѕРІРµСЂРЅРѕСЃС‚Рё РѕСЃС‚Р°Р»СЊРЅС‹С… РїРѕР»РµР№ СЃС‚СЂСѓРєС‚СѓСЂС‹
+      Name:array[0..15]of AnsiChar;                            // РЅР°Р·РІР°РЅРёРµ
+      Calibration:array[0..ADC_CALIBRATION_NUMBER-1]of double;// РєРѕСЂСЂРµРєС‚РёСЂРѕРІРѕС‡РЅС‹Рµ РєРѕСЌС„С„РёС†РёРµРЅС‚С‹
       Comment:array[0..COMMENT_LENGTH-1]of AnsiChar;           //
     end;
-    // описание h-мезанинов
+    // РѕРїРёСЃР°РЅРёРµ h-РјРµР·Р°РЅРёРЅРѕРІ
     TLTR_DESCRIPTION_MEZZANINE=record
-      Active:byte;                                         // флаг достоверности остальных полей структуры
+      Active:byte;                                         // С„Р»Р°Рі РґРѕСЃС‚РѕРІРµСЂРЅРѕСЃС‚Рё РѕСЃС‚Р°Р»СЊРЅС‹С… РїРѕР»РµР№ СЃС‚СЂСѓРєС‚СѓСЂС‹
       Name:array[0..15]of AnsiChar;
-      SerialNumber:array[0..15]of AnsiChar;                    // серийный номер изделия
-      Revision:Byte;                                       // ревизия изделия
-      Calibration:array[0..3]of double;                    // корректировочные коэффициенты
-      Comment:array[0..COMMENT_LENGTH-1]of AnsiChar;           // комментарий
+      SerialNumber:array[0..15]of AnsiChar;                    // СЃРµСЂРёР№РЅС‹Р№ РЅРѕРјРµСЂ РёР·РґРµР»РёСЏ
+      Revision:Byte;                                       // СЂРµРІРёР·РёСЏ РёР·РґРµР»РёСЏ
+      Calibration:array[0..3]of double;                    // РєРѕСЂСЂРµРєС‚РёСЂРѕРІРѕС‡РЅС‹Рµ РєРѕСЌС„С„РёС†РёРµРЅС‚С‹
+      Comment:array[0..COMMENT_LENGTH-1]of AnsiChar;           // РєРѕРјРјРµРЅС‚Р°СЂРёР№
     end;
-    // описание цифрового вв
+    // РѕРїРёСЃР°РЅРёРµ С†РёС„СЂРѕРІРѕРіРѕ РІРІ
     TLTR_DESCRIPTION_DIGITAL_IO=record
-      Active:byte;                                         // флаг достоверности остальных полей структуры
-      Name:array[0..15]of AnsiChar;                            // название ???????
-      InChannels:word;                                     // число каналов
-      OutChannels:word;                                    // число каналов
-      Comment:array[0..COMMENT_LENGTH-1]of AnsiChar;           // комментарий
+      Active:byte;                                         // С„Р»Р°Рі РґРѕСЃС‚РѕРІРµСЂРЅРѕСЃС‚Рё РѕСЃС‚Р°Р»СЊРЅС‹С… РїРѕР»РµР№ СЃС‚СЂСѓРєС‚СѓСЂС‹
+      Name:array[0..15]of AnsiChar;                            // РЅР°Р·РІР°РЅРёРµ ???????
+      InChannels:word;                                     // С‡РёСЃР»Рѕ РєР°РЅР°Р»РѕРІ
+      OutChannels:word;                                    // С‡РёСЃР»Рѕ РєР°РЅР°Р»РѕРІ
+      Comment:array[0..COMMENT_LENGTH-1]of AnsiChar;           // РєРѕРјРјРµРЅС‚Р°СЂРёР№
     end;
-    // описание интерфейсных модулей
+    // РѕРїРёСЃР°РЅРёРµ РёРЅС‚РµСЂС„РµР№СЃРЅС‹С… РјРѕРґСѓР»РµР№
     TLTR_DESCRIPTION_INTERFACE=record
-      Active:BYTE;                                         // флаг достоверности остальных полей структуры
-      Name:array[0..15]of AnsiChar;                            // название
+      Active:BYTE;                                         // С„Р»Р°Рі РґРѕСЃС‚РѕРІРµСЂРЅРѕСЃС‚Рё РѕСЃС‚Р°Р»СЊРЅС‹С… РїРѕР»РµР№ СЃС‚СЂСѓРєС‚СѓСЂС‹
+      Name:array[0..15]of AnsiChar;                            // РЅР°Р·РІР°РЅРёРµ
       Comment:array[0..COMMENT_LENGTH-1]of AnsiChar;           //
     end;
-    // элемент списка IP-крейтов
+    // СЌР»РµРјРµРЅС‚ СЃРїРёСЃРєР° IP-РєСЂРµР№С‚РѕРІ
     TLTR_CRATE_IP_ENTRY=record
-      ip_addr:LongWord;                                          // IP адрес (host-endian)
-      flags:LongWord;                                            // флаги режимов (CRATE_IP_FLAG_...)
-      serial_number:array[0..15]of AnsiChar;                  // серийный номер (если крейт подключен)
-      is_dynamic:byte;                                        // 0 = задан пользователем, 1 = найден автоматически
-      status:byte;                                            // состояние (CRATE_IP_STATUS_...)
+      ip_addr:LongWord;                                          // IP Р°РґСЂРµСЃ (host-endian)
+      flags:LongWord;                                            // С„Р»Р°РіРё СЂРµР¶РёРјРѕРІ (CRATE_IP_FLAG_...)
+      serial_number:array[0..15]of AnsiChar;                  // СЃРµСЂРёР№РЅС‹Р№ РЅРѕРјРµСЂ (РµСЃР»Рё РєСЂРµР№С‚ РїРѕРґРєР»СЋС‡РµРЅ)
+      is_dynamic:byte;                                        // 0 = Р·Р°РґР°РЅ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј, 1 = РЅР°Р№РґРµРЅ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё
+      status:byte;                                            // СЃРѕСЃС‚РѕСЏРЅРёРµ (CRATE_IP_STATUS_...)
     end;
 
 {$IFNDEF LTRAPI_DISABLE_COMPAT_DEFS}

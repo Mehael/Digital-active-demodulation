@@ -2,11 +2,11 @@ unit ltr51api;
 interface
 uses SysUtils, ltrapitypes, ltrapidefine, ltrapi;
 const
-    // минимальное чесло периодов дискр. в одном периоде измерения
+    // РјРёРЅРёРјР°Р»СЊРЅРѕРµ С‡РµСЃР»Рѕ РїРµСЂРёРѕРґРѕРІ РґРёСЃРєСЂ. РІ РѕРґРЅРѕРј РїРµСЂРёРѕРґРµ РёР·РјРµСЂРµРЅРёСЏ
     LTR51_BASE_VAL_MIN        = 70;
-    // максимальная частота для дискретизации для модуля
+    // РјР°РєСЃРёРјР°Р»СЊРЅР°СЏ С‡Р°СЃС‚РѕС‚Р° РґР»СЏ РґРёСЃРєСЂРµС‚РёР·Р°С†РёРё РґР»СЏ РјРѕРґСѓР»СЏ
     LTR51_FS_MAX              = 500000;
-    // макс. количество каналов в модуле
+    // РјР°РєСЃ. РєРѕР»РёС‡РµСЃС‚РІРѕ РєР°РЅР°Р»РѕРІ РІ РјРѕРґСѓР»Рµ
     LTR51_CHANNEL_CNT         = 16;
 
     LTR51_THRESHOLD_RANGE_1_2V = 1;
@@ -15,7 +15,7 @@ const
     LTR51_EDGE_MODE_RISE      = 0;
     LTR51_EDGE_MODE_FALL      = 1;
 
-    // Коды ошибок
+    // РљРѕРґС‹ РѕС€РёР±РѕРє
     LTR51_NO_ERR                            =0;
     LTR51_ERR_WRONG_MODULE_DESCR            =-5001;
     LTR51_ERR_CANT_OPEN                     =-5002;
@@ -52,39 +52,39 @@ const
     LTR51_ERR_NOT_ENOUGH_POINTS             =-5033;
     LTR51_ERR_WRONG_SRC_SIZE                =-5034;
 
-// Структура описания модуля
+// РЎС‚СЂСѓРєС‚СѓСЂР° РѕРїРёСЃР°РЅРёСЏ РјРѕРґСѓР»СЏ
 type
 
     {$A4}
     TINFO_LTR51=record
         Name:           array[0..15] of AnsiChar;
         Serial:         array[0..23] of AnsiChar;
-        FirmwareVersion:array[0..7]  of AnsiChar; // Версия прошивки AVR
-        FirmwareDate:   array[0..15] of AnsiChar; // Дата создания данной версии прошивки AVR
-        FPGA_Version:   array[0..7]  of AnsiChar; // Версия прошивки ПЛИС
+        FirmwareVersion:array[0..7]  of AnsiChar; // Р’РµСЂСЃРёСЏ РїСЂРѕС€РёРІРєРё AVR
+        FirmwareDate:   array[0..15] of AnsiChar; // Р”Р°С‚Р° СЃРѕР·РґР°РЅРёСЏ РґР°РЅРЅРѕР№ РІРµСЂСЃРёРё РїСЂРѕС€РёРІРєРё AVR
+        FPGA_Version:   array[0..7]  of AnsiChar; // Р’РµСЂСЃРёСЏ РїСЂРѕС€РёРІРєРё РџР›РРЎ
     end;
 
     PTINFO_LTR51=^TINFO_LTR51;
 
     TLTR51 = record
-        size:       integer;              // размер структуры
+        size:       integer;              // СЂР°Р·РјРµСЂ СЃС‚СЂСѓРєС‚СѓСЂС‹
         Channel:    TLTR;
-        ChannelsEna:WORD;          // Маска доступных каналов (показывает, какие субмодули подкл.)
-        SetUserPars:LongBool;          // Указывает, задаются ли Fs и Base пользователем
-        LChQnt:integer;            // Количество логических каналов
-        LChTbl:array[0..15]of LongWord;       // Таблица логических каналов
-        Fs:double;                 // Частота выборки сэмплов
-        Base:word;                 // Делитель частоты измерения
-        F_Base:double;                    // Частота измерений F_Base=Fs/Base
-        AcqTime:integer;           // Время сбора в миллисекундах
-        TbaseQnt:integer;              // Количество периодов измерений, необходимое для обеспечения указанного интревала измерения
+        ChannelsEna:WORD;          // РњР°СЃРєР° РґРѕСЃС‚СѓРїРЅС‹С… РєР°РЅР°Р»РѕРІ (РїРѕРєР°Р·С‹РІР°РµС‚, РєР°РєРёРµ СЃСѓР±РјРѕРґСѓР»Рё РїРѕРґРєР».)
+        SetUserPars:LongBool;          // РЈРєР°Р·С‹РІР°РµС‚, Р·Р°РґР°СЋС‚СЃСЏ Р»Рё Fs Рё Base РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј
+        LChQnt:integer;            // РљРѕР»РёС‡РµСЃС‚РІРѕ Р»РѕРіРёС‡РµСЃРєРёС… РєР°РЅР°Р»РѕРІ
+        LChTbl:array[0..15]of LongWord;       // РўР°Р±Р»РёС†Р° Р»РѕРіРёС‡РµСЃРєРёС… РєР°РЅР°Р»РѕРІ
+        Fs:double;                 // Р§Р°СЃС‚РѕС‚Р° РІС‹Р±РѕСЂРєРё СЃСЌРјРїР»РѕРІ
+        Base:word;                 // Р”РµР»РёС‚РµР»СЊ С‡Р°СЃС‚РѕС‚С‹ РёР·РјРµСЂРµРЅРёСЏ
+        F_Base:double;                    // Р§Р°СЃС‚РѕС‚Р° РёР·РјРµСЂРµРЅРёР№ F_Base=Fs/Base
+        AcqTime:integer;           // Р’СЂРµРјСЏ СЃР±РѕСЂР° РІ РјРёР»Р»РёСЃРµРєСѓРЅРґР°С…
+        TbaseQnt:integer;              // РљРѕР»РёС‡РµСЃС‚РІРѕ РїРµСЂРёРѕРґРѕРІ РёР·РјРµСЂРµРЅРёР№, РЅРµРѕР±С…РѕРґРёРјРѕРµ РґР»СЏ РѕР±РµСЃРїРµС‡РµРЅРёСЏ СѓРєР°Р·Р°РЅРЅРѕРіРѕ РёРЅС‚СЂРµРІР°Р»Р° РёР·РјРµСЂРµРЅРёСЏ
         ModuleInfo:TINFO_LTR51;
     end;
-    pTLTR51=^TLTR51;              // Структура описания модуля
+    pTLTR51=^TLTR51;              // РЎС‚СЂСѓРєС‚СѓСЂР° РѕРїРёСЃР°РЅРёСЏ РјРѕРґСѓР»СЏ
 
     {$A+}
 
-    { Вариант реализации через var/out }
+    { Р’Р°СЂРёР°РЅС‚ СЂРµР°Р»РёР·Р°С†РёРё С‡РµСЂРµР· var/out }
     Function LTR51_Init(out hnd: TLTR51):integer; overload;
     Function LTR51_Open(var hnd: TLTR51; net_addr : LongWord; net_port : Word;
                         csn: string; slot: integer; ttf_name: string): Integer; overload;
@@ -98,21 +98,21 @@ type
     Function  LTR51_Config(var hnd: TLTR51):integer; overload;
     Function  LTR51_Start(var hnd: TLTR51):integer; overload;
     Function  LTR51_Stop(var hnd: TLTR51):integer; overload;
-     // Прием данных от модуля
+     // РџСЂРёРµРј РґР°РЅРЅС‹С… РѕС‚ РјРѕРґСѓР»СЏ
     Function  LTR51_Recv(var hnd: TLTR51; out data : array of LongWord;
                         out tmark : array of LongWord; size: LongWord; tout : LongWord): Integer; overload;
-    // Вариант без синхрометок
+    // Р’Р°СЂРёР°РЅС‚ Р±РµР· СЃРёРЅС…СЂРѕРјРµС‚РѕРє
     Function  LTR51_Recv(var hnd: TLTR51; out data : array of LongWord; size: LongWord;
                           tout : LongWord): Integer; overload;
 
     Function  LTR51_ProcessData(var hnd: TLTR51; var src : array of LongWord;
                                 out dest : array of LongWord; out Frequencies : array of Double;
                                 var size: LongWord): LongInt; overload;
-    //выриант без частот - если нужен только массив чисел N и M
+    //РІС‹СЂРёР°РЅС‚ Р±РµР· С‡Р°СЃС‚РѕС‚ - РµСЃР»Рё РЅСѓР¶РµРЅ С‚РѕР»СЊРєРѕ РјР°СЃСЃРёРІ С‡РёСЃРµР» N Рё M
     Function  LTR51_ProcessData(var hnd: TLTR51; var src : array of LongWord;
                               out dest : array of LongWord;
                               var size: LongWord): LongInt; overload;
-    //вариант без массива N и M - если нужны только частоты
+    //РІР°СЂРёР°РЅС‚ Р±РµР· РјР°СЃСЃРёРІР° N Рё M - РµСЃР»Рё РЅСѓР¶РЅС‹ С‚РѕР»СЊРєРѕ С‡Р°СЃС‚РѕС‚С‹
     Function  LTR51_ProcessData(var hnd: TLTR51; var src : array of LongWord;
                               out Frequencies : array of Double;
                               var size: LongWord): LongInt; overload;
@@ -126,7 +126,7 @@ type
     Function  LTR51_GetErrorString  (err:integer):string;
 
 {$IFNDEF LTRAPI_DISABLE_COMPAT_DEFS}
-    { Старый вариант реализации через Pointer }
+    { РЎС‚Р°СЂС‹Р№ РІР°СЂРёР°РЅС‚ СЂРµР°Р»РёР·Р°С†РёРё С‡РµСЂРµР· Pointer }
     Function  LTR51_Init            (hnd:pTLTR51):integer; {$I ltrapi_callconvention}; overload;
     Function  LTR51_Open            (hnd:pTLTR51; net_addrDWORD:LongWord; net_port:WORD; crate_snCHAR:POINTER; slot_num:integer; ttf_nameCHAR:PAnsiChar):integer;{$I ltrapi_callconvention}; overload;
     Function  LTR51_IsOpened        (hnd:pTLTR51):integer; {$I ltrapi_callconvention}; overload;

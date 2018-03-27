@@ -2,7 +2,7 @@ unit ltr43api;
 interface
 uses SysUtils, ltrapitypes, ltrapidefine, ltrapi;
 const
-// Коды ошибок
+// РљРѕРґС‹ РѕС€РёР±РѕРє
     LTR43_NO_ERR                                =0;
     LTR43_ERR_WRONG_MODULE_DESCR                =-4001;
     LTR43_ERR_CANT_OPEN                         =-4002;
@@ -74,49 +74,49 @@ const
 
 type
 {$A4}
-// Структура описания модуля
+// РЎС‚СЂСѓРєС‚СѓСЂР° РѕРїРёСЃР°РЅРёСЏ РјРѕРґСѓР»СЏ
 TINFO_LTR43=record
     Name  :array[0..15]of AnsiChar;
     Serial:array[0..23]of AnsiChar;
-    FirmwareVersion:array[0..7]of AnsiChar;// Версия БИОСа
-    FirmwareDate   :array[0..15]of AnsiChar;  // Дата создания данной версии БИОСа
+    FirmwareVersion:array[0..7]of AnsiChar;// Р’РµСЂСЃРёСЏ Р‘РРћРЎР°
+    FirmwareDate   :array[0..15]of AnsiChar;  // Р”Р°С‚Р° СЃРѕР·РґР°РЅРёСЏ РґР°РЅРЅРѕР№ РІРµСЂСЃРёРё Р‘РРћРЎР°
 end;
 
 pTINFO_LTR43 = ^TINFO_LTR43;
 
 TLTR43_IO_Ports = record
-    Port1:integer;       // направление линий ввода/вывода группы 1
-    Port2:integer;       // направление линий ввода/вывода группы 2
-    Port3:integer;    // направление линий ввода/вывода группы 3
-    Port4:integer;       // направление линий ввода/вывода группы 4
+    Port1:integer;       // РЅР°РїСЂР°РІР»РµРЅРёРµ Р»РёРЅРёР№ РІРІРѕРґР°/РІС‹РІРѕРґР° РіСЂСѓРїРїС‹ 1
+    Port2:integer;       // РЅР°РїСЂР°РІР»РµРЅРёРµ Р»РёРЅРёР№ РІРІРѕРґР°/РІС‹РІРѕРґР° РіСЂСѓРїРїС‹ 2
+    Port3:integer;    // РЅР°РїСЂР°РІР»РµРЅРёРµ Р»РёРЅРёР№ РІРІРѕРґР°/РІС‹РІРѕРґР° РіСЂСѓРїРїС‹ 3
+    Port4:integer;       // РЅР°РїСЂР°РІР»РµРЅРёРµ Р»РёРЅРёР№ РІРІРѕРґР°/РІС‹РІРѕРґР° РіСЂСѓРїРїС‹ 4
 end;
 
 
 
 TLTR43_RS485 = record
-    FrameSize:integer;      // Кол-во бит в кадре
-    Baud:integer;          // Скорость обмена в бодах
-    StopBit:integer;      // Кол-во стоп-бит
-    Parity:integer;          // Включение бита четности
-    SendTimeoutMultiplier:integer; // Множитель таймаута отправки
-    ReceiveTimeoutMultiplier:integer; // Множитель таймаута приема подтверждения
+    FrameSize:integer;      // РљРѕР»-РІРѕ Р±РёС‚ РІ РєР°РґСЂРµ
+    Baud:integer;          // РЎРєРѕСЂРѕСЃС‚СЊ РѕР±РјРµРЅР° РІ Р±РѕРґР°С…
+    StopBit:integer;      // РљРѕР»-РІРѕ СЃС‚РѕРї-Р±РёС‚
+    Parity:integer;          // Р’РєР»СЋС‡РµРЅРёРµ Р±РёС‚Р° С‡РµС‚РЅРѕСЃС‚Рё
+    SendTimeoutMultiplier:integer; // РњРЅРѕР¶РёС‚РµР»СЊ С‚Р°Р№РјР°СѓС‚Р° РѕС‚РїСЂР°РІРєРё
+    ReceiveTimeoutMultiplier:integer; // РњРЅРѕР¶РёС‚РµР»СЊ С‚Р°Р№РјР°СѓС‚Р° РїСЂРёРµРјР° РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ
 end;
 
 TLTR43_Marks=record
-    SecondMark_Mode:integer; // Режим меток. 0 - внутр., 1-внутр.+выход, 2-внешн
+    SecondMark_Mode:integer; // Р РµР¶РёРј РјРµС‚РѕРє. 0 - РІРЅСѓС‚СЂ., 1-РІРЅСѓС‚СЂ.+РІС‹С…РѕРґ, 2-РІРЅРµС€РЅ
     StartMark_Mode:integer; //
 end;
 
 TLTR43=record
-    size:integer;   // размер структуры
+    size:integer;   // СЂР°Р·РјРµСЂ СЃС‚СЂСѓРєС‚СѓСЂС‹
     Channel:TLTR;
     StreamReadRate:double;
     IO_Ports:TLTR43_IO_Ports;
-    RS485:TLTR43_RS485; // Структура для конфигурации RS485
-    Marks:TLTR43_Marks;  // Структура для работы с временными метками
+    RS485:TLTR43_RS485; // РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ РєРѕРЅС„РёРіСѓСЂР°С†РёРё RS485
+    Marks:TLTR43_Marks;  // РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ РІСЂРµРјРµРЅРЅС‹РјРё РјРµС‚РєР°РјРё
     ModuleInfo:TINFO_LTR43;
 end;
-pTLTR43=^TLTR43;// Структура описания модуля
+pTLTR43=^TLTR43;// РЎС‚СЂСѓРєС‚СѓСЂР° РѕРїРёСЃР°РЅРёСЏ РјРѕРґСѓР»СЏ
 
 {$A+}
 

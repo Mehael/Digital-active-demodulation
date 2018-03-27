@@ -5,13 +5,13 @@ unit ltr021api;
 interface
 uses SysUtils, ltrapi,ltrapidefine,ltrapitypes;
 const
-// коды ошибок
-        LTR021_OK                     =LTR_OK;    //Выполнено без ошибок.
-        LTR021_ERROR_GET_ARRAY        =-200;     //Ошибка выполнения команды GET_ARRAY.
-        LTR021_ERROR_PUT_ARRAY        =-201;     //Ошибка выполнения команды PUT_ARRAY.
-        LTR021_ERROR_GET_MODULE_NAME  =-202;     //Ошибка выполнения команды GET_MODULE_NAME.
-        LTR021_ERROR_GET_MODULE_GESCR =-203;     //Ошибка выполнения команды GET_MODULE_DESCRIPTOR.
-        LTR021_ERROR_CRATE_TYPE       =-204;     //неверный тип крейта.
+// РєРѕРґС‹ РѕС€РёР±РѕРє
+        LTR021_OK                     =LTR_OK;    //Р’С‹РїРѕР»РЅРµРЅРѕ Р±РµР· РѕС€РёР±РѕРє.
+        LTR021_ERROR_GET_ARRAY        =-200;     //РћС€РёР±РєР° РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹ GET_ARRAY.
+        LTR021_ERROR_PUT_ARRAY        =-201;     //РћС€РёР±РєР° РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹ PUT_ARRAY.
+        LTR021_ERROR_GET_MODULE_NAME  =-202;     //РћС€РёР±РєР° РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹ GET_MODULE_NAME.
+        LTR021_ERROR_GET_MODULE_GESCR =-203;     //РћС€РёР±РєР° РІС‹РїРѕР»РЅРµРЅРёСЏ РєРѕРјР°РЅРґС‹ GET_MODULE_DESCRIPTOR.
+        LTR021_ERROR_CRATE_TYPE       =-204;     //РЅРµРІРµСЂРЅС‹Р№ С‚РёРї РєСЂРµР№С‚Р°.
 //-----------------------------------------------------------------------------
 type
 TDESCRIPTION_LTR021=packed record

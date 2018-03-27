@@ -9,11 +9,11 @@ const
     LTR22_ADC_CHANNELS          =   LTR22_ADC_NUMBERS;
     LTR22_RANGE_NUMBER          =   6;
     LTR22_RANGE_OVERFLOW        =   7;
-    // количество выставляемых частот
+    // РєРѕР»РёС‡РµСЃС‚РІРѕ РІС‹СЃС‚Р°РІР»СЏРµРјС‹С… С‡Р°СЃС‚РѕС‚
     LTR22_MAX_DISC_FREQ_NUMBER  =   25;
 
 
-   // коды диапазонов АЦП
+   // РєРѕРґС‹ РґРёР°РїР°Р·РѕРЅРѕРІ РђР¦Рџ
     LTR22_ADC_RANGE_1           = 0;
     LTR22_ADC_RANGE_0_3         = 1;
     LTR22_ADC_RANGE_0_1         = 2;
@@ -21,7 +21,7 @@ const
     LTR22_ADC_RANGE_10          = 4;
     LTR22_ADC_RANGE_3           = 5;
 
-    { --------- возможные варианты ошибок -----------------}
+    { --------- РІРѕР·РјРѕР¶РЅС‹Рµ РІР°СЂРёР°РЅС‚С‹ РѕС€РёР±РѕРє -----------------}
     LTR22_ERROR_SEND_DATA                              = -6000;
     LTR22_ERROR_RECV_DATA                              = -6001;
     LTR22_ERROR_NOT_LTR22                              = -6002;
@@ -46,8 +46,8 @@ type
 {$A4}
 
 TINFO_LTR22 = record
-  Description: TDESCRIPTION_MODULE;     // описание модуля
-  CPU: TDESCRIPTION_CPU;                // описание AVR
+  Description: TDESCRIPTION_MODULE;     // РѕРїРёСЃР°РЅРёРµ РјРѕРґСѓР»СЏ
+  CPU: TDESCRIPTION_CPU;                // РѕРїРёСЃР°РЅРёРµ AVR
 end;
 
 
@@ -61,24 +61,24 @@ end;
 
 TLTR22 = record
     Size            : Integer;
-    Channel         : TLTR; // структура описывающая модуль в крейте
-    {---------  настройки модуля ----------}
-    Fdiv_rg         : Byte;     // делитель частоты клоков 1..15
-    Adc384          : Boolean;  // дополнительный делитель частоты сэмплов true =3 false =4
-    AC_DC_State     : Boolean;  // состояние true =AC+DC false=AC
-    MeasureADCZero  : Boolean;  // измерение собственного нуля (true - включено false - выключено)
-    DataReadingProcessed:Boolean;  // состояние считывания АЦП true-АЦП считывается false - нет
-    ADCChannelRange : array [0..LTR22_ADC_NUMBERS-1] of Byte;// предел имзерений АЦП по каналам 0 - 1В 1 - 0.3В 2 - 0.1В 3 - 0.03В 4 - 10В 5 - 3В
-    ChannelEnabled  : array [0..LTR22_ADC_NUMBERS-1] of Boolean;   // Состояние каналов, включен - true выключен - false
+    Channel         : TLTR; // СЃС‚СЂСѓРєС‚СѓСЂР° РѕРїРёСЃС‹РІР°СЋС‰Р°СЏ РјРѕРґСѓР»СЊ РІ РєСЂРµР№С‚Рµ
+    {---------  РЅР°СЃС‚СЂРѕР№РєРё РјРѕРґСѓР»СЏ ----------}
+    Fdiv_rg         : Byte;     // РґРµР»РёС‚РµР»СЊ С‡Р°СЃС‚РѕС‚С‹ РєР»РѕРєРѕРІ 1..15
+    Adc384          : Boolean;  // РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ РґРµР»РёС‚РµР»СЊ С‡Р°СЃС‚РѕС‚С‹ СЃСЌРјРїР»РѕРІ true =3 false =4
+    AC_DC_State     : Boolean;  // СЃРѕСЃС‚РѕСЏРЅРёРµ true =AC+DC false=AC
+    MeasureADCZero  : Boolean;  // РёР·РјРµСЂРµРЅРёРµ СЃРѕР±СЃС‚РІРµРЅРЅРѕРіРѕ РЅСѓР»СЏ (true - РІРєР»СЋС‡РµРЅРѕ false - РІС‹РєР»СЋС‡РµРЅРѕ)
+    DataReadingProcessed:Boolean;  // СЃРѕСЃС‚РѕСЏРЅРёРµ СЃС‡РёС‚С‹РІР°РЅРёСЏ РђР¦Рџ true-РђР¦Рџ СЃС‡РёС‚С‹РІР°РµС‚СЃСЏ false - РЅРµС‚
+    ADCChannelRange : array [0..LTR22_ADC_NUMBERS-1] of Byte;// РїСЂРµРґРµР» РёРјР·РµСЂРµРЅРёР№ РђР¦Рџ РїРѕ РєР°РЅР°Р»Р°Рј 0 - 1Р’ 1 - 0.3Р’ 2 - 0.1Р’ 3 - 0.03Р’ 4 - 10Р’ 5 - 3Р’
+    ChannelEnabled  : array [0..LTR22_ADC_NUMBERS-1] of Boolean;   // РЎРѕСЃС‚РѕСЏРЅРёРµ РєР°РЅР°Р»РѕРІ, РІРєР»СЋС‡РµРЅ - true РІС‹РєР»СЋС‡РµРЅ - false
 
-    FreqDiscretizationIndex : Integer;  // частота дискретизации, выставленная сейчас 0..24 - в зависимости от частоты
-                                    // из массива LTR22_DISK_FREQ_ARRAY
+    FreqDiscretizationIndex : Integer;  // С‡Р°СЃС‚РѕС‚Р° РґРёСЃРєСЂРµС‚РёР·Р°С†РёРё, РІС‹СЃС‚Р°РІР»РµРЅРЅР°СЏ СЃРµР№С‡Р°СЃ 0..24 - РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ С‡Р°СЃС‚РѕС‚С‹
+                                    // РёР· РјР°СЃСЃРёРІР° LTR22_DISK_FREQ_ARRAY
 
-    SyncType        : Byte; // Тип синхронизации 0 - внутренний старт по сигналу Go
-                            //1 - фазировка
-                            //2 -  внешний старт
-                            //3 -  резервировано
-    SyncMaster      : Boolean; // true - модуль генерит сигнал, false - модуль принимает синхросигнал
+    SyncType        : Byte; // РўРёРї СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё 0 - РІРЅСѓС‚СЂРµРЅРЅРёР№ СЃС‚Р°СЂС‚ РїРѕ СЃРёРіРЅР°Р»Сѓ Go
+                            //1 - С„Р°Р·РёСЂРѕРІРєР°
+                            //2 -  РІРЅРµС€РЅРёР№ СЃС‚Р°СЂС‚
+                            //3 -  СЂРµР·РµСЂРІРёСЂРѕРІР°РЅРѕ
+    SyncMaster      : Boolean; // true - РјРѕРґСѓР»СЊ РіРµРЅРµСЂРёС‚ СЃРёРіРЅР°Р», false - РјРѕРґСѓР»СЊ РїСЂРёРЅРёРјР°РµС‚ СЃРёРЅС…СЂРѕСЃРёРіРЅР°Р»
 
     ModuleDescription : TINFO_LTR22;
     ADCCalibration  : array [0..LTR22_ADC_NUMBERS-1] of array [0..LTR22_MAX_DISC_FREQ_NUMBER-1] of ADC_CHANNEL_CALIBRATION;
